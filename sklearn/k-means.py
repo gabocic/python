@@ -20,7 +20,7 @@ print(data)
 print(tags)
 
 #Preprocessing values
-scaleddata = scale(data)
+#scaleddata = scale(data)
 
 
 ## Extraigo la cantidad de clases del array de etiquetas
@@ -34,7 +34,7 @@ print(tags)
 kmeans.fit(data)
 print(kmeans.labels_)
 
-kmeans.fit(scaleddata)
+#kmeans.fit(scaleddata)
 print(kmeans.labels_)
 
 
