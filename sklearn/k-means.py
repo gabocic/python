@@ -8,20 +8,14 @@ from sklearn.preprocessing import scale
 import matplotlib.pyplot as plt
 from sklearn.datasets import load_svmlight_file
 
-# Genero un set det de datos
-## make_blobs = nube de datos isotropica, gaussiana
-#atributos = 2
-#centros = 3
-#data,tags = datasets.make_blobs(n_samples=100, n_features=atributos, centers=centros, cluster_std=1.0, center_box=(-10.0, 10.0), shuffle=True, random_state=None)
+## Loading data from file
+dataspmat,tags = datasets.load_svmlight_file('dataset.svl')
 
-data,tags = datasets.load_svmlight_file('dataset.svl')
-
-print(data)
-print(tags)
+## Converting from SciPy Sparse matrix to numpy ndarray
+data = dataspmat.toarray()
 
 #Preprocessing values
-#scaleddata = scale(data)
-
+scaleddata = scale(data)
 
 ## Extraigo la cantidad de clases del array de etiquetas
 n_digits = len(np.unique(tags))
@@ -29,13 +23,25 @@ n_digits = len(np.unique(tags))
 
 kmeans = KMeans(init='k-means++', n_clusters=n_digits, n_init=10)
 
+print("Etiquetas originales")
+print("****************************")
 print(tags)
+print(" ")
+print(" ")
 
+print("Etiquetas generadas por el kmeans, con los datos sin preprocesar")
+print("****************************")
 kmeans.fit(data)
 print(kmeans.labels_)
+print(" ")
+print(" ")
 
-#kmeans.fit(scaleddata)
+print("Etiquetas generadas por el kmeans, con los datos preprocesados")
+print("****************************")
+kmeans.fit(scaleddata)
 print(kmeans.labels_)
+print(" ")
+print(" ")
 
 
 # Step size of the mesh. Decrease to increase the quality of the VQ.
@@ -71,4 +77,18 @@ plt.ylim(y_min, y_max)
 plt.xticks(())
 plt.yticks(())
 plt.show()
+
+
+
+x_min, x_max = scaleddata[:, 0].min() - 1, data[:, 0].max() + 1
+y_min, y_max = scaleddata[:, 1].min() - 1, data[:, 1].max() + 1
+xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+plt.plot(data[:, 0], data[:, 1], 'k.', markersize=2,color='r')
+plt.xlim(x_min, x_max)
+plt.ylim(y_min, y_max)
+plt.xticks(())
+plt.yticks(())
+plt.show()
+
+
 
