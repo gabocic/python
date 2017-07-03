@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
 import numpy as np
-from sklearn.cluster import KMeans
+from sklearn.cluster import DBSCAN
 from sklearn import datasets
-from sklearn.preprocessing import scale
+from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 from sklearn.datasets import load_svmlight_file
 from mpl_toolkits.mplot3d import Axes3D
@@ -17,29 +17,20 @@ dataspmat,tags = datasets.load_svmlight_file('dataset.svl')
 ## Converting from SciPy Sparse matrix to numpy ndarray
 data = dataspmat.toarray()
 
-
-## Extracting amount of groups by determining unique tags number
-n_digits = len(np.unique(tags))
-
-## Creating KMeans object to process the dataset
+## Creating DBSCAN object to process the dataset
 ## **********************************************
-# k-means++ initialization scheme is specified (use the init='kmeans++' parameter), which has been implemented in scikit-learn. This initializes the centroids to be (generally) 
-# distant from each other, leading to probably better results than random initialization (init=random and PCA-based are two other possible choices). The parameter n_job specify 
-# the amount of processors to be used (default: 1). A value of -1 uses all available processors, with -2 using one less, and so on.
-kmeans = KMeans(init='k-means++', n_clusters=n_digits, n_init=10, n_jobs=2)
+# There are two parameters to the algorithm, min_samples and epsilon, which define formally what we mean when we say "dense". Higher min_samples or lower eps indicate 
+# higher density necessary to form a cluster.
+db = DBSCAN(eps=0.3, min_samples=10)
 
 ## Compute k-means clustering against the original data set
-kmeans.fit(data)
+db.fit(data)
 
-## Save centroids for plotting
-datacentroids=kmeans.cluster_centers_
+## Preprocess data set and repeat DBSCAN clustering
+scaleddata = StandardScaler().fit_transform(data)
+db.fit(scaleddata)
 
-## Preprocess data set and repeat k-means clustering
-scaleddata = scale(data)
-kmeans.fit(scaleddata)
-scaleddatacentroids=kmeans.cluster_centers_
-
-
+print(db.labels_)
 
 ## PLOTTING RESULTS
 ## ******************************
@@ -57,19 +48,6 @@ ax.plot(data[:, 0], data[:, 1], data[:, 2],'k.', markersize=2) # <-- 3D
 ## Plot the scaled data points
 #ax.plot(scaleddata[:, 0], scaleddata[:, 1],'k.', markersize=2,color='r') # <-- 2D
 ax.plot(scaleddata[:, 0], scaleddata[:, 1], scaleddata[:, 2],'k.', markersize=2,color='r') # <-- 3D
-
-# Plot the centroids as a green X for both, the original and the scaled data set
-centroids = datacentroids
-#ax.scatter(centroids[:, 0], centroids[:, 1], # <-- 2D
-ax.scatter(centroids[:, 0], centroids[:, 1], centroids[:, 2], # <-- 3D
-            marker='x', s=169, linewidths=3,
-            color='g', zorder=10)
-
-centroids = scaleddatacentroids
-#ax.scatter(centroids[:, 0], centroids[:, 1], # <-- 2D
-ax.scatter(centroids[:, 0], centroids[:, 1], centroids[:, 2], # <-- 3D
-            marker='x', s=169, linewidths=3,
-            color='g', zorder=10)
 
 ## Graph and axis formatting
 ax.set_aspect('equal')

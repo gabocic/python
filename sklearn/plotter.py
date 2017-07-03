@@ -2,6 +2,7 @@
 
 import numpy as np
 from sklearn.cluster import KMeans
+from sklearn.datasets import load_digits
 from sklearn import datasets
 from sklearn.preprocessing import scale
 import matplotlib.pyplot as plt
@@ -18,31 +19,7 @@ dataspmat,tags = datasets.load_svmlight_file('dataset.svl')
 data = dataspmat.toarray()
 
 
-## Extracting amount of groups by determining unique tags number
-n_digits = len(np.unique(tags))
-
-## Creating KMeans object to process the dataset
-## **********************************************
-# k-means++ initialization scheme is specified (use the init='kmeans++' parameter), which has been implemented in scikit-learn. This initializes the centroids to be (generally) 
-# distant from each other, leading to probably better results than random initialization (init=random and PCA-based are two other possible choices). The parameter n_job specify 
-# the amount of processors to be used (default: 1). A value of -1 uses all available processors, with -2 using one less, and so on.
-kmeans = KMeans(init='k-means++', n_clusters=n_digits, n_init=10, n_jobs=2)
-
-## Compute k-means clustering against the original data set
-kmeans.fit(data)
-
-## Save centroids for plotting
-datacentroids=kmeans.cluster_centers_
-
-## Preprocess data set and repeat k-means clustering
-scaleddata = scale(data)
-kmeans.fit(scaleddata)
-scaleddatacentroids=kmeans.cluster_centers_
-
-
-
-## PLOTTING RESULTS
-## ******************************
+### <<<<<<<<<<<<<< NOT READY >>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 #fig, ax = plt.subplots() # <-- 2D
 fig = plt.figure() # <-- 3D
