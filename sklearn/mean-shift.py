@@ -1,10 +1,8 @@
 #!/usr/bin/python
 
-import numpy as np
 from sklearn.cluster import MeanShift, estimate_bandwidth
 from sklearn import datasets
 from sklearn.preprocessing import scale
-import matplotlib.pyplot as plt
 
 ## LOADING DATASET FROM FILE
 ## *************************

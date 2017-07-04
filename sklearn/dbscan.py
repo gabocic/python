@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn import datasets
 from sklearn.preprocessing import StandardScaler
