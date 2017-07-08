@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/home/gabriel/pythonenvs/v3.5/bin/python
 
 import numpy as np
 from sklearn.cluster import KMeans

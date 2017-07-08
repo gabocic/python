@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/home/gabriel/pythonenvs/v3.5/bin/python
 
 from sklearn.cluster import DBSCAN
 from sklearn import datasets

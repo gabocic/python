@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/home/gabriel/pythonenvs/v3.5/bin/python
 
 from sklearn.cluster import MeanShift, estimate_bandwidth
 from sklearn import datasets
