@@ -2,6 +2,7 @@
 
 import Orange
 from sklearn import datasets
+import numpy as np
 
 # Read some data
 
@@ -19,28 +20,15 @@ data = dataspmat.toarray()
 att1 = Orange.data.ContinuousVariable(name='att1', compute_value=None)
 att2 = Orange.data.ContinuousVariable(name='att2', compute_value=None)
 att3 = Orange.data.ContinuousVariable(name='att3', compute_value=None)
-#classv = Orange.data.DiscreteVariable(name='classv', compute_value=None)
-classv = Orange.data.StringVariable(name='classv', compute_value=None)
+classv = Orange.data.DiscreteVariable(name='classv',values=['A', 'B', 'C'])
 
 # Create domain based on the above attributes
 mydomain = Orange.data.Domain(attributes=[att1,att2,att3],class_vars=classv)
 
-charar = np.chararray((100, 1))
-
-for idx,etiq in np.ndenumerate(tags):
-	if etiq == 0:
-		charar[idx]='A'
-	elif etiq == 1:
-		charar[idx]='B'
-	elif etiq == 2:
-		charar[idx]='C'
-
-
 ## Loading data and tags in ndarray format into a an Orange.Table
-table = Orange.data.Table.from_numpy(mydomain,data,Y=charar)
+table = Orange.data.Table.from_numpy(mydomain,data,Y=tags)
 
 # construct the learning algorithm and use it to induce a classifier
-
 learner = Orange.classification.CN2Learner()
 
 # consider up to 10 solution streams at one time
@@ -55,7 +43,7 @@ learner.rule_finder.general_validator.min_covered_examples = 15
 # found rules may combine at most 2 selectors (conditions)
 learner.rule_finder.general_validator.max_rule_length = 2
 
-classifier = learner(data)
+classifier = learner(table)
 
 for myrule in classifier.rule_list:
 	print(myrule.__str__())
