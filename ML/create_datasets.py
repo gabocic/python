@@ -3,15 +3,16 @@
 import numpy as np
 
 def create_dataset(n_samples=10, n_features=3,
-                        perc_lin_comb=20, perc_repeated=20, n_groups=2,
+                        perc_lin=20, perc_repeated=20, n_groups=2,
                         avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=25,
                         shuffle=True,feat_dist=0):
 
     # Calculate the percentage of useful values we need to generate
 
     # << ToDo: check that percentage parameters do not exceed 80% and that they end in zero (10, 20, 30.. etc)
-    perc_usef_samples = 100 - perc_lin_comb - perc_repeated
+    perc_usef_samples = 100 - perc_lin - perc_repeated
     usef_samples = int(0.01 * perc_usef_samples * n_samples)
+    lin_samples = int(0.01 * perc_lin * n_samples)
     print("Useful samples: "+usef_samples.__str__())
 
     # feat_dist =  Feature distribution
@@ -64,6 +65,25 @@ def create_dataset(n_samples=10, n_features=3,
     X[:usef_samples,standa_feat:standa_feat+unifor_feat] = Xu
     print(X)
 
+    # Generate samples with linear relation to a ramdom sample
+    ## Choose a ramdom sample
+    sampleidx = (generator.random_integers(low=0, high=usef_samples, size=(1)))[0]
+    print("Index: "+sampleidx.__str__())
+    print("Winning sample:")
+    print(X[sampleidx])
+    print("Linear samples: "+lin_samples.__str__())
+    k = generator.random_integers(low=2, high=5, size=([1,2]))
+    print(k[0,0])
+    print(k[0,1])
+    i = 0
+    #for i in range(lin_samples): # 
+    #### << PARA COMPUTAR ESTA METRICA: Usar ajuste / regression lineal y medir la distancia promedio entre los valores reales y los de la hiper recta para las mismas coordenadas
+    #### << PARA GENERAR LOS VALORES: tomar dos samples y encontrar la recta que pasa por ese punto (ej Po + d->). Luego pasar valores de xo, x1...,xn-1 y calcular xn
+
+
+
+
+
     # Randomly permute features
     indices = np.arange(n_features)
     generator.shuffle(indices)
@@ -74,7 +94,7 @@ def create_dataset(n_samples=10, n_features=3,
 
 
 create_dataset(n_samples=10, n_features=5,
-                        perc_lin_comb=20, perc_repeated=20, n_groups=2,
+                        perc_lin=20, perc_repeated=20, n_groups=2,
                         avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=25,
                         shuffle=True,feat_dist=0)
 
