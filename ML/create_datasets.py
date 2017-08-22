@@ -50,7 +50,7 @@ def create_dataset(n_samples=10, n_features=3,
         Xs[:usef_samples, i:i+1] = m
 
     Xs = np.around(Xs,3)
-    print(Xs)
+    #print(Xs)
 
     # Generate uniform columns
     for i in range(0,unifor_feat):
@@ -69,27 +69,39 @@ def create_dataset(n_samples=10, n_features=3,
     ## Choose a ramdom sample
     sampleidx = (generator.random_integers(low=0, high=usef_samples, size=(1)))[0]
     print("Index: "+sampleidx.__str__())
-    print("Winning sample:")
-    print(X[sampleidx])
+    print("Winning samples:")
+    p0 = X[sampleidx]
+    print(p0)
+    if X[sampleidx+1][0]:
+        p1 = X[sampleidx+1]
+    elif X[sampleidx-1][0]:
+        p1 = X[sampleidx-1]
+    else:
+        print("Cannot find another point to generate linear samples")
+        raise 
+    print(p1)
     print("Linear samples: "+lin_samples.__str__())
-    k = generator.random_integers(low=2, high=5, size=([1,2]))
-    print(k[0,0])
-    print(k[0,1])
     i = 0
+    d_vector = p1 - p0
+    print(d_vector)
     #for i in range(lin_samples): # 
     #### << PARA COMPUTAR ESTA METRICA: Usar ajuste / regression lineal y medir la distancia promedio entre los valores reales y los de la hiper recta para las mismas coordenadas
     #### << PARA GENERAR LOS VALORES: tomar dos samples y encontrar la recta que pasa por ese punto (ej Po + d->). Luego pasar valores de xo, x1...,xn-1 y calcular xn
 
+    #from numpy import ones,vstack
+    #from numpy.linalg import lstsq
 
-
-
+    #points = [(1,5,3),(3,4,2),(5,3,2),(9,0,4)]
+    #x_coords, y_coords,z_coords = zip(*points)
+    #A = np.vstack([x_coords, y_coords,np.ones(len(x_coords))]).T
+    #mx,my,c = np.linalg.lstsq(A, z_coords)[0]
 
     # Randomly permute features
     indices = np.arange(n_features)
     generator.shuffle(indices)
     X[:, :] = X[:, indices]
 
-    print(X)
+    #print(X)
 
 
 
