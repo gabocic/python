@@ -1,6 +1,8 @@
 #!/home/gabriel/pythonenvs/v3.5/bin/python
 
 import numpy as np
+from numpy import ones,vstack
+from numpy.linalg import lstsq
 
 def create_dataset(n_samples=10, n_features=3,
                         perc_lin=20, perc_repeated=20, n_groups=2,
@@ -81,20 +83,21 @@ def create_dataset(n_samples=10, n_features=3,
         raise 
     print(p1)
     print("Linear samples: "+lin_samples.__str__())
-    i = 0
-    d_vector = p1 - p0
-    print(d_vector)
-    #for i in range(lin_samples): # 
     #### << PARA COMPUTAR ESTA METRICA: Usar ajuste / regression lineal y medir la distancia promedio entre los valores reales y los de la hiper recta para las mismas coordenadas
     #### << PARA GENERAR LOS VALORES: tomar dos samples y encontrar la recta que pasa por ese punto (ej Po + d->). Luego pasar valores de xo, x1...,xn-1 y calcular xn
 
-    #from numpy import ones,vstack
-    #from numpy.linalg import lstsq
+    points=[p0,p1]
+    all_coords = np.zeros((n_features, 2))
+    k=0
+    for valores in zip(*points):
+        all_coords[k:k+1,:] = valores
+        k+=1
 
-    #points = [(1,5,3),(3,4,2),(5,3,2),(9,0,4)]
-    #x_coords, y_coords,z_coords = zip(*points)
-    #A = np.vstack([x_coords, y_coords,np.ones(len(x_coords))]).T
-    #mx,my,c = np.linalg.lstsq(A, z_coords)[0]
+    A = np.vstack((all_coords[:all_coords.shape[0]-1,:],np.ones(2))).T
+
+    k = np.linalg.lstsq(A, all_coords[all_coords.shape[0]-1:all_coords.shape[0],:][0])[0]
+
+    print(k)
 
     # Randomly permute features
     indices = np.arange(n_features)
@@ -105,7 +108,7 @@ def create_dataset(n_samples=10, n_features=3,
 
 
 
-create_dataset(n_samples=10, n_features=5,
+create_dataset(n_samples=10, n_features=3,
                         perc_lin=20, perc_repeated=20, n_groups=2,
                         avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=25,
                         shuffle=True,feat_dist=0)
