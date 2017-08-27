@@ -23,6 +23,12 @@ A=np.vstack((all_coords[:all_coords.shape[0]-1,:],np.ones(2))).T
 
 k=np.linalg.lstsq(A, all_coords[all_coords.shape[0]-1:all_coords.shape[0],:][0])[0]
 
+xy = np.array([[2, 1, 1]])
+
+print(xy.T)
+p2 = np.dot(k,xy.T)
+
+print(p2)
 
 
 ## PLOTTING RESULTS
@@ -35,8 +41,11 @@ ax = fig.add_subplot(111, projection='3d') # <-- 3D
 fig.suptitle("Original and scaled data points with their correspondant K-Means centroids", fontsize=10)
 
 ## Plot the original data points
-ax.plot(p0[0],p1[0],'.', markersize=5,color='r') # <-- 3D
-ax.plot(all_coords[:all_coords.shape[0]-1,:],np.dot(A, np.transpose([k])),'-', markersize=5,color='r') # <-- 3D
+ax.scatter(*all_coords, color='g') # <-- 3D
+ax.scatter(2,1,p2,color='g') # <-- 3D
+#ax.scatter(p1,'.', markersize=5,color='r') # <-- 3D
+#ax.plot(all_coords[:all_coords.shape[0]-1,:],np.dot(A, np.transpose([k])),'-', markersize=5,color='r') # <-- 3D
+ax.plot3D(*all_coords,markersize=5,color='r') # <-- 3D
 
 ## Plot the scaled data points
 #ax.plot(scaleddata[:, 0], scaleddata[:, 1], scaleddata[:, 2],'k.', markersize=2,color='r') # <-- 3D
