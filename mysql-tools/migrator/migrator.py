@@ -64,12 +64,47 @@ def load_slaves():
 
 def migrate_slaves(current_master,candidate_master,slaves_list,hosts_dict):
 
-    def save_slaves_metadata(name,cur_is_slave):
-        sls_out = cur_is_slave.fetchone()
-        slave_relay_masterbinlog[name] = sls_out[9]
+    #def save_slaves_metadata(name):
+
+    def ret_relay_master_binlog():
+        # Retrieve relay master binlog for the candidate master and the slaves
+        for slave in slaves_list+[candidate_master]: 
+            has_slaves = 0
+            is_slave = 0
+            cur_is_slave = dbconar[slave].cursor()
+            cur_is_slave.execute("show slave status")
+            sls_out = cur_is_slave.fetchone()
+            slave_relay_masterbinlog[slave] = sls_out[9]
+
+    def compare_slaves_binlog():
+        idx = 0
+        # Check that all slaves are on the same master binlog
+        for masterbinlog in slave_relay_masterbinlog:
+            if idx == 0:
+               prevbl = slave_relay_masterbinlog[masterbinlog]
+            if prevbl != slave_relay_masterbinlog[masterbinlog]:
+                print("Slaves are not all applying the same master binlog")
+                break
+            else:
+                prevbl = slave_relay_masterbinlog[masterbinlog]
+            idx+=1
+        if idx == slave_relay_masterbinlog.__len__():
+            print("All slaves are at the same binlog")
+            response = prevbl
+        else:
+            response = None
+        return response
+
+    def ret_master_status(server):
+        # Retrieve master's active binlog
+        cursor = dbconar[server].cursor()
+        cursor.execute("show master status")
+        master_cur_coord = cursor.fetchone()
+        master_cur_coord_file = master_cur_coord[0]
+        return master_cur_coord[0],master_cur_coord[1]
+
 
     slave_relay_masterbinlog={}
-    idx = 0
     dbconar={}
     hostlist = [current_master] + [candidate_master] + slaves_list
 
@@ -86,38 +121,17 @@ def migrate_slaves(current_master,candidate_master,slaves_list,hosts_dict):
         else:
             dbconar[server] = MySQLdb.connect(host=hosts_dict[server]['ip'],port=int(hosts_dict[server]['port']),user=dbuser,passwd=dbpass,db="information_schema")
 
-    # Retrieve relay master binlog for the candidate master and the slaves
-    for slave in slaves_list+[candidate_master]: 
-        has_slaves = 0
-        is_slave = 0
-        cur_is_slave = dbconar[slave].cursor()
-        cur_is_slave.execute("show slave status")
-        save_slaves_metadata(hosts_dict[slave]['name'],cur_is_slave)
 
+    ret_relay_master_binlog()
     print(slave_relay_masterbinlog)
-
-    # Retrieve master's active binlog
-    cursor = dbconar[current_master].cursor()
-    cursor.execute("show master status")
-    master_cur_coord = cursor.fetchone()
-    master_cur_coord_file = master_cur_coord[0]
+    slavesbinlog = compare_slaves_binlog()
+    master_cur_coord_file,master_cur_coord_file_pos = ret_master_status(current_master)
     print(master_cur_coord_file)
+    print(master_cur_coord_file_pos)
 
-    # Check that all slaves are on the same master binlog
-    for masterbinlog in slave_relay_masterbinlog:
-        if idx == 0:
-           prevbl = slave_relay_masterbinlog[masterbinlog]
-        if prevbl != slave_relay_masterbinlog[masterbinlog]:
-            print("Slaves are not all applying the same master binlog")
-            break
-        else:
-            prevbl = slave_relay_masterbinlog[masterbinlog]
-        idx+=1
-    if idx == slave_relay_masterbinlog.__len__():
-        print("All slaves are at the same binlog")
 
     # Check that the master's active binlog matches the slave relay binlog
-    if prevbl == master_cur_coord_file:
+    if slavesbinlog == master_cur_coord_file:
         print("The slaves are reading the master active binlog file")
         print("Stopping all slaves sql_thread")
 
@@ -129,7 +143,27 @@ def migrate_slaves(current_master,candidate_master,slaves_list,hosts_dict):
         cur_is_slave = dbconar[slave].cursor()
         cur_is_slave.execute("stop slave sql_thread")
         cur_is_slave.execute("stop slave sql_thread")
+   
+    ret_relay_master_binlog()
+    print(slave_relay_masterbinlog)
+    slavesbinlog = compare_slaves_binlog()
 
+    if slavesbinlog != None:
+        master_cur_coord_file,master_cur_coord_file_pos = ret_master_status(current_master)
+        master_binlog_num = int(master_cur_coord_file.split('.')[1])
+        print(master_binlog_num)
+        target_mas_binlog_num = master_binlog_num + 1
+        target_mas_binlog = 'mysql-bin.'+('0' * (6-len(target_mas_binlog_num.__str__())))+target_mas_binlog_num.__str__()
+        print(target_mas_binlog)
+
+        for slave in slaves_list: 
+            cur_is_slave = dbconar[slave].cursor()
+            cur_is_slave.execute("start slave until '"++"'")
+    else:
+        print("Slaves were not stopped on the same binlog")
+        
+
+    # Close all database connections
     for conn in dbconar:
         dbconar[conn].close()
 
