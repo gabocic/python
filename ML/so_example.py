@@ -32,10 +32,12 @@ uu, dd, vv = np.linalg.svd(data - datamean)
 # I use -7, 7 since the spread of the data is roughly 14
 # and we want it to have mean 0 (like the points we did
 # the svd on). Also, it's a straight line, so we only need 2 points.
-linepts = vv[0] * np.mgrid[-7:7:2j][:, np.newaxis]
+
+print(vv[0])
+linepts = vv[0] * np.mgrid[-7:7:4j][:, np.newaxis]
 
 # shift by the mean to get the line in the right place
-linepts += datamean
+#linepts += datamean
 
 # Verify that everything looks right.
 
@@ -44,5 +46,6 @@ import mpl_toolkits.mplot3d as m3d
 
 ax = m3d.Axes3D(plt.figure())
 #ax.scatter3D(*data.T)
-ax.plot3D(*linepts.T)
+#ax.plot3D(*linepts.T)
+ax.scatter3D(*linepts.T)
 plt.show()
