@@ -3,9 +3,10 @@
 import numpy as np
 from numpy import ones,vstack
 from numpy.linalg import lstsq
+from plot_2d_3d import plot_2d_3d
 
-def create_dataset(n_samples=10, n_features=3,
-                        perc_lin=20, perc_repeated=20, n_groups=2,
+def create_dataset(n_samples=20, n_features=3,
+                        perc_lin=20, perc_repeated=10, n_groups=2,
                         avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=25,
                         shuffle=True,feat_dist=0):
 
@@ -28,14 +29,14 @@ def create_dataset(n_samples=10, n_features=3,
     print("standard features: "+standa_feat.__str__())
 
     # Harcoded value range
-    value_limit = 10000
+    value_limit = 10
 
     # Random numbers generator
     #generator = np.random.RandomState(seed)
     generator = np.random
 
     # Initialize dataset 
-    X = np.zeros((n_samples, n_features))
+    X = np.zeros((usef_samples, n_features))
     Xs = np.zeros((usef_samples, standa_feat))
     Xu = np.zeros((usef_samples, unifor_feat))
 
@@ -69,47 +70,50 @@ def create_dataset(n_samples=10, n_features=3,
 
     # Generate samples with linear relation to a ramdom sample
     ## Choose a ramdom sample
-    sampleidx = (generator.random_integers(low=0, high=usef_samples, size=(1)))[0]
+    sampleidx = (generator.random_integers(low=0, high=usef_samples-1, size=(1)))[0]
     print("Index: "+sampleidx.__str__())
     print("Winning samples:")
     p0 = X[sampleidx]
     print(p0)
-    if X[sampleidx+1][0]:
+
+    ## Choose another point based on p0 
+    if sampleidx+1 <= X.shape[0]-1:
         p1 = X[sampleidx+1]
-    elif X[sampleidx-1][0]:
+    elif sampleidx-1 >= 0:
         p1 = X[sampleidx-1]
     else:
         print("Cannot find another point to generate linear samples")
         raise 
     print(p1)
+
     print("Linear samples: "+lin_samples.__str__())
     #### << PARA COMPUTAR ESTA METRICA: Usar ajuste / regression lineal y medir la distancia promedio entre los valores reales y los de la hiper recta para las mismas coordenadas
     #### << PARA GENERAR LOS VALORES: tomar dos samples y encontrar la recta que pasa por ese punto (ej Po + d->). Luego pasar valores de xo, x1...,xn-1 y calcular xn
+    
+    d0 = np.array(p1 - p0)
+    print(d0)
+    points = np.zeros((lin_samples,n_features))
+    for a in range(0,lin_samples+1):
+        lins = p0+a*d0
+        print(lins)
+        # Add some noise 
+        #lins += np.random.normal(size=lins.shape) * 0.4
+        points[a-1:a,:] = lins
+    #print(points)
 
-    points=[p0,p1]
-    all_coords = np.zeros((n_features, 2))
-    k=0
-    for valores in zip(*points):
-        all_coords[k:k+1,:] = valores
-        k+=1
-
-    A = np.vstack((all_coords[:all_coords.shape[0]-1,:],np.ones(2))).T
-
-    k = np.linalg.lstsq(A, all_coords[all_coords.shape[0]-1:all_coords.shape[0],:][0])[0]
-
-    print(k)
+    Xf = np.vstack((X,points))
 
     # Randomly permute features
     indices = np.arange(n_features)
     generator.shuffle(indices)
     X[:, :] = X[:, indices]
 
-    #print(X)
+    print(X)
 
+    plot_2d_3d(points,p0,p1,X)
 
-
-create_dataset(n_samples=10, n_features=3,
-                        perc_lin=20, perc_repeated=20, n_groups=2,
-                        avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=25,
+create_dataset(n_samples=30, n_features=2,
+                        perc_lin=80, perc_repeated=10, n_groups=2,
+                        avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=10,
                         shuffle=True,feat_dist=0)
 
