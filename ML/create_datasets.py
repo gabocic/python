@@ -3,7 +3,16 @@
 import numpy as np
 from numpy import ones,vstack
 from numpy.linalg import lstsq
+from sklearn import datasets
+
 from plot_2d_3d import plot_2d_3d
+
+class TooFewPoints(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
 
 def create_dataset(n_samples=20, n_features=3,
                         perc_lin=20, perc_repeated=10, n_groups=2,
@@ -16,7 +25,10 @@ def create_dataset(n_samples=20, n_features=3,
     perc_usef_samples = 100 - perc_lin - perc_repeated
     usef_samples = int(0.01 * perc_usef_samples * n_samples)
     lin_samples = int(0.01 * perc_lin * n_samples)
+    rep_samples = int(0.01 * perc_repeated * n_samples)
     print("Useful samples: "+usef_samples.__str__())
+    print("Linear samples: "+lin_samples.__str__())
+    print("Repeated samples: "+rep_samples.__str__())
 
     # feat_dist =  Feature distribution
     ## 0: interleave standard normal and uniform values
@@ -68,7 +80,11 @@ def create_dataset(n_samples=20, n_features=3,
     X[:usef_samples,standa_feat:standa_feat+unifor_feat] = Xu
     print(X)
 
-    # Generate samples with linear relation to a ramdom sample
+    ## Generate samples with linear relation to a ramdom sample
+    #  **********************************************************
+    # Choose two points, generate the parametric equation of the line that passes through those two points, and use the parameter to generate samples
+    # Add some noise to make it more realistic
+
     ## Choose a ramdom sample
     sampleidx = (generator.random_integers(low=0, high=usef_samples-1, size=(1)))[0]
     print("Index: "+sampleidx.__str__())
@@ -83,37 +99,43 @@ def create_dataset(n_samples=20, n_features=3,
         p1 = X[sampleidx-1]
     else:
         print("Cannot find another point to generate linear samples")
-        raise 
+        raise TooFewPoints('Not able to find two points to generate pseudo linear samples')
     print(p1)
 
     print("Linear samples: "+lin_samples.__str__())
     #### << PARA COMPUTAR ESTA METRICA: Usar ajuste / regression lineal y medir la distancia promedio entre los valores reales y los de la hiper recta para las mismas coordenadas
-    #### << PARA GENERAR LOS VALORES: tomar dos samples y encontrar la recta que pasa por ese punto (ej Po + d->). Luego pasar valores de xo, x1...,xn-1 y calcular xn
     
     d0 = np.array(p1 - p0)
-    print(d0)
     points = np.zeros((lin_samples,n_features))
     for a in range(0,lin_samples+1):
         lins = p0+a*d0
-        print(lins)
         # Add some noise 
-        #lins += np.random.normal(size=lins.shape) * 0.4
+        lins += np.random.normal(size=lins.shape) * 0.4
         points[a-1:a,:] = lins
-    #print(points)
 
+    
+    # Plot samples
+    plot_2d_3d(points,p0,p1,X)
+
+
+    # Dummy samples generation
+    repeated = np.zeros((rep_samples,n_features))        
+
+    # Stack useful and linear samples
     Xf = np.vstack((X,points))
+    Xf = np.vstack((Xf,repeated))
 
     # Randomly permute features
     indices = np.arange(n_features)
     generator.shuffle(indices)
     X[:, :] = X[:, indices]
 
-    print(X)
+    # Save to file
+    datasets.dump_svmlight_file(Xf,np.zeros(n_samples),'dataset.svl')
 
-    plot_2d_3d(points,p0,p1,X)
 
-create_dataset(n_samples=30, n_features=2,
-                        perc_lin=80, perc_repeated=10, n_groups=2,
+create_dataset(n_samples=30, n_features=3,
+                        perc_lin=90, perc_repeated=0, n_groups=2,
                         avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=10,
                         shuffle=True,feat_dist=0)
 
