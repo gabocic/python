@@ -113,9 +113,9 @@ def create_dataset(n_samples=20, n_features=3,
         lins += np.random.normal(size=lins.shape) * 0.4
         points[a-1:a,:] = lins
 
-    
-    # Plot samples
-    plot_2d_3d(points,p0,p1,X)
+    if n_features < 4: 
+        # Plot samples
+        plot_2d_3d(points,p0,p1,X)
 
 
     # Dummy samples generation
@@ -135,7 +135,7 @@ def create_dataset(n_samples=20, n_features=3,
 
 
 create_dataset(n_samples=30, n_features=3,
-                        perc_lin=90, perc_repeated=0, n_groups=2,
+                        perc_lin=10, perc_repeated=0, n_groups=2,
                         avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=10,
                         shuffle=True,feat_dist=0)
 

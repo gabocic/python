@@ -1,8 +1,10 @@
 #!/home/gabriel/pythonenvs/v3.5/bin/python
 
+import sys
 import numpy as np
 from numpy.linalg import lstsq
 from sklearn import datasets
+from numpy.linalg import norm
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -22,68 +24,54 @@ def analyze_dataset():
     data = dataspmat.toarray()
 
     print(data)
-    print("")
-    print("")
-    print("")
-    print("")
 
-    A=np.concatenate((data[:,:data.shape[1]-1],np.ones((data.shape[0],1))),axis=1)
-
-    print("MATRIX A")
-    print("**********")
-    print(A)
-    print("")
-    print("")
-    B = data.T
-    
-    print("MATRIX B")
-    print("**********")
-    print(B)
-    print("")
-    print("")
-
-    print("B[B.shape[0]-1:B.shape[0],:]")
-    print("**********")
-    print(B[B.shape[0]-1:B.shape[0],:])
-    print("")
-    print("")
-
-    k=np.linalg.lstsq(A, B[B.shape[0]-1:B.shape[0],:][0])[0]
-
-    print(k)
-
+    # Average for each set of coordinates
     datamean = data.mean(axis=0)
-    uu, dd, vv = np.linalg.svd(data - datamean)
+
+    # Singular Value Descomposition
+    ## Any given matrix can be factorize as the product of three matrixes: A = U E V*
+    ## The matrix V[n_features x n_features] is unitary and its first row is a vector which corresponds to the direction of the line that fit the data points
+    U,E,V = np.linalg.svd(data - datamean)
+
+    ## Parametric line: r-> = ro + kv->
+    # multiplying the direction vector by several different factors to generate points
+    linepts = V[0] * np.mgrid[-50:50:4j][:, np.newaxis]
+    # adding the datamean point to the points generated previously to obtain the line that better fit all points
+    linepts += datamean
+
+    #Calculate the norm of the vector formed by the edges of the "box" containing the data points
+    boxnorm = norm(np.amax(data,axis=0) - np.amin(data,axis=0))
+    print("boxnmorm")
+    print(boxnorm)
+
+## Plotting
+#########################################
 
     n_features = data.shape[1]
     if n_features == 2:
         fig,ax = plt.subplots()
         ax.scatter(*data.T,color='r')
         ax.scatter(*datamean,color='g',s=10)
-        linepts = vv[0] * np.mgrid[-50:50:4j][:, np.newaxis]
-
-        ## r-> = ro + kv->
-        linepts += datamean
         ax.plot(*linepts.T,'-', color='b')
     elif n_features == 3:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d') # <-- 3D
-        ax.scatter3D(data[:,0],data[:,1],data[:,2],color='r')
-        ax.scatter3D(*datamean,color='g',s=10)
-        #ax.scatter3D(0,0,0,color='b')
-        #linep = k.T * np.mgrid[-7:7:4j][:, np.newaxis]
-        #Zz = A * k 
-        #linep = np.concatenate((data[:,:data.shape[1]-1],Zz),axis=1)
-        #ax.plot3D(*linep.T,'-', color='g')
-        #ax.plot3D(k[0],k[1],k[2],'-', color='g')
-        #l = np.zeros((1,3))
-        #r = np.array(vv[0])
-        #p = np.vstack((r,l))
-        linepts = vv[0] * np.mgrid[-50:50:4j][:, np.newaxis]
+        # For each point, find the distance to the line 
+        for row in data:
+            d = norm(np.cross(row-datamean, V[0]))/norm(V[0])
+            print(d)
 
-        ## r-> = ro + kv->
-        linepts += datamean
+            if d < 0.025*boxnorm:
+                ax.scatter(*row,color='y')
+            else:
+                ax.scatter(*row,color='r')
+
+        #ax.scatter3D(data[:,0],data[:,1],data[:,2],color='r')
+        ax.scatter3D(*datamean,color='g',s=10)
         ax.plot3D(*linepts.T,'-', color='b')
+    else:
+        sys.exit()
+
 
     # SubTitle
     fig.suptitle("Dataset linear points", fontsize=10)
