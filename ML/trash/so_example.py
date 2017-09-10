@@ -35,6 +35,7 @@ uu, dd, vv = np.linalg.svd(data - datamean)
 
 print(vv[0])
 linepts = vv[0] * np.mgrid[-7:7:4j][:, np.newaxis]
+print(linepts)
 
 # shift by the mean to get the line in the right place
 #linepts += datamean
@@ -47,5 +48,5 @@ import mpl_toolkits.mplot3d as m3d
 ax = m3d.Axes3D(plt.figure())
 #ax.scatter3D(*data.T)
 #ax.plot3D(*linepts.T)
-ax.scatter3D(*linepts.T)
+ax.plot3D(*linepts.T)
 plt.show()

@@ -21,27 +21,69 @@ def analyze_dataset():
     ## Converting from SciPy Sparse matrix to numpy ndarray
     data = dataspmat.toarray()
 
+    print(data)
+    print("")
+    print("")
+    print("")
+    print("")
 
     A=np.concatenate((data[:,:data.shape[1]-1],np.ones((data.shape[0],1))),axis=1)
+
+    print("MATRIX A")
+    print("**********")
     print(A)
+    print("")
+    print("")
     B = data.T
+    
+    print("MATRIX B")
+    print("**********")
     print(B)
+    print("")
+    print("")
+
+    print("B[B.shape[0]-1:B.shape[0],:]")
+    print("**********")
     print(B[B.shape[0]-1:B.shape[0],:])
+    print("")
+    print("")
 
     k=np.linalg.lstsq(A, B[B.shape[0]-1:B.shape[0],:][0])[0]
 
     print(k)
 
-    n_features = 3
+    datamean = data.mean(axis=0)
+    uu, dd, vv = np.linalg.svd(data - datamean)
+
+    n_features = data.shape[1]
     if n_features == 2:
         fig,ax = plt.subplots()
-        ax.scatter(points[:,0],points[:,1],color='b')
-        ax.scatter(rpoints[:,0],rpoints[:,1],color='r')
+        ax.scatter(*data.T,color='r')
+        ax.scatter(*datamean,color='g',s=10)
+        linepts = vv[0] * np.mgrid[-50:50:4j][:, np.newaxis]
+
+        ## r-> = ro + kv->
+        linepts += datamean
+        ax.plot(*linepts.T,'-', color='b')
     elif n_features == 3:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d') # <-- 3D
-        ax.scatter(data[:,0],data[:,1],data[:,2],color='r')
-        ax.plot(B[:B.shape[0]-1,:],np.dot(A, np.transpose([k])),'-', markersize=5,color='g')
+        ax.scatter3D(data[:,0],data[:,1],data[:,2],color='r')
+        ax.scatter3D(*datamean,color='g',s=10)
+        #ax.scatter3D(0,0,0,color='b')
+        #linep = k.T * np.mgrid[-7:7:4j][:, np.newaxis]
+        #Zz = A * k 
+        #linep = np.concatenate((data[:,:data.shape[1]-1],Zz),axis=1)
+        #ax.plot3D(*linep.T,'-', color='g')
+        #ax.plot3D(k[0],k[1],k[2],'-', color='g')
+        #l = np.zeros((1,3))
+        #r = np.array(vv[0])
+        #p = np.vstack((r,l))
+        linepts = vv[0] * np.mgrid[-50:50:4j][:, np.newaxis]
+
+        ## r-> = ro + kv->
+        linepts += datamean
+        ax.plot3D(*linepts.T,'-', color='b')
 
     # SubTitle
     fig.suptitle("Dataset linear points", fontsize=10)
