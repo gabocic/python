@@ -5,12 +5,13 @@ import csv
 import sys
 import time
 import os
+import subprocess
 
 hostlist='hostlist.csv'
 dbuser = "percona"
 dbpass = "percona"
-repluser="msandbox"
-replpass="msandbox"
+repluser="rsandbox"
+replpass="rsandbox"
 
 # Main definition - constants
 menu_actions  = {}
@@ -18,7 +19,8 @@ menu_actions  = {}
 ## <<< Flush binlog at the master at the beginning to have 1Gb of time to perform the changes
 
 def load_slaves():
-
+    
+    print("Registering slaves in "+hostlist+"..")
     hosts_dict={}
     dbconar = {}
     try:
@@ -74,18 +76,30 @@ def ret_relay_master_binlog(slaves_list,dbconar):
     if len(slaves_list) == 0:
         slaves = raw_input(">> slave list: ")
         slaves_list = []
-        for slave in slaves.split(','):
-            slaves_list.append(slave)
+        if slaves == '':
+            slaves_list = dbconar.keys()
+        else:
+            for slave in slaves.split(','):
+                if slave in dbconar.keys():
+                    slaves_list.append(slave)
+                else:
+                    print(slave+" is not a registered server")
         
     # Retrieve relay master binlog for the candidate master and the slaves
     slave_relay_masterbinlog = {}
+    print("")
     for slave in slaves_list: 
         cur_is_slave = dbconar[slave].cursor()
         cur_is_slave.execute("show slave status")
         if cur_is_slave.rowcount > 0:
             sls_out = cur_is_slave.fetchone()
             slave_relay_masterbinlog[slave] = {"relay_master_log_file":sls_out[9],"slave_io_running":sls_out[10],"slave_sql_running":sls_out[11],"exec_master_log_pos":sls_out[21],"master_host":sls_out[1],"master_port":sls_out[3]}
-            print("Server "+slave+"-> master_host: "+slave_relay_masterbinlog[slave]['master_host']+":"+slave_relay_masterbinlog[slave]['master_port'].__str__()+" - relay_master_log_file: "+slave_relay_masterbinlog[slave]['relay_master_log_file']+" - exec_master_log_pos: "+slave_relay_masterbinlog[slave]['exec_master_log_pos'].__str__())
+            print("* Server "+slave+"-> master_host: "+slave_relay_masterbinlog[slave]['master_host']+":"+slave_relay_masterbinlog[slave]['master_port'].__str__())
+            print("     -relay_master_log_file: "+slave_relay_masterbinlog[slave]['relay_master_log_file'])
+            print("     -exec_master_log_pos: "+slave_relay_masterbinlog[slave]['exec_master_log_pos'].__str__())
+            print("     -slave_io_running: "+slave_relay_masterbinlog[slave]['slave_io_running']+" - slave_sql_running: "+slave_relay_masterbinlog[slave]['slave_sql_running'].__str__())
+            print("")
+
         else:
             print("Server "+slave+" is not a slave")
             
@@ -240,31 +254,32 @@ def migrate_slaves(hosts_dict,dbconar):
                     print("Slaves repoint failed - SQL threads for all servers will remain stopped!")
                     error = 1
             if error == 0:
-                print("Starting slaves")
-                for slave in slaves_list+[candidate_master]:
-                    cur_start_slave = dbconar[slave].cursor()
-                    cur_start_slave.execute("start slave")
-                
-
-
-
-
+                confirm_start = raw_input(">> Start migrated slaves?:")
+                if confirm_start.lower() == 'y':
+                    print("Starting slaves")
+                    for slave in slaves_list+[candidate_master]:
+                        cur_start_slave = dbconar[slave].cursor()
+                        cur_start_slave.execute("start slave")
+                else:
+                    print("Slaves will NOT be started")
+                exitcode=0
         else:
             print("Slaves were not stopped on the same binlog")
+            exicode=1
 
     else:
         print("Slaves are not all reading the master active binlog file OR The slaves are NOT reading the master active binlog file")
-    # Close all database connections
-        return 1
+        exicode=1
+    ptslavefind()
+    return exitcode
 
 # Main menu
 def main_menu(hosts_dict,dbconar):
-    
-    print "Migrator"
-    print "************\n"
+    print("")    
+    print("")    
     print "1. Show slave status"
     print "2. Migrate slaves to intermediary"
-    print "3. Migrate slaves back to main master"
+    print "3. Run pt-slave-find"
     print "0. Quit"
     choice = raw_input(" >>  ")
     if choice == "1":
@@ -272,9 +287,10 @@ def main_menu(hosts_dict,dbconar):
     elif choice == "2":
         migrate_slaves(hosts_dict,dbconar)
     elif choice == "3":
-        migrate_back(hosts_dict,dbconar)
+        ptslavefind()
+        #migrate_back(hosts_dict,dbconar)
     elif choice == "0":
-        exit
+        return -1
     else:
         print("Invalid option")
     return
@@ -282,13 +298,25 @@ def main_menu(hosts_dict,dbconar):
 def close_conns(dbconar):
     for conn in dbconar:
         dbconar[conn].close()
+
+
+def ptslavefind():
+    print("")
+    print("")
+    print("pt-slave-find check")
+    print("****************************")
+    print("")
+    p = subprocess.Popen(["/usr/bin/pt-slave-find","u="+dbuser+",p="+dbpass+",h=10.177.129.226,P=27208","--report-format=hostname"])
+    p.communicate()
         
 def main():
+    print "Migrator"
+    print "************\n"
     hosts_dict,dbconar = load_slaves()
-    print("")
-    print("")
     #migrate_slaves('master','slave3',['slave1','slave2'],hosts_dict)
-    main_menu(hosts_dict,dbconar)
+    ret = 0
+    while ret != -1:
+        ret = main_menu(hosts_dict,dbconar)
     print("Closing database connections...")
     close_conns(dbconar)
 
