@@ -138,7 +138,7 @@ def create_dataset(n_samples=20, n_features=3,
     datasets.dump_svmlight_file(Xf,np.zeros(n_samples),'dataset.svl')
 
 
-create_dataset(n_samples=100, n_features=6,
+create_dataset(n_samples=100, n_features=3,
                         perc_lin=10, perc_repeated=0, n_groups=2,
                         avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=10,
                         shuffle=True,feat_dist=0)
