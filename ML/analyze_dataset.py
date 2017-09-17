@@ -34,8 +34,8 @@ def analyze_dataset():
     U,E,V = np.linalg.svd(data - datamean)
 
     ## Parametric line: r-> = ro + kv->
-    # multiplying the direction vector by several different factors to generate points
-    linepts = V[0] * np.mgrid[-50:50:4j][:, np.newaxis]
+    # multiplying the direction vector by several different constants to generate points
+    linepts = V[0] * np.mgrid[-10000:10000:4j][:, np.newaxis]
     # adding the datamean point to the points generated previously to obtain the line that better fit all points
     linepts += datamean
 
@@ -43,6 +43,27 @@ def analyze_dataset():
     boxnorm = norm(np.amax(data,axis=0) - np.amin(data,axis=0))
     print("boxnmorm")
     print(boxnorm)
+    print("distance_threshold")
+    dthres = boxnorm * 0.025
+    print(dthres)
+
+    #Calculate the distance of each point to the line
+    pdist=[]
+    for row in data:
+        A = datamean
+        B = datamean + V[0]
+        P = row
+        pa = P - A
+        ba = B - A
+        t = np.dot(pa,ba)/np.dot(ba,ba)
+        d = norm(pa - t*ba)
+        #d = row-datamean, V[0]))/norm(V[0])
+        #d = norm(np.cross(row-datamean, V[0]))/norm(V[0])
+        #d = abs(np.dot(V[0].T,row))/norm(V[0].T)
+        pdist.append(d)
+    pdist = np.asarray(pdist)
+    print(pdist)
+
 
 ## Plotting
 #########################################
@@ -50,28 +71,30 @@ def analyze_dataset():
     n_features = data.shape[1]
     if n_features == 2:
         fig,ax = plt.subplots()
-        ax.scatter(*data.T,color='r')
-        ax.scatter(*datamean,color='g',s=10)
-        ax.plot(*linepts.T,'-', color='b')
     elif n_features == 3:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d') # <-- 3D
-        # For each point, find the distance to the line 
-        for row in data:
-            d = norm(np.cross(row-datamean, V[0]))/norm(V[0])
-            print(d)
-
-            if d < 0.025*boxnorm:
-                ax.scatter(*row,color='y')
-            else:
-                ax.scatter(*row,color='r')
-
-        #ax.scatter3D(data[:,0],data[:,1],data[:,2],color='r')
-        ax.scatter3D(*datamean,color='g',s=10)
-        ax.plot3D(*linepts.T,'-', color='b')
     else:
         sys.exit()
+    
+    # Plot each point using a different color if distance from the line is within the threshold
+    linp=0
+    nlinp=0
+    u = 0
+    for d in pdist:
+        if d < dthres:
+            ax.scatter(*data[u,:],color='y')
+            linp += 1
+        else:
+            ax.scatter(*data[u,:],color='r')
+            nlinp += 1
+        u+=1
 
+    print("Percentage of linear points:",100*(linp/(linp+nlinp)))
+    print("Percentage of Non linear points:",100*(nlinp/(linp+nlinp)))
+
+    ax.scatter(*datamean,color='g',s=10)
+    ax.plot(*linepts.T,'-', color='b')
 
     # SubTitle
     fig.suptitle("Dataset linear points", fontsize=10)

@@ -4,6 +4,7 @@ import numpy as np
 from numpy import ones,vstack
 from numpy.linalg import lstsq
 from sklearn import datasets
+from numpy.linalg import norm
 
 from plot_2d_3d import plot_2d_3d
 
@@ -41,7 +42,7 @@ def create_dataset(n_samples=20, n_features=3,
     print("standard features: "+standa_feat.__str__())
 
     # Harcoded value range
-    value_limit = 10
+    value_limit = 10000
 
     # Random numbers generator
     #generator = np.random.RandomState(seed)
@@ -103,15 +104,18 @@ def create_dataset(n_samples=20, n_features=3,
     print(p1)
 
     print("Linear samples: "+lin_samples.__str__())
-    #### << PARA COMPUTAR ESTA METRICA: Usar ajuste / regression lineal y medir la distancia promedio entre los valores reales y los de la hiper recta para las mismas coordenadas
-    
+   
+
     d0 = np.array(p1 - p0)
     points = np.zeros((lin_samples,n_features))
     for a in range(0,lin_samples+1):
-        lins = p0+a*d0
-        # Add some noise 
-        lins += np.random.normal(size=lins.shape) * 0.4
+        # Making constants smaller to prevent too many outliers
+        lins = p0+a*(0.1)*d0
         points[a-1:a,:] = lins
+
+    # Add some noise 
+    boxnorm = norm(np.amax(points,axis=0) - np.amin(points,axis=0))
+    points += np.random.normal(size=points.shape) * boxnorm * 0.01
 
     if n_features < 4: 
         # Plot samples
@@ -134,7 +138,7 @@ def create_dataset(n_samples=20, n_features=3,
     datasets.dump_svmlight_file(Xf,np.zeros(n_samples),'dataset.svl')
 
 
-create_dataset(n_samples=30, n_features=3,
+create_dataset(n_samples=100, n_features=6,
                         perc_lin=10, perc_repeated=0, n_groups=2,
                         avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=10,
                         shuffle=True,feat_dist=0)
