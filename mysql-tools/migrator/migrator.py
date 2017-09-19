@@ -131,22 +131,25 @@ def migrate_back(hosts_dict,dbconar):
     # Validate that there are no inconsistencies in the list and roles of then servers provided
     if current_master == candidate_master or current_master in slaves_list or candidate_master in slaves_list:
         print("Current master and candidate master cannot be the same. Also none of the masters could be in the slave list")
+        return None
 
 
     # Connect to the intermediary server and stop the sql_thread
+    print("Stopping intermediary server sql_thread..")
     cur_cmaster = dbconar[current_master].cursor()
     cur_cmaster.execute("stop slave sql_thread")
 
-    # Wait for "show slave status to report the slave is stopped"
+    # Wait for "show slave status" to report the slave is stopped"
+    print("Waiting for sql_thread of Intermediary to stop..")
     sss = ret_relay_master_binlog([current_master],dbconar)
     slave_sql_running = sss[current_master]['slave_sql_running']
     while slave_sql_running != 'No':
-        print("Waiting for sql_thread of Intermediary to stop..")
         time.sleep(3)
         sss = ret_relay_master_binlog([current_master],dbconar)
         slave_sql_running = sss[current_master]['slave_sql_running']
 
-    # Retrieve the candidate master relay coordinates
+    # Retrieve the candidate master coordinates
+    print("Retrieving the candidate master coordinates")
     sss = ret_relay_master_binlog([current_master],dbconar)
     binlog_file=sss[current_master]['relay_master_log_file']
     binlog_pos=sss[current_master]['exec_master_log_pos']
@@ -156,12 +159,15 @@ def migrate_back(hosts_dict,dbconar):
     master_cur_coord = cur_cmaster.fetchone()
     master_cur_coord_file = master_cur_coord[0]
     master_cur_coord_pos = master_cur_coord[1]
+    print("Retrieve the current master binlog position to verify that the slaves have applied all events")
+    print(master_cur_coord_file,master_cur_coord_pos)
 
     error=0
     for slave in slaves_list:
         change_master_stmt = "change master to master_host='"+hosts_dict[candidate_master]['ip']+"',master_port="+hosts_dict[candidate_master]['port']+",master_log_file='"+binlog_file+"',master_log_pos="+binlog_pos.__str__()
         print(change_master_stmt)
         sss = ret_relay_master_binlog([slave],dbconar)
+        print("Checking if the intermediary master status matches the relay coordinate on the slaves")
         while sss[slave]['relay_master_log_file'] != master_cur_coord_file or sss[slave]['exec_master_log_pos'] != master_cur_coord_pos:
             print("Waiting for the slave to catch up..")
             time.sleep(3)
@@ -330,8 +336,8 @@ def migrate_slaves(hosts_dict,dbconar):
             exicode=1
 
     else:
-        print("Slaves are not all reading the master active binlog file OR The slaves are NOT reading the master active binlog file")
-        exicode=1
+        print("Slaves are NOT all reading the master active binlog file OR they are NOT all reading the same master binlog file")
+        exitcode=1
     #ptslavefind()
     return exitcode
 
@@ -367,6 +373,10 @@ def binlograte(hosts_dict,dbconar):
         bytesleft = int(max_binlog_size) - master_cur_coord_pos_2
         timenls = bytesleft/rate
         print(" * Time to next log switch: "+(timenls/60).__str__()+" min")
+        
+def print_reg_servers(hosts_dict):
+    for name in hosts_dict:
+        print(hosts_dict[name]['name'])
 
 
 # Main menu
@@ -378,6 +388,7 @@ def main_menu(hosts_dict,dbconar):
     print "3. Run pt-slave-find"
     print "4. Calculate binlog generation rate"
     print "5. Migrate slave back"
+    print "6. Print registered servers"
     print "0. Quit"
     choice = raw_input(" >>  ")
     if choice == "1":
@@ -390,6 +401,8 @@ def main_menu(hosts_dict,dbconar):
         binlograte(hosts_dict,dbconar)
     elif choice == "5":
         migrate_back(hosts_dict,dbconar)
+    elif choice == "6":
+        print_reg_servers(hosts_dict)
     elif choice == "0":
         return -1
     else:
