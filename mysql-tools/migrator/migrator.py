@@ -10,8 +10,8 @@ import subprocess
 hostlist='hostlist.csv'
 dbuser = "percona"
 dbpass = "percona"
-repluser="rsandbox"
-replpass="rsandbox"
+#repluser="rsandbox"
+#replpass="rsandbox"
 
 # Main definition - constants
 menu_actions  = {}
@@ -98,10 +98,10 @@ def ret_relay_master_binlog(slaves_list,dbconar):
             print("     -relay_master_log_file: "+slave_relay_masterbinlog[slave]['relay_master_log_file'])
             print("     -exec_master_log_pos: "+slave_relay_masterbinlog[slave]['exec_master_log_pos'].__str__())
             print("     -slave_io_running: "+slave_relay_masterbinlog[slave]['slave_io_running']+" - slave_sql_running: "+slave_relay_masterbinlog[slave]['slave_sql_running'].__str__())
-            print("")
-
         else:
-            print("Server "+slave+" is not a slave")
+            print("* Server "+slave+" is not a slave")
+        print("")
+
             
             
 
@@ -110,27 +110,82 @@ def ret_relay_master_binlog(slaves_list,dbconar):
 
 def migrate_back(hosts_dict,dbconar):
     
-    current_master = raw_input(">> current master: ")
+    current_master = raw_input(">> current master(intermediary): ")
     candidate_master = raw_input(">> candidate master: ")
     slaves = raw_input(">> slave list: ")
 
+    # Parse the slave list provided
     slaves_list = []
     for slave in slaves.split(','):
         slaves_list.append(slave)
+    
+    # Concatenate all servers involved into a single list
+    hostlist = [current_master] + [candidate_master] + slaves_list
 
+    # Check that each of the hosts specified is already registered
+    for server in hostlist:
+        if server not in hosts_dict.keys():
+            print(server+" is not a registered server")
+            return None
+
+    # Validate that there are no inconsistencies in the list and roles of then servers provided
+    if current_master == candidate_master or current_master in slaves_list or candidate_master in slaves_list:
+        print("Current master and candidate master cannot be the same. Also none of the masters could be in the slave list")
+
+
+    # Connect to the intermediary server and stop the sql_thread
+    cur_cmaster = dbconar[current_master].cursor()
+    cur_cmaster.execute("stop slave sql_thread")
+
+    # Wait for "show slave status to report the slave is stopped"
+    sss = ret_relay_master_binlog([current_master],dbconar)
+    slave_sql_running = sss[current_master]['slave_sql_running']
+    while slave_sql_running != 'No':
+        print("Waiting for sql_thread of Intermediary to stop..")
+        time.sleep(3)
+        sss = ret_relay_master_binlog([current_master],dbconar)
+        slave_sql_running = sss[current_master]['slave_sql_running']
+
+    # Retrieve the candidate master relay coordinates
+    sss = ret_relay_master_binlog([current_master],dbconar)
+    binlog_file=sss[current_master]['relay_master_log_file']
+    binlog_pos=sss[current_master]['exec_master_log_pos']
+
+    # Retrieve the current master binlog position to verify that the slaves have applied all events
+    cur_cmaster.execute("show master status")
+    master_cur_coord = cur_cmaster.fetchone()
+    master_cur_coord_file = master_cur_coord[0]
+    master_cur_coord_pos = master_cur_coord[1]
+
+    error=0
     for slave in slaves_list:
-        pass ## << ToDo
+        change_master_stmt = "change master to master_host='"+hosts_dict[candidate_master]['ip']+"',master_port="+hosts_dict[candidate_master]['port']+",master_log_file='"+binlog_file+"',master_log_pos="+binlog_pos.__str__()
+        print(change_master_stmt)
+        sss = ret_relay_master_binlog([slave],dbconar)
+        while sss[slave]['relay_master_log_file'] != master_cur_coord_file or sss[slave]['exec_master_log_pos'] != master_cur_coord_pos:
+            print("Waiting for the slave to catch up..")
+            time.sleep(3)
+            sss = ret_relay_master_binlog([slave],dbconar)
+        try:
+            cur_change_master = dbconar[slave].cursor()
+            cur_change_master.execute("stop slave")
+            cur_change_master.execute(change_master_stmt)
+        except:
+            print("Slaves repoint failed - SQL threads for all servers will remain stopped!")
+            error = 1
+    if error == 0:
+        confirm_start = raw_input(">> Start migrated slaves?:")
+        if confirm_start.lower() == 'y':
+            print("Starting slaves")
+            for slave in slaves_list+[current_master]:
+                cur_start_slave = dbconar[slave].cursor()
+                cur_start_slave.execute("start slave")
+        else:
+            print("Slaves will NOT be started")
+        exitcode=0
 
 def migrate_slaves(hosts_dict,dbconar):
     
-    current_master = raw_input(">> current master: ")
-    candidate_master = raw_input(">> candidate master: ")
-    slaves = raw_input(">> slave list: ")
-
-    slaves_list = []
-    for slave in slaves.split(','):
-        slaves_list.append(slave)
-
     def compare_slaves_binlog():
         idx = 0
         # Check that all slaves are on the same master binlog
@@ -159,35 +214,44 @@ def migrate_slaves(hosts_dict,dbconar):
         return master_cur_coord[0],master_cur_coord[1]
 
 
-    ## Maint
-    hostlist = [current_master] + [candidate_master] + slaves_list
+    ## Main
 
-    # Validate that there are no inconsistencies in the list and roles of then servers provided
-    if current_master == candidate_master or current_master in slaves_list or candidate_master in slaves_list:
-        print("Current master and candidate master cannot be the same. Also none of the masters could be in the slave list")
-        return None
+    current_master = raw_input(">> current master: ")
+    candidate_master = raw_input(">> candidate master: ")
+    slaves = raw_input(">> slave list: ")
+
+    # Parse the slave list provided
+    slaves_list = []
+    for slave in slaves.split(','):
+        slaves_list.append(slave)
+    
+    # Concatenate all servers involved into a single list
+    hostlist = [current_master] + [candidate_master] + slaves_list
 
     # Check that each of the hosts specified is already registered
     for server in hostlist:
         if server not in hosts_dict.keys():
             print(server+" is not a registered server")
             return None
-    #    else:
-            #dbconar[server] = MySQLdb.connect(host=hosts_dict[server]['ip'],port=int(hosts_dict[server]['port']),user=dbuser,passwd=dbpass,db="information_schema")
+
+    # Validate that there are no inconsistencies in the list and roles of then servers provided
+    if current_master == candidate_master or current_master in slaves_list or candidate_master in slaves_list:
+        print("Current master and candidate master cannot be the same. Also none of the masters could be in the slave list")
+        return None
 
     # Get slaves relay binlog
     slave_relay_masterbinlog = ret_relay_master_binlog(slaves_list+[candidate_master],dbconar)
+    
     # Validate if all slaves are applying the same binlog
     slavesbinlog = compare_slaves_binlog()
     if slavesbinlog == None:
         return 1
     print("")
+
     # Get master binlog coordinates
     master_cur_coord_file,master_cur_coord_file_pos = ret_master_status(current_master)
     print("Server "+current_master+"-> Current binlog: "+master_cur_coord_file+" - binlog position: "+master_cur_coord_file_pos.__str__())
     print("")
-    #print(master_cur_coord_file)
-    #print(master_cur_coord_file_pos)
 
 
     # Check that the master's active binlog matches the slave relay binlog
@@ -208,11 +272,9 @@ def migrate_slaves(hosts_dict,dbconar):
 
         # if they are all at the same master binlog, stop the slave io thread
         if slavesbinlog != None:
-            # Retrieve master current binlog
-            master_cur_coord_file,master_cur_coord_file_pos = ret_master_status(current_master)
 
             # Extract binlog number portion
-            master_binlog_num = int(master_cur_coord_file.split('.')[1])
+            master_binlog_num = int(slavesbinlog.split('.')[1])
             #print(master_binlog_num)
             target_mas_binlog_num = master_binlog_num + 1
             # Prepend binlog prefix
@@ -244,7 +306,7 @@ def migrate_slaves(hosts_dict,dbconar):
             error=0
             binlog_file,binlog_pos = ret_master_status(candidate_master)
             for slave in slaves_list:
-                change_master_stmt = "change master to master_host='"+hosts_dict[candidate_master]['ip']+"',master_port="+hosts_dict[candidate_master]['port']+",master_log_file='"+binlog_file+"',master_log_pos="+binlog_pos.__str__()+",master_user='"+repluser+"',master_password='"+replpass+"'"
+                change_master_stmt = "change master to master_host='"+hosts_dict[candidate_master]['ip']+"',master_port="+hosts_dict[candidate_master]['port']+",master_log_file='"+binlog_file+"',master_log_pos="+binlog_pos.__str__()
                 print(change_master_stmt)
                 try:
                     cur_change_master = dbconar[slave].cursor()
@@ -270,8 +332,42 @@ def migrate_slaves(hosts_dict,dbconar):
     else:
         print("Slaves are not all reading the master active binlog file OR The slaves are NOT reading the master active binlog file")
         exicode=1
-    ptslavefind()
+    #ptslavefind()
     return exitcode
+
+def binlograte(hosts_dict,dbconar):
+    server = raw_input(">> server: ")
+    if server not in dbconar.keys():
+        print(server+" is not a registered server")
+        return None
+    else:
+        cursor = dbconar[server].cursor()
+        cursor.execute("show global variables like 'max_binlog_size'")
+        max_binlog_size = cursor.fetchone()[1]
+        #print(max_binlog_size)
+        
+        cursor.execute("show master status")
+        master_cur_coord = cursor.fetchone()
+        master_cur_coord_pos_1 = master_cur_coord[1]
+        #print(master_cur_coord_pos_1)
+        
+        print("Calculating binlog bytes written in 10 secs..")
+        print("")
+        time.sleep(10)
+        
+        cursor.execute("show master status")
+        master_cur_coord = cursor.fetchone()
+        master_cur_coord_pos_2 = master_cur_coord[1]
+        #print(master_cur_coord_pos_2)
+        rate = (master_cur_coord_pos_2 - master_cur_coord_pos_1)/10
+        print(" * Binlog generation rate: "+rate.__str__()+" bytes/sec")
+        timeperlog = int(max_binlog_size)/rate
+        print(" * Time per logfile: "+(timeperlog/60).__str__()+" min")
+
+        bytesleft = int(max_binlog_size) - master_cur_coord_pos_2
+        timenls = bytesleft/rate
+        print(" * Time to next log switch: "+(timenls/60).__str__()+" min")
+
 
 # Main menu
 def main_menu(hosts_dict,dbconar):
@@ -280,6 +376,8 @@ def main_menu(hosts_dict,dbconar):
     print "1. Show slave status"
     print "2. Migrate slaves to intermediary"
     print "3. Run pt-slave-find"
+    print "4. Calculate binlog generation rate"
+    print "5. Migrate slave back"
     print "0. Quit"
     choice = raw_input(" >>  ")
     if choice == "1":
@@ -288,7 +386,10 @@ def main_menu(hosts_dict,dbconar):
         migrate_slaves(hosts_dict,dbconar)
     elif choice == "3":
         ptslavefind()
-        #migrate_back(hosts_dict,dbconar)
+    elif choice == "4":
+        binlograte(hosts_dict,dbconar)
+    elif choice == "5":
+        migrate_back(hosts_dict,dbconar)
     elif choice == "0":
         return -1
     else:
