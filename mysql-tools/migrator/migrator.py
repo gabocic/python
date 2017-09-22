@@ -12,6 +12,8 @@ dbuser = "percona"
 dbpass = "percona"
 #repluser="rsandbox"
 #replpass="rsandbox"
+f_curr_master=""
+f_cand_master=""
 
 # Main definition - constants
 menu_actions  = {}
@@ -221,9 +223,19 @@ def migrate_slaves(hosts_dict,dbconar):
 
 
     ## Main
+    
+    if len(f_curr_master) == 0:
+        current_master = raw_input(">> current master: ")
+    else:
+        print("[WARNING] Using "+f_curr_master+" as current master")
+        current_master = f_curr_master
+    
+    if len(f_cand_master) == 0:
+        candidate_master = raw_input(">> candidate master: ")
+    else:
+        print("[WARNING] Using "+f_cand_master+" as candidate master")
+        candidate_master = f_cand_master
 
-    current_master = raw_input(">> current master: ")
-    candidate_master = raw_input(">> candidate master: ")
     slaves = raw_input(">> slave list: ")
 
     # Parse the slave list provided
@@ -420,7 +432,7 @@ def ptslavefind():
     print("pt-slave-find check")
     print("****************************")
     print("")
-    p = subprocess.Popen(["/usr/bin/pt-slave-find","u="+dbuser+",p="+dbpass+",h=10.177.129.226,P=27208","--report-format=hostname"])
+    p = subprocess.Popen(["/usr/bin/pt-slave-find","u="+dbuser+",p="+dbpass+",h=10.177.129.226,P=23499","--report-format=hostname"])
     p.communicate()
         
 def main():
