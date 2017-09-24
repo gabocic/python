@@ -5,6 +5,8 @@ import numpy as np
 from numpy.linalg import lstsq
 from sklearn import datasets
 from numpy.linalg import norm
+from sympy.solvers import solve
+from sympy import Symbol
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -41,37 +43,73 @@ def analyze_dataset():
    
     #### Begin - Incomplete #####
 
-    # Determining which V components are negative
-    negcomps=[]
-    s=0
-    for comp in V[0]:
-        if comp < 0:
-            negcomps.append(s)
-        s+=1
-
     maxcords=np.amax(data,axis=0)
-    print("maxcords: ",maxcords)
+    #print("maxcords: ",maxcords)
     mincords=np.amin(data,axis=0)
-    print("mincords: ",mincords)
-    print("V[0]: ",V[0])
-  
+    #print("mincords: ",mincords)
+    #print("V[0]: ",V[0])
+
     # High point
     # Calculating parameters as MaxCor_x / V_x,  MaxCor_y / V_y, etc
-    maxpararr=maxcords/V[0]
-    print("maxpararr: ",maxpararr)
-    h_par=np.amin(maxpararr)
-    print("h_par: ",h_par)
+    
+    # For every V and maxcords components
+    higherthan=[]
+    lowerthan=[]
+    for idx in range(0,len(maxcords)):
+        print("maxcords["+idx.__str__()+"]: "+maxcords[idx].__str__())
+        print("V[0]["+idx.__str__()+"]: "+V[0][idx].__str__())
+        if V[0][idx] >= 0 and maxcords[idx] >= 0:
+            lowerthan.append(maxcords[idx]/V[0][idx])
+        if V[0][idx] >= 0 and maxcords[idx] < 0:
+            lowerthan.append(maxcords[idx]/V[0][idx])
+        if V[0][idx] < 0 and maxcords[idx] >= 0:
+            higherthan.append(maxcords[idx]/V[0][idx])
+        if V[0][idx] < 0 and maxcords[idx] < 0:
+            higherthan.append(maxcords[idx]/V[0][idx])
 
-    # If V has negative components, then it should be the "greatest" of those components, not the "smallest"
-    if len(negcomps) > 0:
+    if len(lowerthan) > 0 and len(higherthan) > 0:
+        h_par=min(lowerthan)
+        if h_par < max(higherthan):
+            print("High point - Impossible parameter")
+            sys.exit()
+    elif len(lowerthan) > 0:
+        h_par=min(lowerthan)
+    elif len(higherthan) > 0:
+        h_par=max(higherthan)
+    print("Min lowerthan:",min(lowerthan))
+    print("Max higherthan:",max(higherthan))
+    print("h_par: ",h_par)
 
 
     # Low point
     # Calculating parameters as MaxCor_x / V_x,  MaxCor_y / V_y, etc
-    minpararr=mincords/V[0]
-    print("minpararr: ",minpararr)
-    l_par=np.amax(minpararr)
-    print("l_par",l_par)
+
+    higherthan=[]
+    lowerthan=[]
+    for idx in range(0,len(maxcords)):
+        print("mincords["+idx.__str__()+"]: "+mincords[idx].__str__())
+        print("V[0]["+idx.__str__()+"]: "+V[0][idx].__str__())
+        if V[0][idx] >= 0 and mincords[idx] >= 0:
+            higherthan.append(mincords[idx]/V[0][idx])
+        if V[0][idx] >= 0 and mincords[idx] < 0:
+            higherthan.append(mincords[idx]/V[0][idx])
+        if V[0][idx] < 0 and mincords[idx] >= 0:
+            lowerthan.append(mincords[idx]/V[0][idx])
+        if V[0][idx] < 0 and mincords[idx] < 0:
+            lowerthan.append(mincords[idx]/V[0][idx])
+
+    if len(lowerthan) > 0 and len(higherthan) > 0:
+        l_par=min(lowerthan)
+        if l_par < max(higherthan):
+            print("Low point - Impossible parameter")
+            sys.exit()
+    elif len(lowerthan) > 0:
+        l_par=min(lowerthan)
+    elif len(higherthan) > 0:
+        l_par=max(higherthan)
+    print("Min lowerthan:",min(lowerthan))
+    print("Max higherthan:",max(higherthan))
+    print("l_par: ",l_par)
 
     #### End - Incomplete #####
 
@@ -84,7 +122,7 @@ def analyze_dataset():
 
     ## Parametric line: r-> = ro + kv->
     # multiplying the direction vector by several different constants to generate points
-    #linepts = V[0] * np.mgrid[-10000:10000:4j][:, np.newaxis]
+    #linepts = V[0] * np.mgrid[-50000:50000:4j][:, np.newaxis]
     linepts = V[0] * np.mgrid[l_par:h_par:2j][:, np.newaxis]
     # adding the datamean point to the points generated previously to obtain the line that better fit all points
     linepts += datamean
@@ -110,12 +148,19 @@ def analyze_dataset():
 ## Plotting
 #########################################
 
+    xx, yy = np.mgrid[mincords[0]:maxcords[0]:4j], np.mgrid[mincords[1]:maxcords[1]:4j]
+    zz = np.ones((1,4))*mincords[2]
+    
+    plt3d = plt.figure().gca(projection='3d')
+    plt3d.plot_surface(xx, yy, zz[0], alpha=0.2)
+
     n_features = data.shape[1]
     if n_features == 2:
         fig,ax = plt.subplots()
     elif n_features == 3:
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d') # <-- 3D
+        #fig = plt.figure()
+        #ax = fig.add_subplot(111, projection='3d') # <-- 3D
+        ax = plt.gca()
     else:
         sys.exit()
     
@@ -137,10 +182,10 @@ def analyze_dataset():
 
     ax.scatter(*datamean,color='g',s=10)
     ax.plot(*linepts.T,'-', color='b')
-    #ax.plot_surface()
+    
 
     # SubTitle
-    fig.suptitle("Dataset linear points", fontsize=10)
+    #ax.suptitle("Dataset linear points", fontsize=10)
 
     ## Graph and axis formatting
     ax.set_aspect('equal')
