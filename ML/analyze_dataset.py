@@ -26,6 +26,7 @@ def analyze_dataset():
     data = dataspmat.toarray()
 
     print(data)
+    n_features = data.shape[1]
 
     # Average for each set of coordinates
     datamean = data.mean(axis=0)
@@ -41,13 +42,9 @@ def analyze_dataset():
     # What I'm trying to do here is to calculate the norm of the fitting line that intersects the "box" where the points are contained.
     # The challenge is to find the two parameters that would become the two ends of the line
    
-    #### Begin - Incomplete #####
 
     maxcords=np.amax(data,axis=0)
-    #print("maxcords: ",maxcords)
     mincords=np.amin(data,axis=0)
-    #print("mincords: ",mincords)
-    #print("V[0]: ",V[0])
 
     # High point
     # Calculating parameters as MaxCor_x / V_x,  MaxCor_y / V_y, etc
@@ -55,29 +52,37 @@ def analyze_dataset():
     # For every V and maxcords components
     higherthan=[]
     lowerthan=[]
-    for idx in range(0,len(maxcords)):
+    for idx in range(0,n_features):
         print("maxcords["+idx.__str__()+"]: "+maxcords[idx].__str__())
         print("V[0]["+idx.__str__()+"]: "+V[0][idx].__str__())
         if V[0][idx] >= 0 and maxcords[idx] >= 0:
-            lowerthan.append(maxcords[idx]/V[0][idx])
+            lowerthan.append((maxcords[idx]-datamean[idx])/V[0][idx])
         if V[0][idx] >= 0 and maxcords[idx] < 0:
-            lowerthan.append(maxcords[idx]/V[0][idx])
+            lowerthan.append((maxcords[idx]-datamean[idx])/V[0][idx])
         if V[0][idx] < 0 and maxcords[idx] >= 0:
-            higherthan.append(maxcords[idx]/V[0][idx])
+            higherthan.append((maxcords[idx]-datamean[idx])/V[0][idx])
         if V[0][idx] < 0 and maxcords[idx] < 0:
-            higherthan.append(maxcords[idx]/V[0][idx])
+            higherthan.append((maxcords[idx]-datamean[idx])/V[0][idx])
+        print("higherthan:",higherthan)    
+        print("lowerthan:",lowerthan)    
 
     if len(lowerthan) > 0 and len(higherthan) > 0:
-        h_par=min(lowerthan)
-        if h_par < max(higherthan):
-            print("High point - Impossible parameter")
-            sys.exit()
+        if abs(min(lowerthan)) < abs(max(higherthan)):
+            h_par=min(lowerthan)
+        else:
+            h_par=max(higherthan)
+        #h_par=min(lowerthan)
+        #if h_par < max(higherthan):
+        #    print("High point - Impossible parameter")
+        #    sys.exit()
+        print("Max higherthan:",max(higherthan))
+        print("Min lowerthan:",min(lowerthan))
     elif len(lowerthan) > 0:
+        print("Min lowerthan:",min(lowerthan))
         h_par=min(lowerthan)
     elif len(higherthan) > 0:
         h_par=max(higherthan)
-    print("Min lowerthan:",min(lowerthan))
-    print("Max higherthan:",max(higherthan))
+        print("Max higherthan:",max(higherthan))
     print("h_par: ",h_par)
 
 
@@ -86,39 +91,43 @@ def analyze_dataset():
 
     higherthan=[]
     lowerthan=[]
-    for idx in range(0,len(maxcords)):
+    for idx in range(0,n_features):
         print("mincords["+idx.__str__()+"]: "+mincords[idx].__str__())
         print("V[0]["+idx.__str__()+"]: "+V[0][idx].__str__())
         if V[0][idx] >= 0 and mincords[idx] >= 0:
-            higherthan.append(mincords[idx]/V[0][idx])
+            higherthan.append((mincords[idx]-datamean[idx])/V[0][idx])
         if V[0][idx] >= 0 and mincords[idx] < 0:
-            higherthan.append(mincords[idx]/V[0][idx])
+            higherthan.append((mincords[idx]-datamean[idx])/V[0][idx])
         if V[0][idx] < 0 and mincords[idx] >= 0:
-            lowerthan.append(mincords[idx]/V[0][idx])
+            lowerthan.append((mincords[idx]-datamean[idx])/V[0][idx])
         if V[0][idx] < 0 and mincords[idx] < 0:
-            lowerthan.append(mincords[idx]/V[0][idx])
+            lowerthan.append((mincords[idx]-datamean[idx])/V[0][idx])
+        print("higherthan:",higherthan)    
+        print("lowerthan:",lowerthan)    
 
     if len(lowerthan) > 0 and len(higherthan) > 0:
-        l_par=min(lowerthan)
-        if l_par < max(higherthan):
-            print("Low point - Impossible parameter")
-            sys.exit()
+        if abs(min(lowerthan)) < abs(max(higherthan)):
+            l_par=min(lowerthan)
+        else:
+            l_par=max(higherthan)
+        #l_par=max(higherthan)
+        #l_par=min(lowerthan)
+        #if l_par > min(lowerthan):
+        #    print("Low point - Impossible parameter")
+        #    sys.exit()
+        print("Min lowerthan:",min(lowerthan))
+        print("Max higherthan:",max(higherthan))
     elif len(lowerthan) > 0:
         l_par=min(lowerthan)
+        print("Min lowerthan:",min(lowerthan))
     elif len(higherthan) > 0:
         l_par=max(higherthan)
-    print("Min lowerthan:",min(lowerthan))
-    print("Max higherthan:",max(higherthan))
+        print("Max higherthan:",max(higherthan))
     print("l_par: ",l_par)
+    print("datamean",datamean)
 
-    #### End - Incomplete #####
-
-    #print("boxnorm")
-    #print(boxnorm)
-    #print("distance_threshold")
     print("norm: ",norm(h_par-l_par))
-    dthres = (norm(h_par-l_par)) * 0.025
-    #print(dthres)
+    dthres = (norm(h_par-l_par)) * 0.09
 
     ## Parametric line: r-> = ro + kv->
     # multiplying the direction vector by several different constants to generate points
@@ -126,6 +135,7 @@ def analyze_dataset():
     linepts = V[0] * np.mgrid[l_par:h_par:2j][:, np.newaxis]
     # adding the datamean point to the points generated previously to obtain the line that better fit all points
     linepts += datamean
+    print(linepts)
 
 
     #Calculate the distance of each point to the line
@@ -145,41 +155,40 @@ def analyze_dataset():
 
 #    sys.exit()
 
+    # Separate "linear" points from "non linear"
+    linp=[]
+    nlinp=[]
+    u = 0
+    for d in pdist:
+        if d < dthres:
+            linp.append(data[u,:])
+        else:
+            nlinp.append(data[u,:])
+        u+=1
+
+    l_linp = len(linp)
+    l_nlinp = len(nlinp)
+
+    print("Percentage of linear points:",100*(l_linp/(l_linp+l_nlinp)))
+    print("Percentage of Non linear points:",100*(l_nlinp/(l_linp+l_nlinp)))
+
 ## Plotting
 #########################################
 
-    xx, yy = np.mgrid[mincords[0]:maxcords[0]:4j], np.mgrid[mincords[1]:maxcords[1]:4j]
-    zz = np.ones((1,4))*mincords[2]
-    
-    plt3d = plt.figure().gca(projection='3d')
-    plt3d.plot_surface(xx, yy, zz[0], alpha=0.2)
-
-    n_features = data.shape[1]
     if n_features == 2:
         fig,ax = plt.subplots()
     elif n_features == 3:
-        #fig = plt.figure()
-        #ax = fig.add_subplot(111, projection='3d') # <-- 3D
-        ax = plt.gca()
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d') # <-- 3D
     else:
         sys.exit()
     
     # Plot each point using a different color if distance from the line is within the threshold
-    linp=0
-    nlinp=0
-    u = 0
-    for d in pdist:
-        if d < dthres:
-            ax.scatter(*data[u,:],color='y')
-            linp += 1
-        else:
-            ax.scatter(*data[u,:],color='r')
-            nlinp += 1
-        u+=1
-
-    print("Percentage of linear points:",100*(linp/(linp+nlinp)))
-    print("Percentage of Non linear points:",100*(nlinp/(linp+nlinp)))
-
+    for point in linp:
+        ax.scatter(*point,color='y')
+    for point in nlinp:
+        ax.scatter(*point,color='r')
+    
     ax.scatter(*datamean,color='g',s=10)
     ax.plot(*linepts.T,'-', color='b')
     
