@@ -58,43 +58,35 @@ def analyze_dataset():
     print("High point")
     print("*****************")
     print("")
+
+
+    test=(maxcords-datamean)/V[0]
+    print("test",test)
     
-    # For every V and maxcords components
-    higherthan=[]
-    lowerthan=[]
+    # For every V and maxcords components, find which plane the line crosses
     for idx in range(0,n_features):
-        print("maxcords["+idx.__str__()+"]: "+maxcords[idx].__str__())
-        print("V[0]["+idx.__str__()+"]: "+V[0][idx].__str__())
-        if V[0][idx] >= 0 and maxcords[idx] >= 0:
-            lowerthan.append((maxcords[idx]-datamean[idx])/V[0][idx])
-        if V[0][idx] >= 0 and maxcords[idx] < 0:
-            lowerthan.append((maxcords[idx]-datamean[idx])/V[0][idx])
-        if V[0][idx] < 0 and maxcords[idx] >= 0:
-            higherthan.append((maxcords[idx]-datamean[idx])/V[0][idx])
-        if V[0][idx] < 0 and maxcords[idx] < 0:
-            higherthan.append((maxcords[idx]-datamean[idx])/V[0][idx])
-        print("higherthan:",higherthan)    
-        print("lowerthan:",lowerthan)    
+        # Calculate lambda for this component to be equal the max component in the dataset
+        v_lambda = (maxcords[idx]-datamean[idx]) / V[0][idx]
+        r_lambda = datamean + v_lambda * V[0]
+        print("r_lambda",r_lambda)
 
-    if len(lowerthan) > 0 and len(higherthan) > 0:
-        #if abs(min(lowerthan)) > abs(max(higherthan)):
-        #    h_par=min(lowerthan)
-        #else:
-        #    h_par=max(higherthan)
-        h_par=min(lowerthan)
-        if h_par < max(higherthan):
-            print("High point - Impossible parameter")
-            sys.exit()
-        #print("Max higherthan:",max(higherthan))
-        #print("Min lowerthan:",min(lowerthan))
-    elif len(lowerthan) > 0:
-        print("Min lowerthan:",min(lowerthan))
-        h_par=min(lowerthan)
-    elif len(higherthan) > 0:
-        h_par=max(higherthan)
-        print("Max higherthan:",max(higherthan))
-    print("h_par: ",h_par)
-
+        # Check if the for the above lambda, the remaining components are within the plane 
+        p=0
+        ok_count=0
+        for r_lambda_comp in r_lambda:
+            if p == idx:
+                pass
+            else:
+                if r_lambda_comp >= mincords[p] and r_lambda_comp <= maxcords[p]:
+                    ok_count +=1
+                    
+            p+=1
+        if ok_count == n_features -1:
+            max_lambda = v_lambda
+            high_point = r_lambda
+            print("max_lambda",max_lambda)
+            print("high_point",high_point)
+            
 
     # Low point
     # Calculating parameters as MaxCor_x / V_x,  MaxCor_y / V_y, etc
@@ -103,55 +95,40 @@ def analyze_dataset():
     print("*****************")
     print("")
 
-    higherthan=[]
-    lowerthan=[]
+    # For every V and mincords components, find which plane the line crosses
     for idx in range(0,n_features):
-        #print("mincords["+idx.__str__()+"]: "+mincords[idx].__str__())
-        #print("V[0]["+idx.__str__()+"]: "+V[0][idx].__str__())
-        if V[0][idx] >= 0 and mincords[idx] >= 0:
-            higherthan.append((mincords[idx]-datamean[idx])/V[0][idx])
-        if V[0][idx] >= 0 and mincords[idx] < 0:
-            higherthan.append((mincords[idx]-datamean[idx])/V[0][idx])
-        if V[0][idx] < 0 and mincords[idx] >= 0:
-            lowerthan.append((mincords[idx]-datamean[idx])/V[0][idx])
-        if V[0][idx] < 0 and mincords[idx] < 0:
-            lowerthan.append((mincords[idx]-datamean[idx])/V[0][idx])
-        print("higherthan:",higherthan)    
-        print("lowerthan:",lowerthan)    
+        # Calculate lambda for this component to be equal the max component in the dataset
+        v_lambda = (mincords[idx]-datamean[idx]) / V[0][idx]
+        r_lambda = datamean + v_lambda * V[0]
+        print("r_lambda",r_lambda)
 
-    if len(lowerthan) > 0 and len(higherthan) > 0:
-        #if abs(min(lowerthan)) > abs(max(higherthan)):
-        #    l_par=min(lowerthan)
-        #else:
-        #    l_par=max(higherthan)
-        l_par=max(higherthan)
-        #l_par=min(lowerthan)
-        if l_par > min(lowerthan):
-            print("Low point - Impossible parameter")
-            sys.exit()
-        #print("Min lowerthan:",min(lowerthan))
-        #print("Max higherthan:",max(higherthan))
-    elif len(lowerthan) > 0:
-        l_par=min(lowerthan)
-        print("Min lowerthan:",min(lowerthan))
-    elif len(higherthan) > 0:
-        l_par=max(higherthan)
-        print("Max higherthan:",max(higherthan))
-    print("l_par: ",l_par)
-    print("")
-    print("")
-    print("")
-    print("datamean",datamean)
+        # Check if the for the above lambda, the remaining components are within the plane 
+        p=0
+        ok_count=0
+        for r_lambda_comp in r_lambda:
+            if p == idx:
+                pass
+            else:
+                if r_lambda_comp >= mincords[p] and r_lambda_comp <= maxcords[p]:
+                    ok_count +=1
+                    
+            p+=1
+        if ok_count == n_features -1:
+            min_lambda = v_lambda
+            low_point = r_lambda
+            print("min_lambda",min_lambda)
+            print("low_point",low_point)
 
-    #print("norm: ",norm(h_par-l_par))
-    dthres = (norm(h_par-l_par)) * 0.01
+    #dthres = (norm(high_point-low_point)) * 0.025
+    dthres = 1
 
     ## Parametric line: r-> = ro + kv->
     # multiplying the direction vector by several different constants to generate points
-    #linepts = V[0] * np.mgrid[-50000:50000:4j][:, np.newaxis]
-    linepts = V[0] * np.mgrid[l_par:h_par:2j][:, np.newaxis]
-    # adding the datamean point to the points generated previously to obtain the line that better fit all points
+    linepts = V[0] * np.mgrid[-5000:5000:2j][:, np.newaxis]
+    #linepts = V[0] * np.mgrid[min_lambda:max_lambda:2j][:, np.newaxis]
     linepts += datamean
+    #linepts = V[0] * np.mgrid[l_par:h_par:2j][:, np.newaxis]
+    # adding the datamean point to the points generated previously to obtain the line that better fit all points
     print(linepts)
 
 

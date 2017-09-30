@@ -43,6 +43,7 @@ def create_dataset(n_samples=20, n_features=3,
 
     # Harcoded value range
     value_limit = 10000
+    #value_limit = 10
 
     # Random numbers generator
     #generator = np.random.RandomState(seed)
@@ -117,9 +118,9 @@ def create_dataset(n_samples=20, n_features=3,
     boxnorm = norm(np.amax(points,axis=0) - np.amin(points,axis=0))
     points += np.random.normal(size=points.shape) * boxnorm * 0.01
 
-    if n_features < 4: 
+    #if n_features < 4: 
         # Plot samples
-        plot_2d_3d(points,p0,p1,X)
+    #    plot_2d_3d(points,p0,p1,X)
 
 
     # Dummy samples generation
@@ -138,7 +139,7 @@ def create_dataset(n_samples=20, n_features=3,
     datasets.dump_svmlight_file(Xf,np.zeros(n_samples),'dataset.svl')
 
 
-create_dataset(n_samples=100, n_features=7,
+create_dataset(n_samples=100, n_features=2,
                         perc_lin=80, perc_repeated=0, n_groups=2,
                         avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=10,
                         shuffle=True,feat_dist=0)
