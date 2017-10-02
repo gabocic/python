@@ -23,6 +23,10 @@ def analyze_dataset(debug=0):
 
     def logger(var=None,message=None,dbg_level=2):
         if dbg_level <= debug:
+            if var is None:
+                var = ''
+            if message is None:
+                message = ''
             print(message,var)
 
     dataspmat,tags = datasets.load_svmlight_file('dataset.svl')
@@ -53,29 +57,29 @@ def analyze_dataset(debug=0):
     mincords=np.amin(data,axis=0)
 
     logger(message="maxcords",var=maxcords,dbg_level=2)
-    #logger(maxcords,2)
-    #logger("mincords",2)
-    #logger(mincords,2)
-    #logger("Direction vector",2)
-    #logger(V[0],2)
-    #logger("Mean point",2)
-    #logger(datamean,2)
+    logger(message="mincords",var=mincords,dbg_level=2)
+    logger(message="Direction vector",var=V[0],dbg_level=2)
+    logger(message="Mean point",var=datamean,dbg_level=2)
 
-    l_lambdas=[]
-    l_hlpoints=[]
 
-    # High point
+    # ToDo: Checking if for some reason the max or min points are part of the line
+    test=(maxcords-datamean)/V[0]
+    logger(message="Lambdas for all components are equal? ->",var=test,dbg_level=0)
+    
+    test=(mincords-datamean)/V[0]
+    logger(message="Lambdas for all components are equal? ->",var=test,dbg_level=0)
+
     # Calculating parameters as MaxCor_x / V_x,  MaxCor_y / V_y, etc
     
-    test=(maxcords-datamean)/V[0]
-    print("test",test)
+    l_lambdas=[]
+    l_hlpoints=[]
     
     # For every V and maxcords components, find which plane the line crosses
     for idx in range(0,n_features):
         # Calculate lambda for this component to be equal the max component in the dataset
         v_lambda = (maxcords[idx]-datamean[idx]) / V[0][idx]
         r_lambda = datamean + v_lambda * V[0]
-        #logger("r_lambda",r_lambda)
+        logger(message="r_lambda",var=r_lambda,dbg_level=2)
 
         # Check if the for the above lambda, the remaining components are within the plane 
         p=0
@@ -91,25 +95,18 @@ def analyze_dataset(debug=0):
         if ok_count == n_features -1:
             l_lambdas.append(v_lambda)
             l_hlpoints.append(r_lambda)
-            max_lambda = v_lambda
-            high_point = r_lambda
-            print("max_lambda",max_lambda)
-            print("high_point",high_point)
+            logger(message="Candidate lambda",var=v_lambda,dbg_level=2)
+            logger(message="Candidate point",var=r_lambda,dbg_level=2)
             
 
-    # Low point
-    # Calculating parameters as MaxCor_x / V_x,  MaxCor_y / V_y, etc
-    print("")
-    print("Low point")
-    print("*****************")
-    print("")
+    # Calculating parameters as MinCor_x / V_x,  MinCor_y / V_y, etc
 
     # For every V and mincords components, find which plane the line crosses
     for idx in range(0,n_features):
         # Calculate lambda for this component to be equal the max component in the dataset
         v_lambda = (mincords[idx]-datamean[idx]) / V[0][idx]
         r_lambda = datamean + v_lambda * V[0]
-        print("r_lambda",r_lambda)
+        logger(message="r_lambda",var=r_lambda,dbg_level=2)
 
         # Check if the for the above lambda, the remaining components are within the plane 
         p=0
@@ -125,26 +122,20 @@ def analyze_dataset(debug=0):
         if ok_count == n_features -1:
             l_lambdas.append(v_lambda)
             l_hlpoints.append(r_lambda)
-            min_lambda = v_lambda
-            low_point = r_lambda
-            print("min_lambda",min_lambda)
-            print("low_point",low_point)
+            logger("Candidate lambda",v_lambda,dbg_level=2)
+            logger("Candidate point",r_lambda,dbg_level=2)
 
-    #dthres = (norm(high_point-low_point)) * 0.025
+    # Define radius for which points will be considered as "linear"
     dthres = (norm(l_hlpoints[0]-l_hlpoints[1])) * 0.05
-    #dthres = 1
 
     ## Parametric line: r-> = ro + kv->
     # multiplying the direction vector by several different constants to generate points
     #linepts = V[0] * np.mgrid[-5000:5000:2j][:, np.newaxis]
-    #linepts = V[0] * np.mgrid[min_lambda:max_lambda:2j][:, np.newaxis]
     linepts = V[0] * np.mgrid[l_lambdas[0]:l_lambdas[1]:2j][:, np.newaxis]
+    
+    # adding the datamean point to the points generated previously to obtain the final fitting line
     linepts += datamean
-    #linepts = V[0] * np.mgrid[l_par:h_par:2j][:, np.newaxis]
-    # adding the datamean point to the points generated previously to obtain the line that better fit all points
-    print(linepts)
-
-
+    
     #Calculate the distance of each point to the line
     pdist=[]
     for row in data:
@@ -157,8 +148,6 @@ def analyze_dataset(debug=0):
         d = norm(pa - t*ba)
         pdist.append(d)
     pdist = np.asarray(pdist)
-    #print(pdist)
-
 
 
     # Separate "linear" points from "non linear"
@@ -175,9 +164,9 @@ def analyze_dataset(debug=0):
     l_linp = len(linp)
     l_nlinp = len(nlinp)
 
-    print("Percentage of linear points:",100*(l_linp/(l_linp+l_nlinp)))
-    print("Percentage of Non linear points:",100*(l_nlinp/(l_linp+l_nlinp)))
-    sys.exit()
+    logger(message="Percentage of linear points:",var=100*(l_linp/(l_linp+l_nlinp)),dbg_level=0)
+    logger(message="Percentage of Non linear points:",var=100*(l_nlinp/(l_linp+l_nlinp)),dbg_level=0)
+    #sys.exit()
 
 ## Plotting
 #########################################
@@ -223,4 +212,4 @@ def analyze_dataset(debug=0):
 
     plt.show()
 
-analyze_dataset(debug=2)
+analyze_dataset(debug=0)
