@@ -49,7 +49,7 @@ def create_dataset(n_samples=20, n_features=3,
     logger("standard features: "+standa_feat.__str__(),1)
 
     # Harcoded value range
-    value_limit = 10000
+    value_limit = 100
     #value_limit = 10
 
     # Random numbers generator
@@ -87,8 +87,9 @@ def create_dataset(n_samples=20, n_features=3,
     logger(Xu,2)
 
     # Append columns to X
-    X[:usef_samples,0:standa_feat] = Xs
-    X[:usef_samples,standa_feat:standa_feat+unifor_feat] = Xu
+    #X[:usef_samples,0:standa_feat] = Xs
+    X[:usef_samples,0:unifor_feat] = Xu
+    X[:usef_samples,unifor_feat:standa_feat+unifor_feat] = Xs
 
     logger("Standard and uniform columns combined",2)
     logger(X,2)
@@ -128,8 +129,8 @@ def create_dataset(n_samples=20, n_features=3,
         boxnorm = norm(np.amax(lin_points,axis=0) - np.amin(lin_points,axis=0))
         lin_points += np.random.normal(size=lin_points.shape) * boxnorm * 0.01
 
-    logger("Linear points:",2)
-    logger(lin_points,2)
+        logger("Linear points:",2)
+        logger(lin_points,2)
 
     # Dummy samples generation
     repeated = np.zeros((rep_samples,n_features))        
@@ -149,7 +150,7 @@ def create_dataset(n_samples=20, n_features=3,
     # Scale values
     u = 0
     for point in Xf:
-        print(point)
+        #print(point)
         dv = point - datamean
 
 
@@ -173,8 +174,8 @@ def create_dataset(n_samples=20, n_features=3,
     datasets.dump_svmlight_file(Xf,np.zeros(n_samples),'dataset.svl')
 
 
-create_dataset(n_samples=100, n_features=2,
-                        perc_lin=10, perc_repeated=0, n_groups=2,
+create_dataset(n_samples=100, n_features=6,
+                        perc_lin=0, perc_repeated=0, n_groups=2,
                         avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=0,
-                        shuffle=True,feat_dist=0,debug=0,plot=1)
+                        shuffle=True,feat_dist=0,debug=2,plot=0)
 

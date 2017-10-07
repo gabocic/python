@@ -11,6 +11,7 @@ from sympy import Symbol
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from plot_2d_3d import plot_2d_3d
+from scipy.special import comb
 
 class TooFewPoints(Exception):
     def __init__(self, value):
@@ -167,6 +168,23 @@ def analyze_dataset(debug=0):
     logger(message="Percentage of linear points:",var=100*(l_linp/(l_linp+l_nlinp)),dbg_level=0)
     logger(message="Percentage of Non linear points:",var=100*(l_nlinp/(l_linp+l_nlinp)),dbg_level=0)
     #sys.exit()
+
+    ## Calculate distance between points
+    print("Calculating distances...","Total values to compute: ",comb(data.shape[0], 2))
+    l_pp_dist=[]
+    i=1
+    for o_row in data:
+        for i_row in data[i:data.shape[0],]:
+            pp_dist = norm(o_row-i_row)
+            l_pp_dist.append(pp_dist)
+        i+=1 
+    avgdist = np.mean(l_pp_dist)
+
+    print("Average distance",avgdist,len(l_pp_dist))
+
+    ## Density coeficient = Avg point-to-point distance / norm(max90th - min90th)
+    ## Max and Min will only consider component percentile 90th 
+    np.percentile(data, 90, axis=0)
 
 ## Plotting
 #########################################
