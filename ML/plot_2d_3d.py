@@ -5,17 +5,17 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
-def plot_2d_3d(points,p0,p1,rpoints):
-    n_features = points.shape[1]
+def plot_2d_3d(p0,p1,rpoints):
+    n_features = rpoints.shape[1]
     if n_features == 2:
         fig,ax = plt.subplots()
-        ax.scatter(points[:,0],points[:,1],color='b')
         ax.scatter(rpoints[:,0],rpoints[:,1],color='r')
+        #ax.scatter(points[:,0],points[:,1],color='b')
     elif n_features == 3:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d') # <-- 3D
-        ax.scatter(points[:,0],points[:,1],points[:,2],color='b')
         ax.scatter(rpoints[:,0],rpoints[:,1],rpoints[:,2],color='r')
+        #ax.scatter(points[:,0],points[:,1],points[:,2],color='b')
 
     # SubTitle
     fig.suptitle("Dataset linear points", fontsize=10)

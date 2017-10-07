@@ -26,7 +26,6 @@ def create_dataset(n_samples=20, n_features=3,
             print(message)
 
 
-
     ### Main ####
     # Calculate the percentage of useful values we need to generate
 
@@ -143,13 +142,27 @@ def create_dataset(n_samples=20, n_features=3,
     if rep_samples > 0:
         Xf = np.vstack((Xf,repeated))
 
-    if plot == 1:
-        if n_features < 4: 
-            # Plot samples
-            plot_2d_3d(points,p0,p1,X)
+    ## Shrink the dataset by shrink factor
+    # Average for each set of coordinates
+    datamean = Xf.mean(axis=0)
+    
+    # Scale values
+    u = 0
+    for point in Xf:
+        print(point)
+        dv = point - datamean
+
+
 
     logger("\n Final Dataset:\n *****************",2)
     logger(Xf,2)
+
+    if plot == 1:
+        if n_features < 4: 
+            # Plot samples
+            plot_2d_3d(p0,p1,Xf)
+            plot_2d_3d(p0*10,p1*10,Xf*10)
+
 
     # Randomly permute features
     #indices = np.arange(n_features)
@@ -160,8 +173,8 @@ def create_dataset(n_samples=20, n_features=3,
     datasets.dump_svmlight_file(Xf,np.zeros(n_samples),'dataset.svl')
 
 
-create_dataset(n_samples=100, n_features=5,
+create_dataset(n_samples=100, n_features=2,
                         perc_lin=10, perc_repeated=0, n_groups=2,
                         avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=0,
-                        shuffle=True,feat_dist=0,debug=1,plot=0)
+                        shuffle=True,feat_dist=0,debug=0,plot=1)
 
