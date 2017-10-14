@@ -15,7 +15,6 @@ class TooFewPoints(Exception):
         return repr(self.value)
 
 
-
 def create_dataset(n_samples=20, n_features=3,
                         perc_lin=20, perc_repeated=10, n_groups=2,
                         avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=25,
@@ -53,7 +52,7 @@ def create_dataset(n_samples=20, n_features=3,
     #value_limit = 10
 
     # Random numbers generator
-    generator = np.random
+    #generator = np.random
 
     # Initialize dataset 
     X = np.zeros((usef_samples, n_features))
@@ -62,13 +61,16 @@ def create_dataset(n_samples=20, n_features=3,
 
     # Generate standard columns
     for i in range(0,standa_feat):
+        generator = np.random
         # Create a random number for mean and stdev
         mean = (generator.random_integers(low=(-1)*value_limit, high=value_limit, size=(1)))[0]
 
         # Generate stdev as a percentage of mean (betwee 10% and 50%)
+        generator = np.random
         stdev = (generator.random_integers(low=1, high=5, size=(1)))[0]*0.1*abs(mean)
         logger("mean: "+mean.__str__(),2)
         logger("stdev: "+stdev.__str__(),2)
+        generator = np.random
         m = stdev * generator.randn(usef_samples,1) + mean
         Xs[:usef_samples, i:i+1] = m
 
@@ -80,6 +82,7 @@ def create_dataset(n_samples=20, n_features=3,
     # Generate uniform columns
     for i in range(0,unifor_feat):
         # Create a random number for mean and stdev
+        generator = np.random
         m = generator.random_integers(low=(-1)*value_limit, high=value_limit, size=(usef_samples,1))
         Xu[:usef_samples, i:i+1] = m
 
@@ -88,8 +91,15 @@ def create_dataset(n_samples=20, n_features=3,
 
     # Append columns to X
     #X[:usef_samples,0:standa_feat] = Xs
-    X[:usef_samples,0:unifor_feat] = Xu
-    X[:usef_samples,unifor_feat:standa_feat+unifor_feat] = Xs
+    #X[:usef_samples,0:unifor_feat] = Xu
+    #X[:usef_samples,unifor_feat:standa_feat+unifor_feat] = Xs
+    r = 0
+    for p in range(0,unifor_feat):
+        X[:usef_samples,r:r+1] = Xs[:,p:p+1]
+        X[:usef_samples,r+1:r+2] = Xu[:,p:p+1]
+        r += 2
+    if standa_feat > unifor_feat:
+        X[:usef_samples,r:r+1] = Xs[:,p+1:p+2]
 
     logger("Standard and uniform columns combined",2)
     logger(X,2)
@@ -101,6 +111,7 @@ def create_dataset(n_samples=20, n_features=3,
 
     if lin_samples > 0:
         ## Choose a ramdom sample
+        generator = np.random
         sampleidx = (generator.random_integers(low=0, high=usef_samples-1, size=(1)))[0]
         logger("Winning samples:",2)
         p0 = X[sampleidx]
@@ -113,7 +124,6 @@ def create_dataset(n_samples=20, n_features=3,
         elif sampleidx-1 >= 0:
             p1 = X[sampleidx-1]
         else:
-            print("Cannot find another point to generate linear samples")
             raise TooFewPoints('Not able to find two points to generate pseudo linear samples')
         logger("p1:",2)
         logger(p1,2)
@@ -146,12 +156,20 @@ def create_dataset(n_samples=20, n_features=3,
     ## Shrink the dataset by shrink factor
     # Average for each set of coordinates
     datamean = Xf.mean(axis=0)
+
+    if plot == 1:
+        if n_features < 4: 
+            # Plot samples
+            #plot_2d_3d(p0,p1,Xf)
+            plot_2d_3d(datamean,datamean,Xf)
+
     
     # Scale values
     u = 0
-    for point in Xf:
-        #print(point)
-        dv = point - datamean
+    #for point in Xf:
+    #    #print(point)
+    #    dv = datamean - point
+    Xf = Xf + 0.5*(norm(datamean-Xf))*(datamean-Xf)
 
 
 
@@ -161,8 +179,7 @@ def create_dataset(n_samples=20, n_features=3,
     if plot == 1:
         if n_features < 4: 
             # Plot samples
-            plot_2d_3d(p0,p1,Xf)
-            plot_2d_3d(p0*10,p1*10,Xf*10)
+            plot_2d_3d(datamean,datamean,Xf)
 
 
     # Randomly permute features
@@ -174,8 +191,8 @@ def create_dataset(n_samples=20, n_features=3,
     datasets.dump_svmlight_file(Xf,np.zeros(n_samples),'dataset.svl')
 
 
-create_dataset(n_samples=100, n_features=6,
-                        perc_lin=0, perc_repeated=0, n_groups=2,
+create_dataset(n_samples=10, n_features=3,
+                        perc_lin=10, perc_repeated=0, n_groups=2,
                         avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=0,
-                        shuffle=True,feat_dist=0,debug=2,plot=0)
+                        shuffle=True,feat_dist=0,debug=2,plot=1)
 

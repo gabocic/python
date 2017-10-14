@@ -184,7 +184,14 @@ def analyze_dataset(debug=0):
 
     ## Density coeficient = Avg point-to-point distance / norm(max90th - min90th)
     ## Max and Min will only consider component percentile 90th 
-    np.percentile(data, 90, axis=0)
+    #np.percentile(data, 90, axis=0)
+
+    boxdiag = norm(maxcords-mincords)
+    print("Box diagonal",boxdiag)
+
+    density_coef = boxdiag/avgdist
+    print("Density coeficient",density_coef)
+
 
 ## Plotting
 #########################################
