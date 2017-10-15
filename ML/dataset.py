@@ -18,7 +18,7 @@ class TooFewPoints(Exception):
 def create_dataset(n_samples=20, n_features=3,
                         perc_lin=20, perc_repeated=10, n_groups=2,
                         avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=25,
-                        shuffle=True,feat_dist=0,debug=0,plot=0):
+                        shuffle=True,feat_dist=0,debug=0,plot=0,save_to_file=0):
 
     def logger(message,dbg_level):
         if dbg_level <= debug:
@@ -104,8 +104,8 @@ def create_dataset(n_samples=20, n_features=3,
     logger("Standard and uniform columns combined",2)
     logger(X,2)
 
-    ## Generate samples with linear relation to a ramdom sample
-    #  **********************************************************
+    ## Generate samples with linear relation to a ramdom pair of samples
+    #  ******************************************************************
     # Choose two points, generate the parametric equation of the line that passes through those two points, and use the parameter to generate samples
     # Add some noise to make it more realistic
 
@@ -127,7 +127,8 @@ def create_dataset(n_samples=20, n_features=3,
             raise TooFewPoints('Not able to find two points to generate pseudo linear samples')
         logger("p1:",2)
         logger(p1,2)
-
+        
+        ## <<< ToDo: Make half of the points to go in p1-p0 direction and the other half in the opposite (p0-p1)
         d0 = np.array(p1 - p0)
         lin_points = np.zeros((lin_samples,n_features))
         for a in range(0,lin_samples+1):
@@ -155,21 +156,15 @@ def create_dataset(n_samples=20, n_features=3,
 
     ## Shrink the dataset by shrink factor
     # Average for each set of coordinates
-    datamean = Xf.mean(axis=0)
-
-    if plot == 1:
-        if n_features < 4: 
-            # Plot samples
-            #plot_2d_3d(p0,p1,Xf)
-            plot_2d_3d(datamean,datamean,Xf)
+    #datamean = Xf.mean(axis=0)
 
     
     # Scale values
-    u = 0
+    #u = 0
     #for point in Xf:
     #    #print(point)
     #    dv = datamean - point
-    Xf = Xf + 0.5*(norm(datamean-Xf))*(datamean-Xf)
+    #Xf = Xf + 0.5*(norm(datamean-Xf))*(datamean-Xf)
 
 
 
@@ -179,7 +174,14 @@ def create_dataset(n_samples=20, n_features=3,
     if plot == 1:
         if n_features < 4: 
             # Plot samples
-            plot_2d_3d(datamean,datamean,Xf)
+            element_list=[]
+            element={'type':'dot','value':p0,'color':'g','marker':'x'}
+            element_list.append(element)
+            element={'type':'dot','value':p1,'color':'g','marker':'x'}
+            element_list.append(element)
+            element={'type':'blob','value':Xf,'color':'r','marker':'o'}
+            element_list.append(element)
+            plot_2d_3d(element_list,n_features)
 
 
     # Randomly permute features
@@ -188,11 +190,13 @@ def create_dataset(n_samples=20, n_features=3,
     #X[:, :] = X[:, indices]
 
     # Save to file
-    datasets.dump_svmlight_file(Xf,np.zeros(n_samples),'dataset.svl')
+    if save_to_file == 1:
+        datasets.dump_svmlight_file(Xf,np.zeros(n_samples),'dataset.svl')
 
+    return Xf
 
-create_dataset(n_samples=10, n_features=3,
-                        perc_lin=10, perc_repeated=0, n_groups=2,
-                        avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=0,
-                        shuffle=True,feat_dist=0,debug=2,plot=1)
+#create_dataset(n_samples=10, n_features=3,
+#                        perc_lin=10, perc_repeated=0, n_groups=2,
+#                        avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=0,
+#                        shuffle=True,feat_dist=0,debug=2,plot=1,save_to_file=1)
 

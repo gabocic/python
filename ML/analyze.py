@@ -13,14 +13,14 @@ from mpl_toolkits.mplot3d import Axes3D
 from plot_2d_3d import plot_2d_3d
 from scipy.special import comb
 
-class TooFewPoints(Exception):
+class DatafileNotFound(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
 
 
-def analyze_dataset(debug=0):
+def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
 
     def logger(var=None,message=None,dbg_level=2):
         if dbg_level <= debug:
@@ -30,10 +30,13 @@ def analyze_dataset(debug=0):
                 message = ''
             print(message,var)
 
-    dataspmat,tags = datasets.load_svmlight_file('dataset.svl')
-
-    ## Converting from SciPy Sparse matrix to numpy ndarray
-    data = dataspmat.toarray()
+    if data is None and load_from_file is not None:
+        try:
+            dataspmat,tags = datasets.load_svmlight_file(load_from_file)
+            ## Converting from SciPy Sparse matrix to numpy ndarray
+            data = dataspmat.toarray()
+        except:
+            raise DatafileNotFound("Failed to load dataset from "+load_from_file)
 
     logger(message="\n Loaded data: \n *******************",var=None,dbg_level=2)
     logger(message=None,var=data,dbg_level=2)
@@ -193,48 +196,29 @@ def analyze_dataset(debug=0):
     print("Density coeficient",density_coef)
 
 
-## Plotting
-#########################################
+    if plot == 1:
+        if n_features < 4:
+            # Plot samples
+            element_list=[]
+            for point in linp:
+                element={'type':'dot','value':point,'color':'y','marker':'o'}
+                element_list.append(element)
+            for point in nlinp:
+                element={'type':'dot','value':point,'color':'r','marker':'o'}
+                element_list.append(element)
+            element={'type':'dot','value':datamean,'color':'g','marker':'o'}
+            element_list.append(element)
+            element={'type':'line','value':linepts.T,'color':'b'}
+            element_list.append(element)
+            plot_2d_3d(element_list,n_features)
+ 
 
-    if n_features == 2:
-        fig,ax = plt.subplots()
-    elif n_features == 3:
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d') # <-- 3D
-    else:
-        sys.exit()
-    
+
     # Plot each point using a different color if distance from the line is within the threshold
-    for point in linp:
-        ax.scatter(*point,color='y')
-    for point in nlinp:
-        ax.scatter(*point,color='r')
+#    for point in linp:
+#        #ax.scatter(*point,color='y')
+#    for point in nlinp:
+#        #ax.scatter(*point,color='r')
     
-    ax.scatter(*datamean,color='g',s=10)
-    ax.plot(*linepts.T,'-', color='b')
-    
-
-    # SubTitle
-    #ax.suptitle("Dataset linear points", fontsize=10)
-
-    ## Graph and axis formatting
-    ax.set_aspect('equal')
-    ax.grid(True, which='both')
-
-    # set the x-spine
-    ax.spines['left'].set_position('zero')
-
-    # turn off the right spine/ticks
-    ax.spines['right'].set_color('none')
-    #ax.yaxis.tick_left()
-
-    # set the y-spine
-    ax.spines['bottom'].set_position('zero')
-
-    # turn off the top spine/ticks
-    ax.spines['top'].set_color('none')
-    ax.xaxis.tick_bottom()
-
-    plt.show()
-
-analyze_dataset(debug=0)
+#    ax.scatter(*datamean,color='g',s=10)
+#    ax.plot(*linepts.T,'-', color='b')

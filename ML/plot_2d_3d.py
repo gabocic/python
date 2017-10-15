@@ -5,23 +5,30 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
-def plot_2d_3d(p0,p1,rpoints):
-    n_features = rpoints.shape[1]
-    if n_features == 2:
+def plot_2d_3d(elements_list,dimensions):
+
+    if dimensions == 2:
         fig,ax = plt.subplots()
-        ax.scatter(rpoints[:,0],rpoints[:,1],color='r')
-        #ax.scatter(points[:,0],points[:,1],color='b')
-    elif n_features == 3:
+    elif dimensions == 3:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d') # <-- 3D
-        ax.scatter(rpoints[:,0],rpoints[:,1],rpoints[:,2],color='r')
-        #ax.scatter(points[:,0],points[:,1],points[:,2],color='b')
+    else:
+        return
+
+    for element in elements_list:
+        if element['type'] == 'dot':
+            ax.scatter(*element['value'], color=element['color'], marker=element['marker'])
+        elif element['type'] == 'blob':
+            #ax.scatter(*element['value'], color=element['color'])
+            if dimensions == 2:
+                ax.scatter(element['value'][:,0],element['value'][:,1], color=element['color'])
+            elif dimensions == 3:
+                ax.scatter(element['value'][:,0],element['value'][:,1],element['value'][:,2], color=element['color'])
+        elif element['type'] == 'line':
+            ax.plot(*element['value'],'-', color=element['color'])
 
     # SubTitle
-    fig.suptitle("Dataset linear points", fontsize=10)
-
-    ax.scatter(*p0, color='g', marker='x', s=90)
-    ax.scatter(*p1, color='g', marker='x', s=90)
+    fig.suptitle("Elements", fontsize=10)
 
     ## Graph and axis formatting
     ax.set_aspect('equal')
