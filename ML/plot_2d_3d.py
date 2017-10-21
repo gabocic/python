@@ -17,7 +17,7 @@ def plot_2d_3d(elements_list,dimensions):
 
     for element in elements_list:
         if element['type'] == 'dot':
-            ax.scatter(*element['value'], color=element['color'], marker=element['marker'])
+            ax.scatter(*element['value'], color=element['color'], marker=element['marker'],s=element['size'])
         elif element['type'] == 'blob':
             #ax.scatter(*element['value'], color=element['color'])
             if dimensions == 2:

@@ -201,12 +201,12 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
             # Plot samples
             element_list=[]
             for point in linp:
-                element={'type':'dot','value':point,'color':'y','marker':'o'}
+                element={'type':'dot','value':point,'color':'y','marker':'o','size':10}
                 element_list.append(element)
             for point in nlinp:
-                element={'type':'dot','value':point,'color':'r','marker':'o'}
+                element={'type':'dot','value':point,'color':'r','marker':'o','size':10}
                 element_list.append(element)
-            element={'type':'dot','value':datamean,'color':'g','marker':'o'}
+            element={'type':'dot','value':datamean,'color':'g','marker':'o','size':10}
             element_list.append(element)
             element={'type':'line','value':linepts.T,'color':'b'}
             element_list.append(element)

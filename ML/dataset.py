@@ -128,12 +128,23 @@ def create_dataset(n_samples=20, n_features=3,
         logger("p1:",2)
         logger(p1,2)
         
-        ## <<< ToDo: Make half of the points to go in p1-p0 direction and the other half in the opposite (p0-p1)
-        d0 = np.array(p1 - p0)
         lin_points = np.zeros((lin_samples,n_features))
-        for a in range(0,lin_samples+1):
+       
+        ## Make half of the points to go in p1-p0 direction and the other half in the opposite (p0-p1)
+        lin_samples_d0 = int(lin_samples/2)
+        lin_samples_d1 = int(lin_samples - lin_samples_d0)
+
+        d0 = np.array(p1 - p0)
+        for a in range(0,lin_samples_d0+1):
             # Making constants smaller to prevent too many outliers
             lins = p0+a*(0.1)*d0
+            lin_points[a-1:a,:] = lins
+
+        d1 = np.array(p0 - p1)
+        for b in range(0,lin_samples_d1+1):
+            # Making constants smaller to prevent too many outliers
+            lins = p0+b*(0.1)*d1
+            a+=1
             lin_points[a-1:a,:] = lins
 
         # Add some noise 
@@ -175,11 +186,13 @@ def create_dataset(n_samples=20, n_features=3,
         if n_features < 4: 
             # Plot samples
             element_list=[]
-            element={'type':'dot','value':p0,'color':'g','marker':'x'}
+            element={'type':'blob','value':X,'color':'r','marker':'o'}
             element_list.append(element)
-            element={'type':'dot','value':p1,'color':'g','marker':'x'}
+            element={'type':'blob','value':lin_points,'color':'b','marker':'o'}
             element_list.append(element)
-            element={'type':'blob','value':Xf,'color':'r','marker':'o'}
+            element={'type':'dot','value':p0,'color':'g','marker':'x','size':90}
+            element_list.append(element)
+            element={'type':'dot','value':p1,'color':'g','marker':'x','size':90}
             element_list.append(element)
             plot_2d_3d(element_list,n_features)
 
