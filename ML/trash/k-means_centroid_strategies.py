@@ -1,3 +1,4 @@
+#!/home/gabriel/pythonenvs/v3.5/bin/python
 print(__doc__)
 
 from time import time
@@ -13,6 +14,9 @@ from sklearn.preprocessing import scale
 np.random.seed(42)
 
 digits = load_digits()
+
+print(digits.target)
+
 data = scale(digits.data)
 
 n_samples, n_features = data.shape
