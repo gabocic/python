@@ -9,7 +9,7 @@ from kmeans import k_means_clustering
 def main():
 
     # Generate dataset
-    dataset = create_dataset(n_samples=2000, n_features=3,
+    dataset = create_dataset(n_samples=30, n_features=3,
                         perc_lin=20, perc_repeated=0, n_groups=2,
                         avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=0,
                         shuffle=True,feat_dist=0,debug=0,plot=0,save_to_file=0)
