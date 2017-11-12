@@ -1,28 +1,42 @@
 #!/home/gabriel/pythonenvs/v3.5/bin/python
 
 from sklearn import metrics
+import numpy as np
 
 def clustering_metrics(estimator, name, data, time, sample_size):
 
 
+    def get_intra_cluster_distances(c,clusters):
+        print("in")
+        print(clusters[c])
+
     def dunn_index(estimator,data):
-        print(data)
-        print(estimator.labels_)
+
+        # Split data into the different clusters
+        clusters={}
+        it = np.nditer(estimator.labels_, flags=['f_index'])
+        while not it.finished:
+            clusterid = int(it[0])
+            if clusterid in clusters: 
+                clusters[clusterid] = np.append(clusters[clusterid],[data[it.index,:]],axis=0)
+            else:
+                clusters[clusterid] = np.array([data[it.index,:]])
+            it.iternext()
 
         # Calculates the minimum internal distance.
         ## The below line is basically:
         ## For each cluster, calculates the distances between the cluster points(?)
         ## The first numpy.min obtains the minimum distance for that cluster
         ## The outer numpy.min obtains the minimum distance across all clusters
-        numpy.min([numpy.min(get_intra_cluster_distances(c, matrix)) for c in clustering.clusters])
+        [get_intra_cluster_distances(c,clusters) for c in clusters]
+        #numpy.min([numpy.min(get_intra_cluster_distances(c)) for c in clustering.clusters])
                     
     
-    @classmethod
-    def max_intercluster_distance(cls, clustering, matrix):
+    #def max_intercluster_distance(cls, clustering, matrix):
 
 
 
-        return None
+    #    return None
 
         
 
