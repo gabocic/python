@@ -11,7 +11,7 @@ from sympy import Symbol
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from plot_2d_3d import plot_2d_3d
-from scipy.special import comb
+from common import get_intra_cluster_distances
 
 class DatafileNotFound(Exception):
     def __init__(self, value):
@@ -173,16 +173,8 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
     #sys.exit()
 
     ## Calculate distance between points
-    print("Calculating distances...","Total values to compute: ",comb(data.shape[0], 2))
-    l_pp_dist=[]
-    i=1
-    for o_row in data:
-        for i_row in data[i:data.shape[0],]:
-            pp_dist = norm(o_row-i_row)
-            l_pp_dist.append(pp_dist)
-        i+=1 
+    l_pp_dist = get_intra_cluster_distances(data)
     avgdist = np.mean(l_pp_dist)
-
     print("Average distance",avgdist,len(l_pp_dist))
 
     ## Density coeficient = Avg point-to-point distance / norm(max90th - min90th)
