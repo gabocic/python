@@ -4,47 +4,47 @@ import Orange
 from sklearn import datasets
 import numpy as np
 
-# Read some data
 
-## LOADING DATASET FROM FILE
-## *************************
-## dataspmat is a scipy matrix storing all the data points. 
-## and tags is a numpy.ndarray storing tags for each data point
-dataspmat,tags = datasets.load_svmlight_file('dataset.svl')
 
-## Converting from SciPy Sparse matrix to numpy ndarray
-data = dataspmat.toarray()
+def CN2_classifier(data,estimator):
 
-## Creating an Orange "Domain" to work with the data and the tags
-# Define each attribute
-att1 = Orange.data.ContinuousVariable(name='att1', compute_value=None)
-att2 = Orange.data.ContinuousVariable(name='att2', compute_value=None)
-att3 = Orange.data.ContinuousVariable(name='att3', compute_value=None)
-classv = Orange.data.DiscreteVariable(name='classv',values=['A', 'B', 'C'])
+    ## Creating an Orange "Domain" to work with the data and the tags
+    # Define each attribute
+    l_attr = []
+    for i in range(0,data.shape[1]):
+        l_attr.append(Orange.data.ContinuousVariable(name='f'+i.__str__(), compute_value=None))
 
-# Create domain based on the above attributes
-mydomain = Orange.data.Domain(attributes=[att1,att2,att3],class_vars=classv)
+    # Define target value
+    #classv = Orange.data.DiscreteVariable(name='classv',values=estimator.labels_)
+    print(estimator.labels_.tolist())
+    l_label=[]
+    for label in estimator.labels_:
+        l_label.append(label.__str__())    
+    classv = Orange.data.DiscreteVariable(name='classv',values=l_label)
 
-## Loading data and tags in ndarray format into a an Orange.Table
-table = Orange.data.Table.from_numpy(mydomain,data,Y=tags)
+    # Create domain based on the above attributes
+    mydomain = Orange.data.Domain(attributes=l_attr,class_vars=classv)
 
-# construct the learning algorithm and use it to induce a classifier
-learner = Orange.classification.CN2Learner()
+    ## Loading data and tags in ndarray format into a an Orange.Table
+    table = Orange.data.Table.from_numpy(mydomain,data,Y=estimator.labels_)
 
-# consider up to 10 solution streams at one time
-learner.rule_finder.search_algorithm.beam_width = 10
+    # construct the learning algorithm and use it to induce a classifier
+    learner = Orange.classification.CN2Learner()
 
-# continuous value space is constrained to reduce computation time
-learner.rule_finder.search_strategy.constrain_continuous = True
+    # consider up to 10 solution streams at one time
+    learner.rule_finder.search_algorithm.beam_width = 10
 
-# found rules must cover at least 15 examples
-learner.rule_finder.general_validator.min_covered_examples = 15
+    # continuous value space is constrained to reduce computation time
+    learner.rule_finder.search_strategy.constrain_continuous = True
 
-# found rules may combine at most 2 selectors (conditions)
-learner.rule_finder.general_validator.max_rule_length = 2
+    # found rules must cover at least 15 examples
+    learner.rule_finder.general_validator.min_covered_examples = 1
 
-classifier = learner(table)
+    # found rules may combine at most 2 selectors (conditions)
+    learner.rule_finder.general_validator.max_rule_length = 2
 
-for myrule in classifier.rule_list:
-	print(myrule.__str__())
+    classifier = learner(table)
+
+    for myrule in classifier.rule_list:
+            print(myrule.__str__())
 

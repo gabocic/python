@@ -161,9 +161,9 @@ def create_dataset(n_samples=20, n_features=3,
     Xf = X
     # Stack useful,linear and repeated samples
     if lin_samples > 0:
-        Xf = np.vstack((X,lin_points))
+        Xf = np.vstack((X,np.around(lin_points,3)))
     if rep_samples > 0:
-        Xf = np.vstack((Xf,repeated))
+        Xf = np.vstack((Xf,np.around(repeated,3)))
 
     ## Shrink the dataset by shrink factor
     # Average for each set of coordinates
