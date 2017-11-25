@@ -13,3 +13,5 @@ def get_intra_cluster_distances(data):
             l_pp_dist.append(pp_dist)
         i+=1
     return l_pp_dist
+
+

@@ -59,4 +59,29 @@ def clustering_metrics(estimator, name, data, time, sample_size):
     proc_metrics['calinski_harabaz_score'] = metrics.calinski_harabaz_score(data, estimator.labels_)
     proc_metrics['silhouette_score'] = metrics.silhouette_score(data, estimator.labels_,metric='euclidean',sample_size=sample_size)
     proc_metrics['dunn_index'] = dunn_index(estimator,data)
-    print(proc_metrics) 
+    print(proc_metrics)
+
+def rules_metrics(clusters,rules):
+
+    ### <<< WIP: not working!!
+    ## Create contingency Table for each Rule,Cluster pair
+    #c examples covered by rule r
+    #c examples not covered by rule r
+    #not c examples covered by rule r
+    #not c examples not covered by rule r
+
+    d_cont_table=[[]]
+
+    for ruleid in rules:
+        for example in data:
+	    if rule apply to example
+	        retrieve cluster id
+	        r[ruleid][clusterid] +=1 
+
+    ### VERIFY THIS VV
+    for clusterid in clusters:
+        d_cont_table=[ruleid][classid]['ncr'] = r[ruleid][clusterid]
+        d_cont_table=[ruleid][classid]['nc!r'] = len(clusters[clusterid]) - r[ruleid][clusterid]
+        d_cont_table=[ruleid][classid]['n!cr'] = sum(r[ruleid]) - r[ruleid][clusterid]
+        d_cont_table=[ruleid][classid]['n!c!r'] = (len(clusters)-len([clusterid])) - (sum(r[ruleid]) - r[ruleid][clusterid])
+
