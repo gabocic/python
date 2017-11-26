@@ -32,12 +32,53 @@ def CART_classifier(data,estimator):
     ## Main ##
     clf = tree.DecisionTreeClassifier()
     clf = clf.fit(data, estimator.labels_)
-    
+   
     # feature_names
     feature_names = np.array([])
     for i in range(0,data.shape[1]):
         feature_names = np.append(feature_names,'f'+i.__str__())
 
-    print(feature_names)
+    ## Rules extractor
 
-    tree_to_code(clf,feature_names)
+    n_nodes = clf.tree_.node_count
+    children_left = clf.tree_.children_left
+    children_right = clf.tree_.children_right
+    feature = clf.tree_.feature
+    threshold = clf.tree_.threshold
+
+    node_depth = np.zeros(shape=n_nodes, dtype=np.int64)
+    is_leaves = np.zeros(shape=n_nodes, dtype=bool)
+    stack = [(0, -1)]  # seed is the root node id and its parent depth
+    while len(stack) > 0:
+        node_id, parent_depth = stack.pop()
+        node_depth[node_id] = parent_depth + 1
+
+	# If we have a test node
+        if (children_left[node_id] != children_right[node_id]):
+            stack.append((children_left[node_id], parent_depth + 1))
+            stack.append((children_right[node_id], parent_depth + 1))
+        else:
+            is_leaves[node_id] = True
+
+    l_rules=[]
+    n_nodes = clf.tree_.node_count
+    for i in range(n_nodes):
+        if is_leaves[i]:
+            print("Close rule")
+            print("%snode=%s leaf node." % (node_depth[i] * "\t", i),clf.tree_.value[i])
+        else:
+            curr_rule
+            print("%snode=%s test node: go to node %s if X[:, %s] <= %s else to "
+                    "node %s."
+                     % (node_depth[i] * "\t",
+		     i,
+		     children_left[i],
+		     feature[i],
+		     threshold[i],
+		     children_right[i],
+                ))
+
+
+
+
+    #tree_to_code(clf,feature_names)
