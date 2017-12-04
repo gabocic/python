@@ -39,6 +39,26 @@ def CART_classifier(data,estimator):
         feature_names = np.append(feature_names,'f'+i.__str__())
 
     ## Rules extractor
+    ## <<<< CHECK! IT SEEMS LIKE YOUD DON'T NEED THE ENTIRE RULE TO CALCULATE THE CONTINGENCY TABLE
+
+    ## http://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html
+    def retrieve_parent_rule(i):
+        right=0
+        parentid = np.argwhere(children_left == i)
+        if parentid.size == 0:
+            right=1
+            parentid = np.argwhere(children_right == i)[0][0]
+        else:
+            parentid = parentid[0][0]
+        print(parentid)
+        if right == 1:
+            symbol = '>'
+        else:
+            symbol = '<='
+        rule = {'feature':feature[parentid],'symbol':symbol,'threshold':threshold[parentid]}
+        return parentid,rule
+
+
 
     n_nodes = clf.tree_.node_count
     children_left = clf.tree_.children_left
@@ -50,6 +70,7 @@ def CART_classifier(data,estimator):
     is_leaves = np.zeros(shape=n_nodes, dtype=bool)
     stack = [(0, -1)]  # seed is the root node id and its parent depth
     while len(stack) > 0:
+        print(stack)
         node_id, parent_depth = stack.pop()
         node_depth[node_id] = parent_depth + 1
 
@@ -61,22 +82,41 @@ def CART_classifier(data,estimator):
             is_leaves[node_id] = True
 
     l_rules=[]
-    n_nodes = clf.tree_.node_count
+    print(children_left)
+    print(children_right)
+    print(is_leaves)
     for i in range(n_nodes):
         if is_leaves[i]:
-            print("Close rule")
+            rules=[]
+            print('nodo',i)
+            parentid,rule = retrieve_parent_rule(i)
+            rules.append(rule)
+            while parentid != 0:
+                parentid,rule = retrieve_parent_rule(parentid)
+                rules.append(rule)
+                #print('if feature',feature[parentid],symbol,threshold[parentid])
+            print(rules)
+
+    ####### Print validation tree ##################
+    for i in range(n_nodes):
+        if is_leaves[i]:
             print("%snode=%s leaf node." % (node_depth[i] * "\t", i),clf.tree_.value[i])
+            ## Strategy:
+            # 1) Search for a leaf node
+            # 2) Check children_left and children_right to find it's parent
+            # 3) Extract the condition for that parent using 'feature' and 'threshold'
+            # 4) Repeat the process until node 0 is reached
         else:
-            curr_rule
+            #curr_rule
             print("%snode=%s test node: go to node %s if X[:, %s] <= %s else to "
                     "node %s."
                      % (node_depth[i] * "\t",
-		     i,
-		     children_left[i],
-		     feature[i],
-		     threshold[i],
-		     children_right[i],
-                ))
+    		     i,
+    		     children_left[i],
+    		     feature[i],
+    		     threshold[i],
+    		     children_right[i],
+               ))
 
 
 
