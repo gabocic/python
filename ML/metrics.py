@@ -32,10 +32,13 @@ def clustering_metrics(estimator, name, data, time, sample_size):
         l_micd = []
         for c in clusters:
             ## For each cluster, calculates the distances between the cluster points
-            icd = get_intra_cluster_distances(clusters[c])
-            ## The first numpy.min obtains the minimum distance for that cluster
-            micd = np.max(icd)
-            l_micd.append(micd)
+            # Ignore single element clusters
+            if clusters[c].shape[0] == 1:
+                print("<<<< SINGLE ELEMENT CLUSTER WAS GENERATED >>>>")
+            else:
+                icd = get_intra_cluster_distances(clusters[c])
+                micd = np.max(icd)
+                l_micd.append(micd)
         
         ## Obtain the minimum distance across all clusters
         max_intra_cluster_dist = np.max(l_micd)

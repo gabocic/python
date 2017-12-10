@@ -16,7 +16,7 @@ def CN2_classifier(data,estimator):
 
     # Define target value
     #classv = Orange.data.DiscreteVariable(name='classv',values=estimator.labels_)
-    print(estimator.labels_.tolist())
+    #print(estimator.labels_.tolist())
     l_label=[]
     for label in estimator.labels_:
         l_label.append(label.__str__())    
@@ -44,7 +44,7 @@ def CN2_classifier(data,estimator):
     #learner.rule_finder.general_validator.max_rule_length = 3
 
     classifier = learner(table)
-    print(dir(classifier.rule_list))
+    #print(dir(classifier.rule_list))
     for myrule in classifier.rule_list:
             print(myrule.__str__())
 
