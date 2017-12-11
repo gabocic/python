@@ -3,9 +3,10 @@
 from sklearn import metrics
 import numpy as np
 from common import get_intra_cluster_distances
+from common import split_data_in_clusters
 from numpy.linalg import norm
 
-def clustering_metrics(estimator, name, data, time, sample_size):
+def clustering_metrics(estimator, name, data, time, sample_size,clusters):
 
 
     def dunn_index(estimator,data):
@@ -18,15 +19,18 @@ def clustering_metrics(estimator, name, data, time, sample_size):
             return distances
 
         # Split data into the different clusters
-        clusters={}
-        it = np.nditer(estimator.labels_, flags=['f_index'])
-        while not it.finished:
-            clusterid = int(it[0])
-            if clusterid in clusters: 
-                clusters[clusterid] = np.append(clusters[clusterid],[data[it.index,:]],axis=0)
-            else:
-                clusters[clusterid] = np.array([data[it.index,:]])
-            it.iternext()
+        #clusters = split_data_in_clusters(estimator,data)
+
+        #clusters={}
+        #it = np.nditer(estimator.labels_, flags=['f_index'])
+        #while not it.finished:
+        #    clusterid = int(it[0])
+        #    if clusterid in clusters: 
+        #        clusters[clusterid] = np.append(clusters[clusterid],[data[it.index,:]],axis=0)
+        #    else:
+        #        clusters[clusterid] = np.array([data[it.index,:]])
+        #    it.iternext()
+        
 
         # Calculates the maximum internal distance.
         l_micd = []
@@ -64,7 +68,7 @@ def clustering_metrics(estimator, name, data, time, sample_size):
     proc_metrics['dunn_index'] = dunn_index(estimator,data)
     print(proc_metrics)
 
-#def rules_metrics(clusters,rules):
+def rules_metrics(clusters,rules):
 
     ### <<< WIP: not working!!
     ## Create contingency Table for each Rule,Cluster pair
@@ -72,19 +76,32 @@ def clustering_metrics(estimator, name, data, time, sample_size):
     #c examples not covered by rule r
     #not c examples covered by rule r
     #not c examples not covered by rule r
+    
+    print("Cluster 0 count:",len(clusters[0]))
+    print("Cluster 1 count:",len(clusters[1]))
+    print("Cluster 2 count:",len(clusters[2]))
 
-    #d_cont_table=[[]]
+    d_cont_table={}
 
-    #for ruleid in rules:
-    #    for example in data:
-    #	    if rule apply to example
-    #	        retrieve cluster id
-    #	        r[ruleid][clusterid] +=1 
+    for ruleid in rules:
+        print("Rule: "+ruleid.__str__())
+        print("************************")
+        if ruleid not in d_cont_table:
+            d_cont_table[ruleid] = {}
+        for clusterid,clustercnt in enumerate(rules[ruleid]['classes_matched'][0]):
+            print("Cluster",clusterid)
+            print(clustercnt)
+            if clusterid not in d_cont_table[ruleid]:
+                d_cont_table[ruleid][clusterid] = {}
+            d_cont_table[ruleid][clusterid]['ncr'] = clustercnt
+            d_cont_table[ruleid][clusterid]['n!cr'] = sum(rules[ruleid]['classes_matched'][0]) - clustercnt
+            d_cont_table[ruleid][clusterid]['nc!r'] = len(clusters[clusterid]) - clustercnt
+    print(d_cont_table)
 
     ### VERIFY THIS VV
     #for clusterid in clusters:
-    #    d_cont_table=[ruleid][classid]['ncr'] = r[ruleid][clusterid]
-    #    d_cont_table=[ruleid][classid]['nc!r'] = len(clusters[clusterid]) - r[ruleid][clusterid]
-    #    d_cont_table=[ruleid][classid]['n!cr'] = sum(r[ruleid]) - r[ruleid][clusterid]
-    #    d_cont_table=[ruleid][classid]['n!c!r'] = (len(clusters)-len([clusterid])) - (sum(r[ruleid]) - r[ruleid][clusterid])
+    #    d_cont_table[ruleid][classid]['ncr'] = r[ruleid][clusterid]
+    #    d_cont_table[ruleid][classid]['nc!r'] = len(clusters[clusterid]) - r[ruleid][clusterid]
+    #    d_cont_table[ruleid][classid]['n!cr'] = sum(r[ruleid]) - r[ruleid][clusterid]
+    #    d_cont_table[ruleid][classid]['n!c!r'] = (len(clusters)-len([clusterid])) - (sum(r[ruleid]) - r[ruleid][clusterid])
 

@@ -1,5 +1,6 @@
 #!/home/gabriel/pythonenvs/v3.5/bin/python
 
+import numpy as np
 from numpy.linalg import norm
 from scipy.special import comb
 
@@ -14,4 +15,18 @@ def get_intra_cluster_distances(data):
         i+=1
     return l_pp_dist
 
+
+def split_data_in_clusters(estimator,data):
+
+    # Split data into the different clusters
+    clusters={}
+    it = np.nditer(estimator.labels_, flags=['f_index'])
+    while not it.finished:
+        clusterid = int(it[0])
+        if clusterid in clusters: 
+            clusters[clusterid] = np.append(clusters[clusterid],[data[it.index,:]],axis=0)
+        else:
+            clusters[clusterid] = np.array([data[it.index,:]])
+        it.iternext()
+    return clusters
 

@@ -95,7 +95,6 @@ def CART_classifier(data,estimator):
                 parentid,rule = retrieve_parent_rule(parentid)
                 rules.append(rule)
             l_rules[i] = {'rules':rules,'classes_matched':clf.tree_.value[i]}
-    print(l_rules)
         
 
     ####### Print validation tree ##################
@@ -115,3 +114,4 @@ def CART_classifier(data,estimator):
                ))
 
     #tree_to_code(clf,feature_names)
+    return l_rules
