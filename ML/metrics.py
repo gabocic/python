@@ -95,5 +95,27 @@ def rules_metrics(clusters,rules,n_samples):
             d_cont_table[ruleid][clusterid]['nc!r'] = len(clusters[clusterid]) - clustercnt
             d_cont_table[ruleid][clusterid]['n!c!r'] = (n_samples - sum(rules[ruleid]['classes_matched'][0])) - (len(clusters[clusterid])+clustercnt)
 
+    ## Weighted Sum of consistency and coverage (Michalsky, 1990)
+    # Qws = w1 x cons(R) + w2 x cover(R), with
+    #
+    #   cons(R) = ncr / nr
+    #   cover(R) = ncr / nc
+    #   w1 = 0.5 + 1/4 x cons(R)
+    #   w2 = 0.5 - 1/4 x cons(R)
+
+    for rule in d_cont_table:
+        print('Rule',rule)
+        sum_Qws = 0
+        for cluster in d_cont_table[rule]:
+            cons = d_cont_table[rule][cluster]['ncr'] / (d_cont_table[rule][cluster]['ncr']+d_cont_table[rule][cluster]['n!cr'])
+            cover = d_cont_table[rule][cluster]['ncr'] / (d_cont_table[rule][cluster]['ncr']+d_cont_table[rule][cluster]['nc!r'])
+            w1 = 0.5 + (1/4 * cons)
+            w2 = 0.5 - (1/4 * cons)
+            Qws = w1 * cons + w2 * cover
+            sum_Qws = sum_Qws + Qws
+        avg_Qws = sum_Qws / len(clusters)
+        print(avg_Qws)
+
+
 
 
