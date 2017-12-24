@@ -13,7 +13,9 @@ from common import split_data_in_clusters
 def main():
 
     # Generate dataset
-    dataset = create_dataset(n_samples=30, n_features=6,
+
+    n_samples = 30
+    dataset = create_dataset(n_samples=n_samples, n_features=6,
                         perc_lin=20, perc_repeated=0, n_groups=2,
                         avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=0,
                         shuffle=True,feat_dist=0,debug=0,plot=0,save_to_file=0)
@@ -43,7 +45,7 @@ def main():
     CN2_classifier(dataset,estimator)
 
     # Compute rules metrics
-    rules_metrics(clusters,rules)
+    rules_metrics(clusters,rules,n_samples)
 
 if __name__ == '__main__':
     main()

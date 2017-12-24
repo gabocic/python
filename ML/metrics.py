@@ -68,19 +68,14 @@ def clustering_metrics(estimator, name, data, time, sample_size,clusters):
     proc_metrics['dunn_index'] = dunn_index(estimator,data)
     print(proc_metrics)
 
-def rules_metrics(clusters,rules):
+def rules_metrics(clusters,rules,n_samples):
 
-    ### <<< WIP: not working!!
-    ## Create contingency Table for each Rule,Cluster pair
-    #c examples covered by rule r
-    #c examples not covered by rule r
-    #not c examples covered by rule r
-    #not c examples not covered by rule r
+    ## Create contingency table for each Rule,Cluster pair:
+    # -Cluster 'c' examples covered by rule 'r'
+    # -Cluster 'c' examples Not covered by rule 'r'
+    # -Non Cluster 'c'  covered by rule 'r'
+    # -Non Cluster 'c' examples Not covered by rule r
     
-    print("Cluster 0 count:",len(clusters[0]))
-    print("Cluster 1 count:",len(clusters[1]))
-    print("Cluster 2 count:",len(clusters[2]))
-
     d_cont_table={}
 
     for ruleid in rules:
@@ -88,6 +83,8 @@ def rules_metrics(clusters,rules):
         print("************************")
         if ruleid not in d_cont_table:
             d_cont_table[ruleid] = {}
+
+        # In this case clusterid is the position of the value in the list since the clusters are also numbered by position
         for clusterid,clustercnt in enumerate(rules[ruleid]['classes_matched'][0]):
             print("Cluster",clusterid)
             print(clustercnt)
@@ -96,12 +93,7 @@ def rules_metrics(clusters,rules):
             d_cont_table[ruleid][clusterid]['ncr'] = clustercnt
             d_cont_table[ruleid][clusterid]['n!cr'] = sum(rules[ruleid]['classes_matched'][0]) - clustercnt
             d_cont_table[ruleid][clusterid]['nc!r'] = len(clusters[clusterid]) - clustercnt
-    print(d_cont_table)
+            d_cont_table[ruleid][clusterid]['n!c!r'] = (n_samples - sum(rules[ruleid]['classes_matched'][0])) - (len(clusters[clusterid])+clustercnt)
 
-    ### VERIFY THIS VV
-    #for clusterid in clusters:
-    #    d_cont_table[ruleid][classid]['ncr'] = r[ruleid][clusterid]
-    #    d_cont_table[ruleid][classid]['nc!r'] = len(clusters[clusterid]) - r[ruleid][clusterid]
-    #    d_cont_table[ruleid][classid]['n!cr'] = sum(r[ruleid]) - r[ruleid][clusterid]
-    #    d_cont_table[ruleid][classid]['n!c!r'] = (len(clusters)-len([clusterid])) - (sum(r[ruleid]) - r[ruleid][clusterid])
+
 
