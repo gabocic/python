@@ -5,6 +5,7 @@ import numpy as np
 from common import get_intra_cluster_distances
 from common import split_data_in_clusters
 from numpy.linalg import norm
+from math import e
 
 def clustering_metrics(estimator, name, data, time, sample_size,clusters):
 
@@ -103,19 +104,51 @@ def rules_metrics(clusters,rules,n_samples):
     #   w1 = 0.5 + 1/4 x cons(R)
     #   w2 = 0.5 - 1/4 x cons(R)
 
+    ## Product of consistency and coverage (Brazdil & Torgo, 1990)
+    # Qprod = cons(R) x e^(cover(R) - 1)
+
+    ## Pearson X2 statistic
+    # x2 = N(ncr x n!c!r - n!cr x nc!r)^2 / (nc x n!c x nr x n!r) 
+
     for rule in d_cont_table:
         print('Rule',rule)
         sum_Qws = 0
+        sum_Qprod = 0
+        sum_X2 = 0
         for cluster in d_cont_table[rule]:
-            cons = d_cont_table[rule][cluster]['ncr'] / (d_cont_table[rule][cluster]['ncr']+d_cont_table[rule][cluster]['n!cr'])
-            cover = d_cont_table[rule][cluster]['ncr'] / (d_cont_table[rule][cluster]['ncr']+d_cont_table[rule][cluster]['nc!r'])
+            ncr = d_cont_table[rule][cluster]['ncr']
+            nIcr = d_cont_table[rule][cluster]['n!cr']
+            ncIr = d_cont_table[rule][cluster]['nc!r']
+            cons = ncr / (ncr + nIcr)
+            cover = ncr / (ncr + ncIr)
             w1 = 0.5 + (1/4 * cons)
             w2 = 0.5 - (1/4 * cons)
+
+            # Qws
             Qws = w1 * cons + w2 * cover
             sum_Qws = sum_Qws + Qws
-        avg_Qws = sum_Qws / len(clusters)
-        print(avg_Qws)
 
+            # Qprod
+            Qprod = cons * (e**(cover-1))
+            sum_Qprod = sum_Qprod + Qprod
+
+            # X2
+            nIcIr = d_cont_table[rule][cluster]['n!c!r']
+            nc = d_cont_table[rule][cluster]['nc!r'] + d_cont_table[rule][cluster]['ncr']
+            nr = d_cont_table[rule][cluster]['n!cr'] + d_cont_table[rule][cluster]['ncr']
+            nIc = d_cont_table[rule][cluster]['n!c!r'] + d_cont_table[rule][cluster]['n!cr']
+            nIr = d_cont_table[rule][cluster]['n!c!r'] + d_cont_table[rule][cluster]['nc!r']
+            X2 = n_samples * ((ncr*nIcIr - nIcr*ncIr)**2) / (nc*nIc*nr*nIr)
+            sum_X2 = sum_X2 + X2
+
+        avg_Qws = round(sum_Qws / len(clusters),2)
+        avg_Qprod = round(sum_Qprod / len(clusters),2)
+        avg_X2 = round(sum_X2 / len(clusters),2)
+        print('avg_Qws: ',avg_Qws)
+        print('avg_Qprod: ',avg_Qprod)
+        print('avg_X2: ',avg_X2)
+
+    
 
 
 
