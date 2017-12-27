@@ -6,6 +6,7 @@ from common import get_intra_cluster_distances
 from common import split_data_in_clusters
 from numpy.linalg import norm
 from math import e
+from math import log
 
 def clustering_metrics(estimator, name, data, time, sample_size,clusters):
 
@@ -105,16 +106,41 @@ def rules_metrics(clusters,rules,n_samples):
     #   w2 = 0.5 - 1/4 x cons(R)
 
     ## Product of consistency and coverage (Brazdil & Torgo, 1990)
+    #
     # Qprod = cons(R) x e^(cover(R) - 1)
 
-    ## Pearson X2 statistic
+    ## Pearson X2 statistic [DISABLED] - as per the paper, a different formula was used for the experiments
+    #
     # x2 = N(ncr x n!c!r - n!cr x nc!r)^2 / (nc x n!c x nr x n!r) 
+
+    ## Cohen's formula (Cohen, 1960)
+    #
+    #   Qcohen = frc + f!r!c - (fr x fc + f!r x f!c) / (1 - (fr x fc + f!r x f!c))
+    # 
+    # It is directly interpretable as the proportion of joint judgments in which there is agreement, after chance
+    # agreement is excluded. Its upper limit is +1.00, and its lower limit
+    # falls between zero and -1.00, depending on the distribution of
+    # judgments by the two judges.
+
+    ## Coleman's Formula (Bishop, Fienbehg and Holland, 1991; Bruha and Kockova, 1993)
+    #
+    # Qcoleman = (fcr - fr * fc)/(fr - fr * fc)
+
+
+    ## Information Score (Kononenko and Bratko, 1991)
+    #
+    # Qis = -log(nc / N) + log(nrc / nr)
+
 
     for rule in d_cont_table:
         print('Rule',rule)
         sum_Qws = 0
         sum_Qprod = 0
-        sum_X2 = 0
+        #sum_X2 = 0
+        sum_Qcohen = 0
+        sum_Qcoleman = 0
+        sum_Qis = 0
+
         for cluster in d_cont_table[rule]:
             ncr = d_cont_table[rule][cluster]['ncr']
             nIcr = d_cont_table[rule][cluster]['n!cr']
@@ -138,15 +164,47 @@ def rules_metrics(clusters,rules,n_samples):
             nr = d_cont_table[rule][cluster]['n!cr'] + d_cont_table[rule][cluster]['ncr']
             nIc = d_cont_table[rule][cluster]['n!c!r'] + d_cont_table[rule][cluster]['n!cr']
             nIr = d_cont_table[rule][cluster]['n!c!r'] + d_cont_table[rule][cluster]['nc!r']
-            X2 = n_samples * ((ncr*nIcIr - nIcr*ncIr)**2) / (nc*nIc*nr*nIr)
-            sum_X2 = sum_X2 + X2
+            #X2 = n_samples * ((ncr*nIcIr - nIcr*ncIr)**2) / (nc*nIc*nr*nIr)
+            #sum_X2 = sum_X2 + X2
+
+            # Qcohen
+            fr = nr / n_samples 
+            fc = nc / n_samples
+            fIr = nIr / n_samples
+            fIc = nIc / n_samples
+            fcr = ncr / n_samples
+            fIcIr = nIcIr / n_samples
+            Qcohen = (fcr + fIcIr - (fr * fc + fIr * fIc)) / (1 - (fr * fc + fIr * fIc))
+            sum_Qcohen = sum_Qcohen + Qcohen
+
+            # Qcoleman
+            Qcoleman = (fcr - fr * fc)/(fr - fr * fc)
+            sum_Qcoleman = sum_Qcoleman + Qcoleman
+
+            print('Cluster 0:',len(clusters[0]))
+            print('Cluster 1:',len(clusters[1]))
+            print('Cluster 2:',len(clusters[2]))
+            
+            # Qis
+            Qis = -log(nc / n_samples)
+            print(ncr / nr)
+            Qis =  log(ncr / nr)
+            sum_Qis = sum_Qis + Qis
+
+
 
         avg_Qws = round(sum_Qws / len(clusters),2)
         avg_Qprod = round(sum_Qprod / len(clusters),2)
-        avg_X2 = round(sum_X2 / len(clusters),2)
+        #avg_X2 = round(sum_X2 / len(clusters),2)
+        avg_Qcohen = round(sum_Qcohen / len(clusters),2)
+        avg_Qcoleman = round(sum_Qcoleman / len(clusters),2)
+        avg_Qis = round(sum_Qis / len(clusters),2)
         print('avg_Qws: ',avg_Qws)
         print('avg_Qprod: ',avg_Qprod)
-        print('avg_X2: ',avg_X2)
+        #print('avg_X2: ',avg_X2)
+        print('avg_Qcohen: ',avg_Qcohen)
+        print('avg_Qcoleman: ',avg_Qcoleman)
+        print('avg_Qis: ',avg_Qis)
 
     
 
