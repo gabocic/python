@@ -130,7 +130,18 @@ def rules_metrics(clusters,rules,n_samples):
     ## Information Score (Kononenko and Bratko, 1991)
     #
     # Qis = -log(nc / N) + log(nrc / nr)
+    #
+    # Information score calculation will fail for every Rule-Cluster combination for which the rule doesn't cover any cluster members (ncr = 0)
+    # All Rule-Cluster combinations where ncr = 0  won't be considered in the average (avg_Qis)
 
+
+    ## Measure of logical sufficiency (Duda, Gaschnig and Hart, 1979; Ali, Pazzani, 1993)
+    # 
+    # Qls = (ncr/nc) / (nrIc/nIc)
+
+    ## Measure of discrimination (An and Cercone, 1998)
+    #
+    # Qmd = log((ncr/ncIr)/(nIcr/nIcIr))
 
     for rule in d_cont_table:
         print('Rule',rule)
@@ -140,6 +151,8 @@ def rules_metrics(clusters,rules,n_samples):
         sum_Qcohen = 0
         sum_Qcoleman = 0
         sum_Qis = 0
+        sum_Qls = 0
+        sum_Qmd = 0
 
         for cluster in d_cont_table[rule]:
             ncr = d_cont_table[rule][cluster]['ncr']
@@ -181,17 +194,26 @@ def rules_metrics(clusters,rules,n_samples):
             Qcoleman = (fcr - fr * fc)/(fr - fr * fc)
             sum_Qcoleman = sum_Qcoleman + Qcoleman
 
-            print('Cluster 0:',len(clusters[0]))
-            print('Cluster 1:',len(clusters[1]))
-            print('Cluster 2:',len(clusters[2]))
-            
             # Qis
-            Qis = -log(nc / n_samples)
-            print(ncr / nr)
-            Qis =  log(ncr / nr)
-            sum_Qis = sum_Qis + Qis
+            if ncr/nr == 0:
+                pass
+            else:
+                Qis = -log(nc / n_samples) + log(ncr / nr)
+                sum_Qis = sum_Qis + Qis
 
+            # Qls
+            if nc == 0 or nIc == 0 or nIcr/nIc == 0:
+                pass
+            else:
+                Qls = (ncr/nc) / (nIcr/nIc)
+                sum_Qls = sum_Qls + Qls
 
+            # Qmd
+            if ncIr == 0 or nIcIr == 0 or nIcr/nIcIr == 0 or (ncr/ncIr)/(nIcr/nIcIr) == 0:
+                pass
+            else:
+                Qmd = log((ncr/ncIr)/(nIcr/nIcIr))
+                sum_Qmd = sum_Qmd + Qmd
 
         avg_Qws = round(sum_Qws / len(clusters),2)
         avg_Qprod = round(sum_Qprod / len(clusters),2)
@@ -199,14 +221,13 @@ def rules_metrics(clusters,rules,n_samples):
         avg_Qcohen = round(sum_Qcohen / len(clusters),2)
         avg_Qcoleman = round(sum_Qcoleman / len(clusters),2)
         avg_Qis = round(sum_Qis / len(clusters),2)
+        avg_Qls = round(sum_Qls / len(clusters),2)
+        avg_Qmd = round(sum_Qmd / len(clusters),2)
         print('avg_Qws: ',avg_Qws)
         print('avg_Qprod: ',avg_Qprod)
         #print('avg_X2: ',avg_X2)
         print('avg_Qcohen: ',avg_Qcohen)
         print('avg_Qcoleman: ',avg_Qcoleman)
-        print('avg_Qis: ',avg_Qis)
-
-    
-
-
-
+        print('avg_Qis ',avg_Qis)
+        print('avg_Qls ',avg_Qls)
+        print('avg_Qmd ',avg_Qmd)

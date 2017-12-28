@@ -38,13 +38,16 @@ def CN2_classifier(data,estimator):
     learner.rule_finder.search_strategy.constrain_continuous = True
 
     # found rules must cover at least 15 examples
-    #learner.rule_finder.general_validator.min_covered_examples = 1
+    learner.rule_finder.general_validator.min_covered_examples = 1
 
     # found rules may combine at most 2 selectors (conditions)
     #learner.rule_finder.general_validator.max_rule_length = 3
 
     classifier = learner(table)
-    #print(dir(classifier.rule_list))
     for myrule in classifier.rule_list:
+            print('covered examples #:',len(myrule.covered_examples))
+            print('prediction:',myrule.domain.class_var.values[myrule.prediction])
+            print('selectors:',myrule.selectors)
             print(myrule.__str__())
+            #break
 

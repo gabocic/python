@@ -114,4 +114,6 @@ def CART_classifier(data,estimator):
                ))
 
     #tree_to_code(clf,feature_names)
+    for regla in l_rules:   
+        print(l_rules[regla]['classes_matched'])
     return l_rules
