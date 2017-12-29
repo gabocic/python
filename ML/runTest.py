@@ -14,7 +14,7 @@ def main():
 
     # Generate dataset
 
-    n_samples = 100
+    n_samples = 40
     dataset = create_dataset(n_samples=n_samples, n_features=6,
                         perc_lin=20, perc_repeated=0, n_groups=2,
                         avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=0,

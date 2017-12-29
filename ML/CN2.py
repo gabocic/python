@@ -44,10 +44,18 @@ def CN2_classifier(data,estimator):
     #learner.rule_finder.general_validator.max_rule_length = 3
 
     classifier = learner(table)
-    for myrule in classifier.rule_list:
-            print('covered examples #:',len(myrule.covered_examples))
-            print('prediction:',myrule.domain.class_var.values[myrule.prediction])
-            print('selectors:',myrule.selectors)
-            print(myrule.__str__())
-            #break
 
+    # Generate rules dictionary
+    l_rules={}
+    ruleid = 0
+    for myrule in classifier.rule_list:
+        n_covexamples = 0
+        for boolean in myrule.covered_examples:
+            if boolean:
+                n_covexamples+=1
+        l_rules[ruleid]['classes_matched'] = np.array(())
+        print('covered examples:',n_covexamples)
+        print('prediction:',myrule.domain.class_var.values[myrule.prediction])
+        print('selectors:',myrule.selectors)
+        print(myrule.__str__())
+        ruleid
