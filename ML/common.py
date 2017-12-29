@@ -20,13 +20,20 @@ def split_data_in_clusters(estimator,data):
 
     # Split data into the different clusters
     clusters={}
+    #outliers = []
     it = np.nditer(estimator.labels_, flags=['f_index'])
     while not it.finished:
         clusterid = int(it[0])
+
+        # When splitting dbscan-discovered clusters, we want to exclude the outliers (clusterId = -1)
+        #if clusterid == -1:
+        #    outliers.append(data[it.index,:])
+        #else:
         if clusterid in clusters: 
             clusters[clusterid] = np.append(clusters[clusterid],[data[it.index,:]],axis=0)
         else:
             clusters[clusterid] = np.array([data[it.index,:]])
         it.iternext()
+    #return clusters,outliers
     return clusters
 

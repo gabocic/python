@@ -17,9 +17,13 @@ def CN2_classifier(data,estimator):
     # Define target value
     #classv = Orange.data.DiscreteVariable(name='classv',values=estimator.labels_)
     #print(estimator.labels_.tolist())
-    l_label=[]
-    for label in estimator.labels_:
-        l_label.append(label.__str__())    
+    
+    l_label = [str(i) for i in np.unique(estimator.labels_).tolist()]
+    
+    #print('<<<<<<<<<<<<<<<<<<<<< EN CN2!! <<<<',estimator.labels_)
+    #for label in estimator.labels_:
+    #    if label != -1:
+    #        l_label.append(label.__str__())    
     classv = Orange.data.DiscreteVariable(name='classv',values=l_label)
 
     # Create domain based on the above attributes
@@ -49,13 +53,23 @@ def CN2_classifier(data,estimator):
     l_rules={}
     ruleid = 0
     for myrule in classifier.rule_list:
+        l_rules[ruleid]={}
         n_covexamples = 0
         for boolean in myrule.covered_examples:
             if boolean:
                 n_covexamples+=1
-        l_rules[ruleid]['classes_matched'] = np.array(())
+        l_rules[ruleid]['classes_matched'] = np.zeros((1,max(estimator.labels_)+1))
+        #print(type(myrule.domain.class_var.values[myrule.prediction]))
+        l_rules[ruleid]['classes_matched'][0,int(myrule.domain.class_var.values[myrule.prediction])] = n_covexamples
+        l_rules[ruleid]['rules'] = []
+        for selector in myrule.selectors:
+            subrule = {'feature':selector.column,'symbol':selector.op,'threshold':selector.value}
+            l_rules[ruleid]['rules'].append(subrule)
         print('covered examples:',n_covexamples)
         print('prediction:',myrule.domain.class_var.values[myrule.prediction])
-        print('selectors:',myrule.selectors)
-        print(myrule.__str__())
-        ruleid
+        print(l_rules[ruleid]['classes_matched'])
+        #print(myrule.curr_class_dist)
+        #print(dir(myrule.domain))
+        #print(myrule.domain.class_var)
+        ruleid+=1
+    return l_rules

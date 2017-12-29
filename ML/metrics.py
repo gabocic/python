@@ -64,7 +64,7 @@ def clustering_metrics(estimator, name, data, time, sample_size,clusters):
     proc_metrics={}
     proc_metrics['name'] =  name
     proc_metrics['time'] = time
-    proc_metrics['inertia'] = estimator.inertia_
+    #proc_metrics['inertia'] = estimator.inertia_
     proc_metrics['calinski_harabaz_score'] = metrics.calinski_harabaz_score(data, estimator.labels_)
     proc_metrics['silhouette_score'] = metrics.silhouette_score(data, estimator.labels_,metric='euclidean',sample_size=sample_size)
     proc_metrics['dunn_index'] = dunn_index(estimator,data)
