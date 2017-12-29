@@ -9,13 +9,38 @@ from metrics import rules_metrics
 from kmeans import k_means_clustering
 from dbscan import dbscan_clustering
 from birch import birch_clustering
+from meanshift import meanshift_clustering
 from CART import CART_classifier
 from CN2 import CN2_classifier
 from common import split_data_in_clusters
 import numpy as np
 
-def main():
-   
+class bcolors:
+    BANNER = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
+def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc_repeated):
+
+    # Generate dataset
+    dataset = create_dataset(n_samples=p_n_samples, n_features=p_n_features,
+                        perc_lin=p_perc_lin, perc_repeated=p_perc_repeated, n_groups=2,
+                        avg_sample_dist=1.0, perc_feat_lin_dep=0,
+                        feat_dist=0,debug=0,plot=0,save_to_file=0)
+
+
+    # Validate dataset is within the specifications
+    analyze_dataset(data=dataset,debug=0,plot=0,load_from_file=None)
+
+
+    return dataset
+
+def process_and_analyze():
+
     l_clustering_alg = [
             'kmeans_++',
             'kmeans_random',
@@ -29,23 +54,9 @@ def main():
             'cn2'
             ]
 
-
-    # Run parameters
-    n_samples = 1000
     n_clusters = 3 # only for the algorithms that support this
-    clustering_alg = 'birch'
+    clustering_alg = 'meanshift'
     rulesind_alg = 'cn2'
-
-    # Generate dataset
-    dataset = create_dataset(n_samples=n_samples, n_features=6,
-                        perc_lin=20, perc_repeated=0, n_groups=2,
-                        avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=0,
-                        shuffle=True,feat_dist=0,debug=0,plot=0,save_to_file=0)
-
-    print(dataset)
-
-    # Validate dataset is within the specifications
-    analyze_dataset(data=dataset,debug=0,plot=0,load_from_file=None)
 
     # Scale data
     scaleddata = sklearn_scale(dataset) 
@@ -76,7 +87,11 @@ def main():
     elif clustering_alg == 'birch':
         estimator,elap_time = birch_clustering(data=scaleddata,plot=0,p_n_clusters=n_clusters,p_n_jobs=4)
     elif clustering_alg == 'meanshift':
-        pass
+        estimator,elap_time = meanshift_clustering(data=scaleddata,plot=0,p_n_jobs=4)
+
+    else:
+        print('Clustering algorithm not found')
+        sys.exit()
 
 
     # Split data in clusters
@@ -94,8 +109,11 @@ def main():
 
     if rulesind_alg == 'cart':
         rules = CART_classifier(dataset,estimator)
-    if rulesind_alg == 'cn2':
+    elif rulesind_alg == 'cn2':
         rules = CN2_classifier(dataset,estimator)
+    else:
+        print('Rules induction algorithm not found')
+        sys.exit()
 
     # Compute rules metrics
     rules_metrics(clusters,rules,n_samples)

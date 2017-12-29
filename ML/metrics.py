@@ -81,15 +81,15 @@ def rules_metrics(clusters,rules,n_samples):
     d_cont_table={}
 
     for ruleid in rules:
-        print("Rule: "+ruleid.__str__())
-        print("************************")
+        #print("Rule: "+ruleid.__str__())
+        #print("************************")
         if ruleid not in d_cont_table:
             d_cont_table[ruleid] = {}
 
         # In this case clusterid is the position of the value in the list since the clusters are also numbered by position
         for clusterid,clustercnt in enumerate(rules[ruleid]['classes_matched'][0]):
-            print("Cluster",clusterid)
-            print(clustercnt)
+            #print("Cluster",clusterid)
+            #print(clustercnt)
             if clusterid not in d_cont_table[ruleid]:
                 d_cont_table[ruleid][clusterid] = {}
             d_cont_table[ruleid][clusterid]['ncr'] = clustercnt

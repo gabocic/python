@@ -17,8 +17,8 @@ class TooFewPoints(Exception):
 
 def create_dataset(n_samples=20, n_features=3,
                         perc_lin=20, perc_repeated=10, n_groups=2,
-                        avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=25,
-                        shuffle=True,feat_dist=0,debug=0,plot=0,save_to_file=0):
+                        avg_sample_dist=1.0, perc_feat_lin_dep=25,
+                        feat_dist=0,debug=0,plot=0,save_to_file=0):
 
     def logger(message,dbg_level):
         if dbg_level <= debug:
@@ -197,19 +197,9 @@ def create_dataset(n_samples=20, n_features=3,
             plot_2d_3d(element_list,n_features)
 
 
-    # Randomly permute features
-    #indices = np.arange(n_features)
-    #generator.shuffle(indices)
-    #X[:, :] = X[:, indices]
 
     # Save to file
     if save_to_file == 1:
         datasets.dump_svmlight_file(Xf,np.zeros(n_samples),'dataset.svl')
 
     return Xf
-
-#create_dataset(n_samples=10, n_features=3,
-#                        perc_lin=10, perc_repeated=0, n_groups=2,
-#                        avg_sample_dist=1.0, shift=0.0, scale=1.0, perc_feat_lin_dep=0,
-#                        shuffle=True,feat_dist=0,debug=2,plot=1,save_to_file=1)
-

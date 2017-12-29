@@ -53,6 +53,8 @@ def CN2_classifier(data,estimator):
     l_rules={}
     ruleid = 0
     for myrule in classifier.rule_list:
+        #print(myrule.initial_class_dist)
+        #print(myrule.prior_class_dist)
         l_rules[ruleid]={}
         n_covexamples = 0
         for boolean in myrule.covered_examples:
@@ -65,9 +67,9 @@ def CN2_classifier(data,estimator):
         for selector in myrule.selectors:
             subrule = {'feature':selector.column,'symbol':selector.op,'threshold':selector.value}
             l_rules[ruleid]['rules'].append(subrule)
-        print('covered examples:',n_covexamples)
-        print('prediction:',myrule.domain.class_var.values[myrule.prediction])
-        print(l_rules[ruleid]['classes_matched'])
+        #print('covered examples:',n_covexamples)
+        #print('prediction:',myrule.domain.class_var.values[myrule.prediction])
+        #print(l_rules[ruleid]['classes_matched'])
         #print(myrule.curr_class_dist)
         #print(dir(myrule.domain))
         #print(myrule.domain.class_var)
