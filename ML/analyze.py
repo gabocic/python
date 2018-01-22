@@ -7,10 +7,7 @@ from sklearn import datasets
 from numpy.linalg import norm
 from sympy.solvers import solve
 from sympy import Symbol
-
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from plot_2d_3d import plot_2d_3d
+from scipy.spatial import distance_matrix
 from common import get_intra_cluster_distances
 
 class DatafileNotFound(Exception):
@@ -204,13 +201,33 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
             element_list.append(element)
             plot_2d_3d(element_list,n_features)
  
+    ## Distance distribution analysis
 
+    # Generate distance to the mean matrix
+    dist2mean = distance_matrix(data,[datamean])
 
-    # Plot each point using a different color if distance from the line is within the threshold
-#    for point in linp:
-#        #ax.scatter(*point,color='y')
-#    for point in nlinp:
-#        #ax.scatter(*point,color='r')
+    # Sort the distances array to reduce time complexity
+    dist2mean = np.sort(dist2mean,axis=0)
     
-#    ax.scatter(*datamean,color='g',s=10)
-#    ax.plot(*linepts.T,'-', color='b')
+    # Get the 20% of the furthest points
+    last20 = -(int(dist2mean.shape[0]*.2)) 
+    l_20percfur = dist2mean[last20:]
+    print(l_20percfur)
+    
+
+    # Determine Outlier theslhold as 2 x distance from the mean to the furthest point not included in the top 20%
+    olthres = 1.5 * dist2mean[last20-1:last20]
+    #olthres = int(l_20percfur[-8:-7])
+    print('olthres',olthres)
+    position = np.searchsorted(l_20percfur.T[0],olthres)
+    print('position',position)
+    numol = l_20percfur.shape[0] - position
+    print('numol',numol)
+
+    #l_bins=[0,distmax2mean[0][0]*0.3,distmax2mean[0][0]*0.6,distmax2mean[0][0]*0.9]
+    #print(l_bins)
+
+    # Check how many points are higher than the 90th percentile
+    #print('Distance histogram')
+    #print(np.histogram(dist2mean.T[0],bins=l_bins))
+

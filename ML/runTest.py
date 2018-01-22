@@ -119,4 +119,4 @@ def process_and_analyze():
     rules_metrics(clusters,rules,n_samples)
 
 if __name__ == '__main__':
-    main()
+    dataset_generation_and_validation(5,100,80,10)
