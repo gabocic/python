@@ -165,8 +165,8 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
     l_linp = len(linp)
     l_nlinp = len(nlinp)
 
-    logger(message="Percentage of linear points:",var=100*(l_linp/(l_linp+l_nlinp)),dbg_level=0)
-    logger(message="Percentage of Non linear points:",var=100*(l_nlinp/(l_linp+l_nlinp)),dbg_level=0)
+    logger(message="Percentage of linear points:",var=round(100*(l_linp/(l_linp+l_nlinp)),2),dbg_level=0)
+    logger(message="Percentage of Non linear points:",var=round(100*(l_nlinp/(l_linp+l_nlinp)),2),dbg_level=0)
     #sys.exit()
 
     ## Calculate distance between points

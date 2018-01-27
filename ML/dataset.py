@@ -16,9 +16,8 @@ class TooFewPoints(Exception):
 
 
 def create_dataset(n_samples=20, n_features=3,
-                        perc_lin=20, perc_repeated=10, n_groups=2,
-                        avg_sample_dist=1.0, perc_feat_lin_dep=25,
-                        feat_dist=0,debug=0,plot=0,save_to_file=0):
+                        perc_lin=20, perc_repeated=10, n_groups=2,perc_outliers=10,
+                        debug=1,plot=0,save_to_file=0):
 
     def logger(message,dbg_level):
         if dbg_level <= debug:
@@ -26,40 +25,44 @@ def create_dataset(n_samples=20, n_features=3,
 
 
     ### Main ####
-    # Calculate the percentage of useful values we need to generate
 
-    # << ToDo: check that percentage parameters do not exceed 80% and that they end in zero (10, 20, 30.. etc)
-    perc_usef_samples = 100 - perc_lin - perc_repeated
-    usef_samples = int(0.01 * perc_usef_samples * n_samples)
+    max_special_points_perc = 90
+    min_dataset_size = 100
+
+    if (perc_lin + perc_repeated + perc_outliers) > max_special_points_perc:
+        logger('The sum of special points percentages cannot exceed '+max_special_points_perc.__str__(),0)
+        return np.array([[]])
+
+    if n_samples < min_dataset_size:
+        logger('The minimum number of samples is '+min_dataset_size.__str__(),0)
+        return np.array([[]])
+
+    # Calculate the number of samples for each type
     lin_samples = int(0.01 * perc_lin * n_samples)
     rep_samples = int(0.01 * perc_repeated * n_samples)
-    logger("Useful samples: "+usef_samples.__str__(),1)
+    out_samples = int(0.01 * perc_outliers * n_samples)
+    usef_samples = n_samples - out_samples - rep_samples - lin_samples
+    logger("Random samples: "+usef_samples.__str__(),1)
     logger("Linear samples: "+lin_samples.__str__(),1)
     logger("Repeated samples: "+rep_samples.__str__(),1)
+    logger("Outliers: "+out_samples.__str__(),1)
 
-    # feat_dist =  Feature distribution
-    ## 0: interleave standard normal and uniform values
-    ## [ x, y]: provide amount of attributes for each type (x and y >= 0)
-
-    if feat_dist == 0:
-        unifor_feat = int(n_features/2)
-        standa_feat = n_features - unifor_feat
+    # Features distributions
+    ## Interleave standard normal and uniform values
+    unifor_feat = int(n_features/2)
+    standa_feat = n_features - unifor_feat
     logger("uniform features: "+unifor_feat.__str__(),1)
     logger("standard features: "+standa_feat.__str__(),1)
 
-    # Harcoded value range
-    value_limit = 100
-    #value_limit = 10
-
-    # Random numbers generator
-    #generator = np.random
+    # Harcoded value range: all sample values will be between value_limit and -value_limit
+    value_limit = 100000
 
     # Initialize dataset 
     X = np.zeros((usef_samples, n_features))
     Xs = np.zeros((usef_samples, standa_feat))
     Xu = np.zeros((usef_samples, unifor_feat))
 
-    # Generate standard columns
+    # Generate standard attributes
     for i in range(0,standa_feat):
         generator = np.random
         # Create a random number for mean and stdev
@@ -74,25 +77,23 @@ def create_dataset(n_samples=20, n_features=3,
         m = stdev * generator.randn(usef_samples,1) + mean
         Xs[:usef_samples, i:i+1] = m
 
+    # Round Xs values to 3 decimals
     Xs = np.around(Xs,3)
 
-    logger("Standard columns:",2)
+    logger("Standard attributes:",2)
     logger(Xs,2)
 
-    # Generate uniform columns
+    # Generate uniform attributes
     for i in range(0,unifor_feat):
         # Create a random number for mean and stdev
         generator = np.random
         m = generator.random_integers(low=(-1)*value_limit, high=value_limit, size=(usef_samples,1))
         Xu[:usef_samples, i:i+1] = m
 
-    logger("Uniform columns:",2)
+    logger("Uniform attributes:",2)
     logger(Xu,2)
 
-    # Append columns to X
-    #X[:usef_samples,0:standa_feat] = Xs
-    #X[:usef_samples,0:unifor_feat] = Xu
-    #X[:usef_samples,unifor_feat:standa_feat+unifor_feat] = Xs
+    # Append attributes to X - interleave standard and uniform attributes
     r = 0
     for p in range(0,unifor_feat):
         X[:usef_samples,r:r+1] = Xs[:,p:p+1]
@@ -101,12 +102,12 @@ def create_dataset(n_samples=20, n_features=3,
     if standa_feat > unifor_feat:
         X[:usef_samples,r:r+1] = Xs[:,p+1:p+2]
 
-    logger("Standard and uniform columns combined",2)
+    logger("Standard and uniform attributes combined",2)
     logger(X,2)
 
-    ## Generate samples with linear relation to a ramdom pair of samples
+    ## Generate samples with linear relation to a random pair of samples
     #  ******************************************************************
-    # Choose two points, generate the parametric equation of the line that passes through those two points, and use the parameter to generate samples
+    # Choose two points, generate the parametric equation of the line that crosses those two points, and use the parameter to generate samples
     # Add some noise to make it more realistic
 
     if lin_samples > 0:
@@ -154,8 +155,17 @@ def create_dataset(n_samples=20, n_features=3,
         logger("Linear points:",2)
         logger(lin_points,2)
 
-    # Dummy samples generation
-    repeated = np.zeros((rep_samples,n_features))        
+    # Repeated samples generation
+    repeated = np.zeros((rep_samples,n_features))
+    ## << CONTINUTE HERE!!!
+    # 1) Choose samples from the Random samples based on n_groups
+    # 2) Generate the repeated submatrix based on the above samples
+    # 3) Stack
+
+    # Outliers generation
+    # 1) Choose the N furthest points
+    # 2) Move that point away from 'mean' in point-mean direction by 'dist'
+    # 3) Stack
 
 
     Xf = X
@@ -164,19 +174,6 @@ def create_dataset(n_samples=20, n_features=3,
         Xf = np.vstack((X,np.around(lin_points,3)))
     if rep_samples > 0:
         Xf = np.vstack((Xf,np.around(repeated,3)))
-
-    ## Shrink the dataset by shrink factor
-    # Average for each set of coordinates
-    #datamean = Xf.mean(axis=0)
-
-    
-    # Scale values
-    #u = 0
-    #for point in Xf:
-    #    #print(point)
-    #    dv = datamean - point
-    #Xf = Xf + 0.5*(norm(datamean-Xf))*(datamean-Xf)
-
 
 
     logger("\n Final Dataset:\n *****************",2)

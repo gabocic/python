@@ -23,15 +23,36 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+def fatal_error():
+    sys.exit()
 
-def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc_repeated):
+def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc_repeated,p_perc_outliers):
+
+    
+
+    print("")
+    print("")
+    print("Dataset generation")
+    print("*"*70)
+    print("")
 
     # Generate dataset
     dataset = create_dataset(n_samples=p_n_samples, n_features=p_n_features,
-                        perc_lin=p_perc_lin, perc_repeated=p_perc_repeated, n_groups=2,
-                        avg_sample_dist=1.0, perc_feat_lin_dep=0,
-                        feat_dist=0,debug=0,plot=0,save_to_file=0)
+                        perc_lin=p_perc_lin, perc_repeated=p_perc_repeated, n_groups=2,perc_outliers=p_perc_outliers,
+                        debug=1,plot=0,save_to_file=0)
+    
+    if dataset.shape == (1,0):
+        fatal_error()
 
+
+    print("")
+    print("")
+    print("#"*70)
+    print("")
+    print("")
+    print("Dataset validation")
+    print("*"*70)
+    print("")
 
     # Validate dataset is within the specifications
     analyze_dataset(data=dataset,debug=0,plot=0,load_from_file=None)
@@ -119,4 +140,4 @@ def process_and_analyze():
     rules_metrics(clusters,rules,n_samples)
 
 if __name__ == '__main__':
-    dataset_generation_and_validation(5,100,80,10)
+    dataset_generation_and_validation(5,101,60,20,10)
