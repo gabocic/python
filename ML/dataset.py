@@ -16,7 +16,7 @@ class TooFewPoints(Exception):
 
 
 def create_dataset(n_samples=20, n_features=3,
-                        perc_lin=20, perc_repeated=10, n_groups=2,perc_outliers=10,
+                        perc_lin=20, perc_repeated=10, n_groups=6,perc_outliers=10,
                         debug=1,plot=0,save_to_file=0):
 
     def logger(message,dbg_level):
@@ -44,7 +44,7 @@ def create_dataset(n_samples=20, n_features=3,
     usef_samples = n_samples - out_samples - rep_samples - lin_samples
     logger("Random samples: "+usef_samples.__str__(),1)
     logger("Linear samples: "+lin_samples.__str__(),1)
-    logger("Repeated samples: "+rep_samples.__str__(),1)
+    logger("Repeated samples: "+rep_samples.__str__()+' - Groups: '+n_groups.__str__(),1)
     logger("Outliers: "+out_samples.__str__(),1)
 
     # Features distributions
@@ -156,11 +156,31 @@ def create_dataset(n_samples=20, n_features=3,
         logger(lin_points,2)
 
     # Repeated samples generation
-    repeated = np.zeros((rep_samples,n_features))
-    ## << CONTINUTE HERE!!!
-    # 1) Choose samples from the Random samples based on n_groups
-    # 2) Generate the repeated submatrix based on the above samples
-    # 3) Stack
+    if rep_samples > 0:
+        #if (rep_samples / n_groups) < (0.05*n_samples) or n_groups > usef_samples:
+        if (rep_samples / n_groups) < (0.05*n_samples):
+            logger('The number of samples per group should not be lower than 5% of total samples. Also, there cannot be more groups than completely random samples',0) 
+            return np.array([[]])
+
+        repeated = np.zeros((rep_samples,n_features))
+        
+        # Choose samples from the Random samples based on n_groups
+        generator = np.random
+        #sampleidxs = (generator.random_integers(low=0, high=usef_samples-1, size=(n_groups)))
+       
+        #print(sampleidxs)
+
+        samp_per_group = int(rep_samples / n_groups)
+        
+        for i in range(0,n_groups):
+            repeated[i*samp_per_group:(i+1)*samp_per_group] = X[i]
+        
+        # Use the last sample to cover any repeated left
+        repeated[(i+1)*samp_per_group:] = X[i]
+
+        print(repeated)
+        # 2) Generate the repeated submatrix based on the above samples
+        # 3) Stack
 
     # Outliers generation
     # 1) Choose the N furthest points
