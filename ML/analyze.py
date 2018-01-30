@@ -209,13 +209,12 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
     # Sort the distances array to reduce time complexity
     dist2mean = np.sort(dist2mean,axis=0)
     
-    # Get the 20% of the furthest points
+    # Get the 20% furthest points
     last20 = -(int(dist2mean.shape[0]*.2)) 
     l_20percfur = dist2mean[last20:]
     print(l_20percfur)
-    
 
-    # Determine Outlier theslhold as 2 x distance from the mean to the furthest point not included in the top 20%
+    # Determine outlier threslhold as 1.5 x distance from the mean to the furthest point not included in the top 20%
     olthres = 1.5 * dist2mean[last20-1:last20]
     #olthres = int(l_20percfur[-8:-7])
     print('olthres',olthres)

@@ -26,7 +26,7 @@ class bcolors:
 def fatal_error():
     sys.exit()
 
-def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc_repeated,p_perc_outliers):
+def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc_repeated,p_n_groups,p_perc_outliers):
 
     
 
@@ -38,7 +38,7 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
 
     # Generate dataset
     dataset = create_dataset(n_samples=p_n_samples, n_features=p_n_features,
-                        perc_lin=p_perc_lin, perc_repeated=p_perc_repeated, n_groups=3,perc_outliers=p_perc_outliers,
+                        perc_lin=p_perc_lin, perc_repeated=p_perc_repeated, n_groups=p_n_groups,perc_outliers=p_perc_outliers,
                         debug=1,plot=0,save_to_file=0)
     
     if dataset.shape == (1,0):
@@ -140,4 +140,4 @@ def process_and_analyze():
     rules_metrics(clusters,rules,n_samples)
 
 if __name__ == '__main__':
-    dataset_generation_and_validation(5,200,60,20,10)
+    dataset_generation_and_validation(5,100,20,20,2,20)

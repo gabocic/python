@@ -5,7 +5,7 @@ from numpy import ones,vstack
 from numpy.linalg import lstsq
 from sklearn import datasets
 from numpy.linalg import norm
-
+from scipy.spatial import distance_matrix
 from plot_2d_3d import plot_2d_3d
 
 class TooFewPoints(Exception):
@@ -29,13 +29,22 @@ def create_dataset(n_samples=20, n_features=3,
     max_special_points_perc = 90
     min_dataset_size = 100
 
+    ## A few safety checks
+    
+    # Sample types percentage should not exceed 100%
     if (perc_lin + perc_repeated + perc_outliers) > max_special_points_perc:
         logger('The sum of special points percentages cannot exceed '+max_special_points_perc.__str__(),0)
         return np.array([[]])
-
+    
+    # Minimum amount of outliers
     if n_samples < min_dataset_size:
         logger('The minimum number of samples is '+min_dataset_size.__str__(),0)
         return np.array([[]])
+
+    # Check that outliers percentage does not exceeds 20%
+    if perc_outliers > 20:
+        logger('The minimum number of samples is '+min_dataset_size.__str__(),0)
+
 
     # Calculate the number of samples for each type
     lin_samples = int(0.01 * perc_lin * n_samples)
@@ -46,6 +55,7 @@ def create_dataset(n_samples=20, n_features=3,
     logger("Linear samples: "+lin_samples.__str__(),1)
     logger("Repeated samples: "+rep_samples.__str__()+' - Groups: '+n_groups.__str__(),1)
     logger("Outliers: "+out_samples.__str__(),1)
+    logger("Total samples: "+n_samples.__str__(),1)
 
     # Features distributions
     ## Interleave standard normal and uniform values
@@ -83,8 +93,9 @@ def create_dataset(n_samples=20, n_features=3,
     logger("Standard attributes:",2)
     logger(Xs,2)
 
-    # Generate uniform attributes
-    for i in range(0,unifor_feat):
+    # Generate uniform attributes. Including out_samples as they will be moved away from the mean later
+
+    for i in range(0,unifor_feat+out_samples):
         # Create a random number for mean and stdev
         generator = np.random
         m = generator.random_integers(low=(-1)*value_limit, high=value_limit, size=(usef_samples,1))
@@ -164,31 +175,31 @@ def create_dataset(n_samples=20, n_features=3,
 
         repeated = np.zeros((rep_samples,n_features))
         
-        # Choose samples from the Random samples based on n_groups
-        generator = np.random
-        #sampleidxs = (generator.random_integers(low=0, high=usef_samples-1, size=(n_groups)))
-       
-        #print(sampleidxs)
-
+        # Calculate samples per group
         samp_per_group = int(rep_samples / n_groups)
         
+        # For each group, use i-element of the random values as seed
         for i in range(0,n_groups):
             repeated[i*samp_per_group:(i+1)*samp_per_group] = X[i]
         
         # Use the last sample to cover any repeated left
         repeated[(i+1)*samp_per_group:] = X[i]
 
-        print(repeated)
-        # 2) Generate the repeated submatrix based on the above samples
-        # 3) Stack
-
-    # Outliers generation
-    # 1) Choose the N furthest points
-    # 2) Move that point away from 'mean' in point-mean direction by 'dist'
-    # 3) Stack
 
 
     Xf = X
+    print('Random')
+    print('*********************************************************')
+    print(Xf)
+    print('*********************************************************')
+    print('Linear')
+    print('*********************************************************')
+    print(np.around(lin_points,3))
+    print('*********************************************************')
+    print('Repeated')
+    print('*********************************************************')
+    print(np.around(repeated,3))
+    print('*********************************************************')
     # Stack useful,linear and repeated samples
     if lin_samples > 0:
         Xf = np.vstack((X,np.around(lin_points,3)))
@@ -198,6 +209,39 @@ def create_dataset(n_samples=20, n_features=3,
 
     logger("\n Final Dataset:\n *****************",2)
     logger(Xf,2)
+    
+    # Outliers generation
+
+    if out_samples > 0:
+        ## Dataset mean
+        datamean = Xf.mean(axis=0)
+
+        ## Obtain distance-to-mean matrix
+        dist2mean = distance_matrix(Xf,[datamean])
+
+        # Sort the distances array to reduce time complexity
+        dist2mean = np.sort(dist2mean,axis=0)
+
+        # Get the 20% furthest points
+        last20 = -(int(dist2mean.shape[0]*.2))
+
+        # Outlier threshold
+        olthres = 1.5 * dist2mean[last20-1:last20]
+
+        l_20percfur = dist2mean[last20:]
+        position = np.searchsorted(l_20percfur.T[0],olthres)
+        numol = l_20percfur.shape[0] - position
+
+        points_to_fix = numol - out_samples
+
+        if points_to_fix > 0:
+            # Get the necessary points closer to the mean
+            print('Exceso de outliers')
+        elif points_to_fix < 0:
+            # Get the necessary points further from the mean
+            print('Falta de outliers')
+            #### <<< TODO!!! Usar la ecuacion de la recta para mover los puntos en la recta mean-punto
+
 
     if plot == 1:
         if n_features < 4: 
