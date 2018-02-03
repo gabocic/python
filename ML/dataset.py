@@ -67,12 +67,12 @@ def create_dataset(n_samples=20, n_features=3,
     # Harcoded value range: all sample values will be between value_limit and -value_limit
     value_limit = 100000
 
-    # Initialize dataset 
-    X = np.zeros((usef_samples, n_features))
-    Xs = np.zeros((usef_samples, standa_feat))
-    Xu = np.zeros((usef_samples, unifor_feat))
+    # Initialize dataset. Including out_samples as they will be moved away from the mean later
+    X = np.zeros((usef_samples+out_samples, n_features))
+    Xs = np.zeros((usef_samples+out_samples, standa_feat))
+    Xu = np.zeros((usef_samples+out_samples, unifor_feat))
 
-    # Generate standard attributes
+    # Generate standard attributes. Including out_samples as they will be moved away from the mean later
     for i in range(0,standa_feat):
         generator = np.random
         # Create a random number for mean and stdev
@@ -84,8 +84,8 @@ def create_dataset(n_samples=20, n_features=3,
         logger("mean: "+mean.__str__(),2)
         logger("stdev: "+stdev.__str__(),2)
         generator = np.random
-        m = stdev * generator.randn(usef_samples,1) + mean
-        Xs[:usef_samples, i:i+1] = m
+        m = stdev * generator.randn(usef_samples+out_samples,1) + mean
+        Xs[:usef_samples+out_samples, i:i+1] = m
 
     # Round Xs values to 3 decimals
     Xs = np.around(Xs,3)
@@ -94,12 +94,11 @@ def create_dataset(n_samples=20, n_features=3,
     logger(Xs,2)
 
     # Generate uniform attributes. Including out_samples as they will be moved away from the mean later
-
-    for i in range(0,unifor_feat+out_samples):
+    for i in range(0,unifor_feat):
         # Create a random number for mean and stdev
         generator = np.random
-        m = generator.random_integers(low=(-1)*value_limit, high=value_limit, size=(usef_samples,1))
-        Xu[:usef_samples, i:i+1] = m
+        m = generator.random_integers(low=(-1)*value_limit, high=value_limit, size=(usef_samples+out_samples,1))
+        Xu[:usef_samples+out_samples, i:i+1] = m
 
     logger("Uniform attributes:",2)
     logger(Xu,2)
@@ -107,11 +106,11 @@ def create_dataset(n_samples=20, n_features=3,
     # Append attributes to X - interleave standard and uniform attributes
     r = 0
     for p in range(0,unifor_feat):
-        X[:usef_samples,r:r+1] = Xs[:,p:p+1]
-        X[:usef_samples,r+1:r+2] = Xu[:,p:p+1]
+        X[:usef_samples+out_samples,r:r+1] = Xs[:,p:p+1]
+        X[:usef_samples+out_samples,r+1:r+2] = Xu[:,p:p+1]
         r += 2
     if standa_feat > unifor_feat:
-        X[:usef_samples,r:r+1] = Xs[:,p+1:p+2]
+        X[:usef_samples+out_samples,r:r+1] = Xs[:,p+1:p+2]
 
     logger("Standard and uniform attributes combined",2)
     logger(X,2)
@@ -194,11 +193,11 @@ def create_dataset(n_samples=20, n_features=3,
     print('*********************************************************')
     print('Linear')
     print('*********************************************************')
-    print(np.around(lin_points,3))
+    #print(np.around(lin_points,3))
     print('*********************************************************')
     print('Repeated')
     print('*********************************************************')
-    print(np.around(repeated,3))
+    #print(np.around(repeated,3))
     print('*********************************************************')
     # Stack useful,linear and repeated samples
     if lin_samples > 0:
@@ -218,19 +217,29 @@ def create_dataset(n_samples=20, n_features=3,
 
         ## Obtain distance-to-mean matrix
         dist2mean = distance_matrix(Xf,[datamean])
+        print(dist2mean)
 
-        # Sort the distances array to reduce time complexity
-        dist2mean = np.sort(dist2mean,axis=0)
+        # Obtain the sorted array of dist2mean indexes
+        sortd2midx = np.argsort(dist2mean,axis=0)
+        print(sortd2midx)
+
+        #dist2mean = np.sort(dist2mean,axis=0)
 
         # Get the 20% furthest points
-        last20 = -(int(dist2mean.shape[0]*.2))
+        last20 = -(int(sortd2midx.shape[0]*.2))
+        l_20percfur = np.take(dist2mean,sortd2midx[last20:])
+        print('l_20percfur')
+        print(l_20percfur)
+
 
         # Outlier threshold
-        olthres = 1.5 * dist2mean[last20-1:last20]
+        olthres = 1.5 * np.take(dist2mean,sortd2midx[last20-1:last20])
+        print('olthres',olthres)
 
-        l_20percfur = dist2mean[last20:]
         position = np.searchsorted(l_20percfur.T[0],olthres)
         numol = l_20percfur.shape[0] - position
+        print('position',position)
+        print('numol',numol)
 
         points_to_fix = numol - out_samples
 
@@ -240,7 +249,11 @@ def create_dataset(n_samples=20, n_features=3,
         elif points_to_fix < 0:
             # Get the necessary points further from the mean
             print('Falta de outliers')
-            #### <<< TODO!!! Usar la ecuacion de la recta para mover los puntos en la recta mean-punto
+
+            ## When sorting the distance-to-mean matrix, I still need to keep the original positions so I know to which point the distance belongs too -> Keep the unsorted data2mean matrix and use the distance as index? what if I have two distances that are equal? -> numpy.argsort!!
+
+            #### <<< THE question is: create new outliers or move current points? If I create new outliers I still need to fix the existing points when I have too many 
+            ## <<< TODO!!! Usar la ecuacion de la recta para mover los puntos en la recta mean-punto
 
 
     if plot == 1:
@@ -249,12 +262,13 @@ def create_dataset(n_samples=20, n_features=3,
             element_list=[]
             element={'type':'blob','value':X,'color':'r','marker':'o'}
             element_list.append(element)
-            element={'type':'blob','value':lin_points,'color':'b','marker':'o'}
-            element_list.append(element)
-            element={'type':'dot','value':p0,'color':'g','marker':'x','size':90}
-            element_list.append(element)
-            element={'type':'dot','value':p1,'color':'g','marker':'x','size':90}
-            element_list.append(element)
+            if lin_samples > 0:
+                element={'type':'blob','value':lin_points,'color':'b','marker':'o'}
+                element_list.append(element)
+                element={'type':'dot','value':p0,'color':'g','marker':'x','size':90}
+                element_list.append(element)
+                element={'type':'dot','value':p1,'color':'g','marker':'x','size':90}
+                element_list.append(element)
             plot_2d_3d(element_list,n_features)
 
 
