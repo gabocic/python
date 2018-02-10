@@ -250,11 +250,13 @@ def create_dataset(n_samples=20, n_features=3,
             # Get the necessary points further from the mean
             print('Falta de outliers')
 
-            ## When sorting the distance-to-mean matrix, I still need to keep the original positions so I know to which point the distance belongs too -> Keep the unsorted data2mean matrix and use the distance as index? what if I have two distances that are equal? -> numpy.argsort!!
-
-            #### <<< THE question is: create new outliers or move current points? If I create new outliers I still need to fix the existing points when I have too many 
-            ## <<< TODO!!! Usar la ecuacion de la recta para mover los puntos en la recta mean-punto
-
+            ## Distance factor: distance for the 'position' point divided by threshold distance
+            theta = olthres / dist2mean[position]
+            print('theta',theta)
+            for dot in sortd2midx[position[0,0]+2:]:
+                #Xf[dot,:] = datamean + theta*(Xf[dot,:]-datamean)
+                pass
+        ## ToDo: hay que entender por que si teoricamente estoy moviendo como mucho los 20 puntos mas lejanos y el threshold se calcula sobre el 21, el threshold tambien se ve modificado en el analyze. Estoy tocando tambien la distancia del punto 21?
 
     if plot == 1:
         if n_features < 4: 
