@@ -208,7 +208,8 @@ def create_dataset(n_samples=20, n_features=3,
 
     logger("\n Final Dataset:\n *****************",2)
     logger(Xf,2)
-    
+    print('****************************Xf*************************')
+    print(Xf) 
     # Outliers generation
 
     if out_samples > 0:
@@ -217,19 +218,15 @@ def create_dataset(n_samples=20, n_features=3,
 
         ## Obtain distance-to-mean matrix
         dist2mean = distance_matrix(Xf,[datamean])
-        print(dist2mean)
 
         # Obtain the sorted array of dist2mean indexes
         sortd2midx = np.argsort(dist2mean,axis=0)
-        print(sortd2midx)
 
         #dist2mean = np.sort(dist2mean,axis=0)
 
         # Get the 20% furthest points
         last20 = -(int(sortd2midx.shape[0]*.2))
         l_20percfur = np.take(dist2mean,sortd2midx[last20:])
-        print('l_20percfur')
-        print(l_20percfur)
 
 
         # Outlier threshold
@@ -253,9 +250,13 @@ def create_dataset(n_samples=20, n_features=3,
             ## Distance factor: distance for the 'position' point divided by threshold distance
             theta = olthres / dist2mean[position]
             print('theta',theta)
-            for dot in sortd2midx[position[0,0]+2:]:
-                #Xf[dot,:] = datamean + theta*(Xf[dot,:]-datamean)
+            #print('antes',np.take(Xf,sortd2midx[:,0],axis=0))
+            print(sortd2midx)
+            for dot in sortd2midx[(sortd2midx.shape[0]+last20)+position[0,0]:]:
+                print(dot)
+                Xf[dot,:] = datamean + theta*(Xf[dot,:]-datamean)
                 pass
+            #print('despues',np.take(Xf,sortd2midx[:,0],axis=0))
         ## ToDo: hay que entender por que si teoricamente estoy moviendo como mucho los 20 puntos mas lejanos y el threshold se calcula sobre el 21, el threshold tambien se ve modificado en el analyze. Estoy tocando tambien la distancia del punto 21?
 
     if plot == 1:
