@@ -165,8 +165,10 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
     l_linp = len(linp)
     l_nlinp = len(nlinp)
 
-    logger(message="Percentage of linear points:",var=round(100*(l_linp/(l_linp+l_nlinp)),2),dbg_level=0)
-    logger(message="Percentage of Non linear points:",var=round(100*(l_nlinp/(l_linp+l_nlinp)),2),dbg_level=0)
+    linpointsperc = round(100*(l_linp/(l_linp+l_nlinp)),2)
+    
+    logger(message="Percentage of linear points:",var=linpointsperc,dbg_level=0)
+    #logger(message="Percentage of Non linear points:",var=round(100*(l_nlinp/(l_linp+l_nlinp)),2),dbg_level=0)
     #sys.exit()
 
     ## Calculate distance between points
@@ -230,3 +232,9 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
     #print('Distance histogram')
     #print(np.histogram(dist2mean.T[0],bins=l_bins))
 
+    # Prepare output
+    outdict = {}
+    outdict['linpointsperc'] = linpointsperc
+
+
+    return outdict
