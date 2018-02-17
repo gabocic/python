@@ -187,18 +187,18 @@ def create_dataset(n_samples=20, n_features=3,
 
 
     Xf = X
-    print('Random')
-    print('*********************************************************')
-    print(Xf)
-    print('*********************************************************')
-    print('Linear')
-    print('*********************************************************')
+    #print('Random')
+    #print('*********************************************************')
+    #print(Xf)
+    #print('*********************************************************')
+    #print('Linear')
+    #print('*********************************************************')
     #print(np.around(lin_points,3))
-    print('*********************************************************')
-    print('Repeated')
-    print('*********************************************************')
+    #print('*********************************************************')
+    #print('Repeated')
+    #print('*********************************************************')
     #print(np.around(repeated,3))
-    print('*********************************************************')
+    #print('*********************************************************')
     # Stack useful,linear and repeated samples
     if lin_samples > 0:
         Xf = np.vstack((X,np.around(lin_points,3)))
@@ -208,8 +208,8 @@ def create_dataset(n_samples=20, n_features=3,
 
     logger("\n Final Dataset:\n *****************",2)
     logger(Xf,2)
-    print('****************************Xf*************************')
-    print(Xf) 
+    #print('****************************Xf*************************')
+    #print(Xf) 
     # Outliers generation
 
     if out_samples > 0:
@@ -227,7 +227,7 @@ def create_dataset(n_samples=20, n_features=3,
         # Get the 20% furthest points
         last20 = int(sortd2midx.shape[0]*.2)
         l_20percfur = np.take(dist2mean,sortd2midx[-last20:])
-        print('l_20percfur',l_20percfur)
+        #print('l_20percfur',l_20percfur)
 
         # Outlier threshold
         olthres = 1.5 * np.take(dist2mean,sortd2midx[-last20-1:-last20])
@@ -244,33 +244,34 @@ def create_dataset(n_samples=20, n_features=3,
 
         points_to_fix = numol - out_samples
 
-        if points_to_fix > 0:
-            # Get the necessary points closer to the mean
-            print('Exceso de outliers')
-        elif points_to_fix < 0:
-            # Get the necessary points further from the mean
-            print('Falta de outliers')
-
+        # If there are points to fix..
+        if points_to_fix != 0:
+            print('points_to_fix',points_to_fix)
             # Absolute position of the first outlier: Total samples - further20% + first oultlier position but within l_20percfur -1 (To obtain the index)
             abs_firstolpos = sortd2midx.shape[0] - last20 + firstolpos -1
             
             ## Distance factor: distance for first outlier divided by threshold distance
-            theta = 2 * olthres / dist2mean[abs_firstolpos]
-            print('theta',theta)
+            v_lambda = 1.5 * olthres / dist2mean[abs_firstolpos]
+            print('v_lambda',v_lambda)
 
-            #print('antes',np.take(Xf,sortd2midx[:,0],axis=0))
-            #print(sortd2midx)
-            for dot in sortd2midx[sortd2midx.shape[0]-1-last20:abs_firstolpos]:
-               print(dot)
-               Xf[dot,:] = datamean + theta*(Xf[dot,:]-datamean)
-               pass
-            #print('despues',np.take(Xf,sortd2midx[:,0],axis=0))
-        ## ToDo: CALCULAR MEAN SOBRE EL 100% DE LOS PUNTOS, OBTENER DISTANCE MATRIX, EXTRAER EL 80% MAS CERCANO Y CALCULAR LA NUEVA MEAN. USAR ESTA ULTIMA PARA DETECTAR / GENERAR LOS OUTLIERS
+            if points_to_fix > 0:
+                # Get the necessary points closer to the mean
+                print('Exceso de outliers')
 
-    print('Outliers')
-    print('***************')
-    print(np.take(Xf,(sortd2midx[sortd2midx.shape[0]-1-last20:abs_firstolpos].T)[0],axis=0))
-    #print((sortd2midx[(sortd2midx.shape[0]-1+last20)+position[0,0]:].T)[0])
+                for dot in sortd2midx[abs_firstolpos:]:
+                   Xf[dot,:] = datamean + (1/v_lambda)*(Xf[dot,:]-datamean)
+
+            elif points_to_fix < 0:
+                # Get the necessary points further from the mean
+                print('Falta de outliers')
+
+                #for dot in sortd2midx[sortd2midx.shape[0]-1-last20:abs_firstolpos]:
+                for dot in sortd2midx[abs_firstolpos+points_to_fix:abs_firstolpos]:
+                   Xf[dot,:] = datamean + v_lambda*(Xf[dot,:]-datamean)
+
+        #print('Outliers')
+        #print('***************')
+        #print(np.take(Xf,(sortd2midx[abs_firstolpos+points_to_fix:abs_firstolpos].T)[0],axis=0))
 
     if plot == 1:
         if n_features < 4: 
