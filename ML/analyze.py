@@ -134,30 +134,21 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
     # adding the datamean point to the points generated previously to obtain the final fitting line
     linepts += datamean
     
-    #Calculate the distance of each point to the line
-    pdist=[]
-    for row in data:
-        A = datamean
-        B = datamean + V[0]
-        P = row
-        pa = P - A
-        ba = B - A
-        t = np.dot(pa,ba)/np.dot(ba,ba)
-        d = norm(pa - t*ba)
-        pdist.append(d)
-    pdist = np.asarray(pdist)
-
-
-    # Separate "linear" points from "non linear"
+    #Calculate the distance of each point to the line. Then separate "linear" points from "non linear"
+    
     linp=[]
     nlinp=[]
-    u = 0
-    for d in pdist:
+    for row in data:
+        
+        # Point-Line Distance 
+        BA = datamean - row
+        numer = norm(np.cross(BA,V[0]))
+        d =numer/norm(V[0]) 
+
         if d < dthres:
-            linp.append(data[u,:])
+            linp.append(row)
         else:
-            nlinp.append(data[u,:])
-        u+=1
+            nlinp.append(row)
 
     l_linp = len(linp)
     l_nlinp = len(nlinp)
@@ -253,6 +244,18 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
             element_list.append(element)
             element={'type':'line','value':linepts.T,'color':'b'}
             element_list.append(element)
+            element={'type':'dot','value':l_hlpoints[0],'color':'c','marker':'x','size':20}
+            element_list.append(element)
+            element={'type':'dot','value':l_hlpoints[1],'color':'c','marker':'x','size':20}
+            element_list.append(element)
             plot_2d_3d(element_list,n_features)
+
+            element_list=[]        
+
+            element={'type':'line','value':np.array((0,norm(l_hlpoints[0]-l_hlpoints[1]))).T,'color':'r'}
+            element_list.append(element)
+            element={'type':'line','value':np.array(((norm(l_hlpoints[0]-l_hlpoints[1]))*0.05,0)).T,'color':'g'}
+            element_list.append(element)
+            plot_2d_3d(element_list,2)
 
     return outdict

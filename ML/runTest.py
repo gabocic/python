@@ -140,4 +140,4 @@ def process_and_analyze():
     rules_metrics(clusters,rules,n_samples)
 
 if __name__ == '__main__':
-    dataset_generation_and_validation(3,100,0,0,4,20)
+    dataset_generation_and_validation(3,100,0,0,4,0)
