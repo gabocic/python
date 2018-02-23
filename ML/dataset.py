@@ -1,8 +1,6 @@
 #!/home/gabriel/pythonenvs/v3.5/bin/python
 
 import numpy as np
-from numpy import ones,vstack
-from numpy.linalg import lstsq
 from sklearn import datasets
 from numpy.linalg import norm
 from scipy.spatial import distance_matrix
@@ -121,23 +119,30 @@ def create_dataset(n_samples=20, n_features=3,
     # Add some noise to make it more realistic
 
     if lin_samples > 0:
+
+        # Calculate the mean for the values already generated
+        Xmean = X.mean(axis=0)
+
+        #Single Value Decomposition
+        U,E,V = np.linalg.svd(X - Xmean)
+
         ## Choose a ramdom sample
         generator = np.random
         sampleidx = (generator.random_integers(low=0, high=usef_samples-1, size=(1)))[0]
-        logger("Winning samples:",2)
-        p0 = X[sampleidx]
-        logger("p0:",2)
-        logger(p0,2)
+        #logger("Winning samples:",2)
+        p0 = Xmean
+        #logger("p0:",2)
+        #logger(p0,2)
 
         ## Choose another point based on p0 
-        if sampleidx+1 <= X.shape[0]-1:
-            p1 = X[sampleidx+1]
-        elif sampleidx-1 >= 0:
-            p1 = X[sampleidx-1]
-        else:
-            raise TooFewPoints('Not able to find two points to generate pseudo linear samples')
-        logger("p1:",2)
-        logger(p1,2)
+        #if sampleidx+1 <= X.shape[0]-1:
+        #    p1 = X[sampleidx+1]
+        #elif sampleidx-1 >= 0:
+        #    p1 = X[sampleidx-1]
+        #else:
+        #    raise TooFewPoints('Not able to find two points to generate pseudo linear samples')
+        #logger("p1:",2)
+        #logger(p1,2)
         
         lin_points = np.zeros((lin_samples,n_features))
        
@@ -145,21 +150,27 @@ def create_dataset(n_samples=20, n_features=3,
         lin_samples_d0 = int(lin_samples/2)
         lin_samples_d1 = int(lin_samples - lin_samples_d0)
 
-        d0 = np.array(p1 - p0)
+        #d0 = np.array(p1 - p0)
+        d0 = V[0]
         for a in range(0,lin_samples_d0+1):
             # Making constants smaller to prevent too many outliers
-            lins = p0+a*(0.1)*d0
+            #lins = p0+a*(0.1)*d0
+            lins = p0+100*a*d0
             lin_points[a-1:a,:] = lins
+        maxlins = lins 
 
-        d1 = np.array(p0 - p1)
+        d1 = -1*V[0]
         for b in range(0,lin_samples_d1+1):
             # Making constants smaller to prevent too many outliers
-            lins = p0+b*(0.1)*d1
+            #lins = p0+b*(0.1)*d1
+            lins = p0+100*b*d1
             a+=1
             lin_points[a-1:a,:] = lins
+        minlins = lins 
 
         # Add some noise 
-        boxnorm = norm(np.amax(lin_points,axis=0) - np.amin(lin_points,axis=0))
+        #boxnorm = norm(np.amax(lin_points,axis=0) - np.amin(lin_points,axis=0))
+        boxnorm = norm(maxlins - minlins)
         lin_points += np.random.normal(size=lin_points.shape) * boxnorm * 0.01
 
         logger("Linear points:",2)
@@ -281,10 +292,10 @@ def create_dataset(n_samples=20, n_features=3,
             if lin_samples > 0:
                 element={'type':'blob','value':lin_points,'color':'b','marker':'o'}
                 element_list.append(element)
-                element={'type':'dot','value':p0,'color':'g','marker':'x','size':90}
+                element={'type':'dot','value':p0,'color':'g','marker':'x','size':190}
                 element_list.append(element)
-                element={'type':'dot','value':p1,'color':'g','marker':'x','size':90}
-                element_list.append(element)
+                #element={'type':'dot','value':p1,'color':'g','marker':'x','size':90}
+                #element_list.append(element)
             if out_samples > 0:
                 element={'type':'blob','value':np.take(Xf,sortd2midx[sortd2midx.shape[0]-1-last20:abs_firstolpos].T[0],axis=0),'color':'c','marker':'o'}
                 element_list.append(element)

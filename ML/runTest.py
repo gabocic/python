@@ -40,7 +40,7 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
     while True:
         dataset = create_dataset(n_samples=p_n_samples, n_features=p_n_features,
                             perc_lin=p_perc_lin, perc_repeated=p_perc_repeated, n_groups=p_n_groups,perc_outliers=p_perc_outliers,
-                            debug=1,plot=0,save_to_file=0)
+                            debug=1,plot=1,save_to_file=0)
         
         if dataset.shape == (1,0):
             fatal_error()
@@ -56,7 +56,7 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
         print("")
 
         # Validate dataset is within the specifications
-        analisis_results = analyze_dataset(data=dataset,debug=0,plot=0,load_from_file=None)
+        analisis_results = analyze_dataset(data=dataset,debug=1,plot=0,load_from_file=None)
         #{'repeatedperc': 50.0, 'linpointsperc': 0.63, 'repeatedgrps': 2, 'samples': 10000, 'features': 3, 'outliersbyperpenperc': 0, 'outliersperc': 7.72}
        
         # Linear points ranges
@@ -109,7 +109,7 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
         
     return dataset
 
-def process_and_analyze():
+def process_and_analyze(dataset):
 
     l_clustering_alg = [
             'kmeans_++',
@@ -125,7 +125,7 @@ def process_and_analyze():
             ]
 
     n_clusters = 3 # only for the algorithms that support this
-    clustering_alg = 'meanshift'
+    clustering_alg = 'kmeans_++'
     rulesind_alg = 'cn2'
 
     # Scale data
@@ -189,4 +189,5 @@ def process_and_analyze():
     rules_metrics(clusters,rules,n_samples)
 
 if __name__ == '__main__':
-    dataset_generation_and_validation(7,10000,22,0,0,0)
+    dataset = dataset_generation_and_validation(7,5000,50,0,0,0)
+    process_and_analyze(dataset)
