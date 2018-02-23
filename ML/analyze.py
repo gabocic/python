@@ -2,13 +2,9 @@
 
 import sys
 import numpy as np
-from numpy.linalg import lstsq
 from sklearn import datasets
 from numpy.linalg import norm
-from sympy.solvers import solve
-from sympy import Symbol
 from scipy.spatial import distance_matrix
-from common import get_intra_cluster_distances
 from plot_2d_3d import plot_2d_3d
 
 
@@ -29,6 +25,8 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
                 message = ''
             print(message,var)
 
+    ### Main ##
+
     if data is None and load_from_file is not None:
         try:
             dataspmat,tags = datasets.load_svmlight_file(load_from_file)
@@ -36,13 +34,58 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
             data = dataspmat.toarray()
         except:
             raise DatafileNotFound("Failed to load dataset from "+load_from_file)
-
-    logger(message="\n Loaded data: \n *******************",var=None,dbg_level=2)
-    logger(message=None,var=data,dbg_level=2)
+        else:
+            logger(message="\n Loaded data: \n *******************",var=None,dbg_level=2)
+            logger(message=None,var=data,dbg_level=2)
+    
+    # Features number
     n_features = data.shape[1]
 
     # Average for each set of coordinates
     datamean = data.mean(axis=0)
+
+
+    ########################
+    ## Repeated analysis  ##
+    ########################
+
+    uniq,arrcount = np.unique(data,axis=0,return_counts=True)
+    groups = [ count for count in arrcount if count >= 0.05 * data.shape[0]] 
+    
+    n_groups = len(groups)
+    n_repeated = sum(groups) - n_groups
+    repeatedperc = round(100*(n_repeated/data.shape[0]),2)
+
+
+
+    ########################
+    ## Outliers detection ##
+    ########################
+
+    ## Obtain distance-to-mean matrix
+    dist2mean = distance_matrix(data,[datamean])
+
+    # Obtain the sorted array of dist2mean indexes
+    sortd2midx = np.argsort(dist2mean,axis=0)
+
+    # Get the 20% furthest points
+    last20 = int(sortd2midx.shape[0]*.2)
+    l_20percfur = np.take(dist2mean,sortd2midx[-last20:])
+
+    # Outlier threshold
+    olthres = 1.5 * np.take(dist2mean,sortd2midx[-last20-1:-last20])
+
+    # Look for the first sample further than 'threshold' (ie. first outlier, if exists)
+    firstolpos = np.searchsorted(l_20percfur.T[0],olthres)[0,0]
+
+    # Determine number of outlier 
+    numol = l_20percfur.shape[0] - firstolpos
+    outliersperc = round(100*(numol/data.shape[0]),2)
+
+
+    ##############################
+    ## Linear points detection  ##
+    ##############################
 
     # Singular Value Descomposition
     ## Any given matrix can be factorize as the product of three matrixes: A = U E V*
@@ -50,11 +93,16 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
     U,E,V = np.linalg.svd(data - datamean)
 
    
-    # What I'm trying to do here is to calculate the norm of the fitting line that intersects the "box" where the points are contained.
-    # The challenge is to find the two parameters that would become the two ends of the line
-   
-    maxcords=np.amax(data,axis=0)
-    mincords=np.amin(data,axis=0)
+    # What I'm doing here is calculating the norm of the fitting line where it intersects the "box" (or "hyperbox")  in which the data points are contained.
+    
+    # Remove outliers from dataset before getting the max/min coordenates
+    if numol > 0:
+        data_no_ol = np.take(data,(sortd2midx[:-numol].T)[0],axis=0)
+    else:
+        data_no_ol = data
+
+    maxcords=np.amax(data_no_ol,axis=0)
+    mincords=np.amin(data_no_ol,axis=0)
 
     logger(message="maxcords",var=maxcords,dbg_level=2)
     logger(message="mincords",var=mincords,dbg_level=2)
@@ -62,10 +110,9 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
     logger(message="Mean point",var=datamean,dbg_level=2)
 
 
-    # ToDo: Checking if for some reason the max or min points are part of the line
+    # Checking if for some reason the max or min points are part of the line
     #test=(maxcords-datamean)/V[0]
     #logger(message="Lambdas for all components are equal? ->",var=test,dbg_level=0)
-    
     #test=(mincords-datamean)/V[0]
     #logger(message="Lambdas for all components are equal? ->",var=test,dbg_level=0)
 
@@ -126,7 +173,7 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
             logger("Candidate point",r_lambda,dbg_level=2)
 
     # Define radius for which points will be considered as "linear"
-    dthres = (norm(l_hlpoints[0]-l_hlpoints[1])) * 0.05
+    dthres = (norm(l_hlpoints[0]-l_hlpoints[1])) * 0.025
 
     ## Parametric line: r-> = ro + kv->
     linepts = V[0] * np.mgrid[l_lambdas[0]:l_lambdas[1]:2j][:, np.newaxis]
@@ -135,91 +182,39 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
     linepts += datamean
     
     #Calculate the distance of each point to the line. Then separate "linear" points from "non linear"
-    
     linp=[]
     nlinp=[]
+    nlinpd=[]
     for row in data:
         
         # Point-Line Distance 
-        BA = datamean - row
-        numer = norm(np.cross(BA,V[0]))
-        d =numer/norm(V[0]) 
+        A = datamean
+        B = datamean + V[0]
+        P = row
+        pa = P - A
+        ba = B - A
+        t = np.dot(pa,ba)/np.dot(ba,ba)
+        d = norm(pa - t*ba)
 
+        # Separate linear from non-linear samples
         if d < dthres:
             linp.append(row)
         else:
             nlinp.append(row)
+            nlinpd.append(d)
 
-    l_linp = len(linp)
-    l_nlinp = len(nlinp)
+    n_linp = len(linp)
+    n_nlinp = len(nlinp)
 
-    linpointsperc = round(100*(l_linp/(l_linp+l_nlinp)),2)
-    
-    logger(message="Percentage of linear points:",var=linpointsperc,dbg_level=0)
-    #logger(message="Percentage of Non linear points:",var=round(100*(l_nlinp/(l_linp+l_nlinp)),2),dbg_level=0)
-    #sys.exit()
+    linpointsperc = round(100*(n_linp/(n_linp+n_nlinp)),2)
 
-    ## Calculate distance between points
-    l_pp_dist = get_intra_cluster_distances(data)
-    avgdist = np.mean(l_pp_dist)
-    print("Average distance",avgdist,len(l_pp_dist))
-
-    ## Density coeficient = Avg point-to-point distance / norm(max90th - min90th)
-    ## Max and Min will only consider component percentile 90th 
-    #np.percentile(data, 90, axis=0)
-
-    boxdiag = norm(maxcords-mincords)
-    print("Box diagonal",boxdiag)
-
-    density_coef = boxdiag/avgdist
-    print("Density coeficient",density_coef)
-
-
- 
-    ## Distance distribution analysis
-
-    # Generate distance to the mean matrix
-    dist2mean = distance_matrix(data,[datamean])
-
-    # Sort the distances array to reduce time complexity
-    dist2mean = np.sort(dist2mean,axis=0)
-    
-    # Get the 20% furthest points
-    last20 = -(int(dist2mean.shape[0]*.2)) 
-    l_20percfur = dist2mean[last20:]
-    #print(l_20percfur)
-
-    # Determine outlier threslhold as 1.5 x distance from the mean to the furthest point not included in the top 20%
-    olthres = 1.5 * dist2mean[last20-1:last20]
-    #olthres = int(l_20percfur[-8:-7])
-    print('olthres',olthres)
-    position = np.searchsorted(l_20percfur.T[0],olthres)
-    print('position',position)
-    numol = l_20percfur.shape[0] - position
-    print('numol',numol)
-    outliersperc = round(100*(numol[0,0]/data.shape[0]),2)
-
-
-    #### Repeated analysis ##########
-
-    uniq,arrcount = np.unique(data,axis=0,return_counts=True)
-    groups = [ count for count in arrcount if count >= 0.05 * data.shape[0]] 
-    #print('arrcount:',arrcount)
-    
-    n_groups = len(groups)
-    n_repeated = sum(groups) - n_groups
-    #print('groups:',n_groups)
-    #print('repeated:',n_repeated)
-    repeatedperc = round(100*(n_repeated/data.shape[0]),2)
-
-
-
-    #l_bins=[0,distmax2mean[0][0]*0.3,distmax2mean[0][0]*0.6,distmax2mean[0][0]*0.9]
-    #print(l_bins)
-
-    # Check how many points are higher than the 90th percentile
-    #print('Distance histogram')
-    #print(np.histogram(dist2mean.T[0],bins=l_bins))
+    # If the dataset is fairly linear, check for outliers by perpendicularity
+    if linpointsperc > 60:
+        perpolthres = (norm(l_hlpoints[0]-l_hlpoints[1])) * 0.3
+        perpol = [ dist2line for dist2line in nlinpd if dist2line >= perpolthres ] 
+        outliersbyperpenperc = round(100*(len(perpol)/data.shape[0]),2)
+    else:
+        outliersbyperpenperc = 0
 
     # Prepare output
     outdict = {}
@@ -229,7 +224,10 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
     outdict['outliersperc'] = outliersperc
     outdict['repeatedperc'] = repeatedperc
     outdict['repeatedgrps'] = n_groups
+    outdict['outliersbyperpenperc'] = outliersbyperpenperc
 
+
+    # Plot if requested
     if plot == 1:
         if n_features < 4:
             # Plot samples
@@ -249,13 +247,5 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
             element={'type':'dot','value':l_hlpoints[1],'color':'c','marker':'x','size':20}
             element_list.append(element)
             plot_2d_3d(element_list,n_features)
-
-            element_list=[]        
-
-            element={'type':'line','value':np.array((0,norm(l_hlpoints[0]-l_hlpoints[1]))).T,'color':'r'}
-            element_list.append(element)
-            element={'type':'line','value':np.array(((norm(l_hlpoints[0]-l_hlpoints[1]))*0.05,0)).T,'color':'g'}
-            element_list.append(element)
-            plot_2d_3d(element_list,2)
 
     return outdict

@@ -28,7 +28,7 @@ def fatal_error():
 
 def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc_repeated,p_n_groups,p_perc_outliers):
 
-    
+    error = 0.05 # 5% 
 
     print("")
     print("")
@@ -37,27 +37,76 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
     print("")
 
     # Generate dataset
-    dataset = create_dataset(n_samples=p_n_samples, n_features=p_n_features,
-                        perc_lin=p_perc_lin, perc_repeated=p_perc_repeated, n_groups=p_n_groups,perc_outliers=p_perc_outliers,
-                        debug=1,plot=0,save_to_file=0)
-    
-    if dataset.shape == (1,0):
-        fatal_error()
+    while True:
+        dataset = create_dataset(n_samples=p_n_samples, n_features=p_n_features,
+                            perc_lin=p_perc_lin, perc_repeated=p_perc_repeated, n_groups=p_n_groups,perc_outliers=p_perc_outliers,
+                            debug=1,plot=0,save_to_file=0)
+        
+        if dataset.shape == (1,0):
+            fatal_error()
 
 
-    print("")
-    print("")
-    print("#"*70)
-    print("")
-    print("")
-    print("Dataset validation")
-    print("*"*70)
-    print("")
+        print("")
+        print("")
+        print("#"*70)
+        print("")
+        print("")
+        print("Dataset validation")
+        print("*"*70)
+        print("")
 
-    # Validate dataset is within the specifications
-    analisis_results = analyze_dataset(data=dataset,debug=0,plot=1,load_from_file=None)
-    print(analisis_results)
+        # Validate dataset is within the specifications
+        analisis_results = analyze_dataset(data=dataset,debug=0,plot=0,load_from_file=None)
+        #{'repeatedperc': 50.0, 'linpointsperc': 0.63, 'repeatedgrps': 2, 'samples': 10000, 'features': 3, 'outliersbyperpenperc': 0, 'outliersperc': 7.72}
+       
+        # Linear points ranges
+        if 0 <= p_perc_lin < 20:
+            lin_lowlimit = 0
+            lin_highlimit = 20
+        elif 20 <= p_perc_lin < 60:
+            lin_lowlimit = 20
+            lin_highlimit = 60
+        elif 60 <= p_perc_lin < 100:
+            lin_lowlimit = 60
+            lin_highlimit = 100
 
+        print('lin_lowlimit',lin_lowlimit)
+        print('lin_highlimit',lin_highlimit)
+
+        if p_perc_repeated == 0:
+            rep_lowlimit = 0
+            rep_highlimit = 5
+        else:
+            rep_lowlimit = p_perc_repeated*(1-error)
+            rep_highlimit = p_perc_repeated*(1+error)
+        
+        print('rep_lowlimit',rep_lowlimit)
+        print('rep_highlimit',rep_highlimit)
+
+
+        if p_perc_outliers == 0:
+            ol_lowlimit = 0
+            ol_highlimit = 5
+        else:
+            ol_lowlimit = p_perc_outliers*(1-error)
+            ol_highlimit = p_perc_outliers*(1+error)
+        
+        print('ol_lowlimit',ol_lowlimit)
+        print('ol_highlimit',ol_highlimit)
+
+        print(analisis_results)
+
+                #analisis_results['features'] == p_n_features and \
+        if analisis_results['samples'] == p_n_samples and \
+                ol_lowlimit <= analisis_results['outliersperc'] + analisis_results['outliersbyperpenperc'] < ol_highlimit and \
+                lin_lowlimit <= analisis_results['linpointsperc'] < lin_highlimit and \
+                rep_lowlimit <= analisis_results['repeatedperc'] < rep_highlimit and \
+                analisis_results['repeatedgrps'] == p_n_groups:
+            print('DATASET IS OK!!')
+            break
+        else:
+            print('INVALID DATASET')
+        
     return dataset
 
 def process_and_analyze():
@@ -140,4 +189,4 @@ def process_and_analyze():
     rules_metrics(clusters,rules,n_samples)
 
 if __name__ == '__main__':
-    dataset_generation_and_validation(3,100,0,0,4,0)
+    dataset_generation_and_validation(7,10000,22,0,0,0)

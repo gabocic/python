@@ -233,7 +233,6 @@ def create_dataset(n_samples=20, n_features=3,
         olthres = 1.5 * np.take(dist2mean,sortd2midx[-last20-1:-last20])
         print('olthres',olthres)
 
-
         # Look for the first sample further than 'threshold' (ie. first outlier, if exists)
         firstolpos = np.searchsorted(l_20percfur.T[0],olthres)[0,0]
         
