@@ -2,11 +2,11 @@
 
 from sklearn import metrics
 import numpy as np
-from common import get_intra_cluster_distances
 from common import split_data_in_clusters
 from numpy.linalg import norm
 from math import e
 from math import log
+from scipy.spatial.distance import pdist
 
 def clustering_metrics(estimator, name, data, time, sample_size,clusters):
 
@@ -20,29 +20,16 @@ def clustering_metrics(estimator, name, data, time, sample_size,clusters):
                     distances.append(norm(cluster_i_element-cluster_j_element))
             return distances
 
-        # Split data into the different clusters
-        #clusters = split_data_in_clusters(estimator,data)
-
-        #clusters={}
-        #it = np.nditer(estimator.labels_, flags=['f_index'])
-        #while not it.finished:
-        #    clusterid = int(it[0])
-        #    if clusterid in clusters: 
-        #        clusters[clusterid] = np.append(clusters[clusterid],[data[it.index,:]],axis=0)
-        #    else:
-        #        clusters[clusterid] = np.array([data[it.index,:]])
-        #    it.iternext()
-        
 
         # Calculates the maximum internal distance.
         l_micd = []
         for c in clusters:
-            ## For each cluster, calculates the distances between the cluster points
             # Ignore single element clusters
             if clusters[c].shape[0] == 1:
                 print("<<<< SINGLE ELEMENT CLUSTER WAS GENERATED >>>>")
             else:
-                icd = get_intra_cluster_distances(clusters[c])
+                ## Condensed distance matrix
+                icd = pdist(clusters[c])
                 micd = np.max(icd)
                 l_micd.append(micd)
         

@@ -186,8 +186,8 @@ def process_and_analyze(dataset):
         sys.exit()
 
     # Compute rules metrics
-    rules_metrics(clusters,rules,n_samples)
+    rules_metrics(clusters,rules,dataset.shape[0])
 
 if __name__ == '__main__':
-    dataset = dataset_generation_and_validation(7,5000,50,0,0,0)
+    dataset = dataset_generation_and_validation(7,1000,50,0,0,0)
     process_and_analyze(dataset)
