@@ -14,6 +14,7 @@ from CART import CART_classifier
 from CN2 import CN2_classifier
 from common import split_data_in_clusters
 import numpy as np
+from sklearn.preprocessing import StandardScaler
 
 class bcolors:
     BANNER = '\033[94m'
@@ -96,11 +97,12 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
 
         print(analisis_results)
 
-                #analisis_results['features'] == p_n_features and \
+                #ol_lowlimit <= analisis_results['outliersperc'] + analisis_results['outliersbyperpenperc'] < ol_highlimit and \
         if analisis_results['samples'] == p_n_samples and \
-                ol_lowlimit <= analisis_results['outliersperc'] + analisis_results['outliersbyperpenperc'] < ol_highlimit and \
+                ol_lowlimit <= analisis_results['outliersperc'] < ol_highlimit and \
                 lin_lowlimit <= analisis_results['linpointsperc'] < lin_highlimit and \
                 rep_lowlimit <= analisis_results['repeatedperc'] < rep_highlimit and \
+                analisis_results['features'] == p_n_features and \
                 analisis_results['repeatedgrps'] == p_n_groups:
             print('DATASET IS OK!!')
             break
@@ -124,12 +126,13 @@ def process_and_analyze(dataset):
             'cn2'
             ]
 
-    n_clusters = 3 # only for the algorithms that support this
-    clustering_alg = 'kmeans_++'
-    rulesind_alg = 'cn2'
+    n_clusters = 4 # only for the algorithms that support this
+    clustering_alg = 'dbscan'
+    rulesind_alg = 'cart'
 
     # Scale data
-    scaleddata = sklearn_scale(dataset) 
+    #scaleddata = sklearn_scale(dataset) 
+    scaleddata = StandardScaler().fit_transform(dataset)
 
     # Clustering phase
     
@@ -166,7 +169,8 @@ def process_and_analyze(dataset):
 
     # Split data in clusters
     print('Split data in clusters')
-    clusters = split_data_in_clusters(estimator,scaleddata)
+    #clusters = split_data_in_clusters(estimator,scaleddata)
+    clusters = split_data_in_clusters(estimator,dataset)
     for singleclus in clusters:
         print('Cluster '+singleclus.__str__()+':',len(clusters[singleclus]))
     
@@ -177,6 +181,8 @@ def process_and_analyze(dataset):
 
     # Induct group membership rules
 
+    print('Induct group membership rules')
+
     if rulesind_alg == 'cart':
         rules = CART_classifier(dataset,estimator)
     elif rulesind_alg == 'cn2':
@@ -185,9 +191,12 @@ def process_and_analyze(dataset):
         print('Rules induction algorithm not found')
         sys.exit()
 
+    #for ruleid in rules:
+    #    print(ruleid,rules[ruleid]['classes_matched'])
+    print(len(rules))
     # Compute rules metrics
-    rules_metrics(clusters,rules,dataset.shape[0])
+    #rules_metrics(clusters,rules,dataset.shape[0])
 
 if __name__ == '__main__':
-    dataset = dataset_generation_and_validation(7,1000,50,0,0,0)
+    dataset = dataset_generation_and_validation(7,1000,80,0,0,0)
     process_and_analyze(dataset)

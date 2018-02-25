@@ -155,7 +155,7 @@ def create_dataset(n_samples=20, n_features=3,
         for a in range(0,lin_samples_d0+1):
             # Making constants smaller to prevent too many outliers
             #lins = p0+a*(0.1)*d0
-            lins = p0+100*a*d0
+            lins = p0+300*a*d0
             lin_points[a-1:a,:] = lins
         maxlins = lins 
 
@@ -163,7 +163,7 @@ def create_dataset(n_samples=20, n_features=3,
         for b in range(0,lin_samples_d1+1):
             # Making constants smaller to prevent too many outliers
             #lins = p0+b*(0.1)*d1
-            lins = p0+100*b*d1
+            lins = p0+300*b*d1
             a+=1
             lin_points[a-1:a,:] = lins
         minlins = lins 

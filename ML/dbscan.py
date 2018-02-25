@@ -12,7 +12,7 @@ def dbscan_clustering(data,plot,p_n_jobs):
 
     l_NearestNeighborsAlg = ['auto', 'ball_tree', 'kd_tree', 'brute']
     NearestNeighborsAlg = 'auto'
-    dbscan = DBSCAN(eps=0.98, min_samples=3,metric='euclidean',algorithm=NearestNeighborsAlg,n_jobs=p_n_jobs)
+    dbscan = DBSCAN(eps=2, min_samples=10,metric='euclidean',algorithm='auto',n_jobs=p_n_jobs)
 
     # Initial time mark
     t0 = time()

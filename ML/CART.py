@@ -27,10 +27,10 @@ def CART_classifier(data,estimator):
             else:
                 print("{}return {}".format(indent, tree_.value[node]))
 
-        recurse(0, 1)
+        #recurse(0, 1)
 
     ## Main ##
-    clf = tree.DecisionTreeClassifier()
+    clf = tree.DecisionTreeClassifier(min_samples_leaf=0.1)
     clf = clf.fit(data, estimator.labels_)
    
     # feature_names
@@ -96,24 +96,24 @@ def CART_classifier(data,estimator):
                 rules.append(rule)
             l_rules[i] = {'rules':rules,'classes_matched':clf.tree_.value[i]}
         
-
+    
     ####### Print validation tree ##################
-    for i in range(n_nodes):
-        if is_leaves[i]:
-            print("%snode=%s leaf node." % (node_depth[i] * "\t", i),clf.tree_.value[i])
-        else:
-            #curr_rule
-            print("%snode=%s test node: go to node %s if X[:, %s] <= %s else to "
-                    "node %s."
-                     % (node_depth[i] * "\t",
-    		     i,
-    		     children_left[i],
-    		     feature[i],
-    		     threshold[i],
-    		     children_right[i],
-               ))
+    #for i in range(n_nodes):
+    #    if is_leaves[i]:
+    #        print("%snode=%s leaf node." % (node_depth[i] * "\t", i),clf.tree_.value[i])
+    #    else:
+    #        #curr_rule
+    #        print("%snode=%s test node: go to node %s if X[:, %s] <= %s else to "
+    #                "node %s."
+    #                 % (node_depth[i] * "\t",
+    #		     i,
+    #		     children_left[i],
+    #		     feature[i],
+    #		     threshold[i],
+    #		     children_right[i],
+    #           ))
 
     #tree_to_code(clf,feature_names)
-    for regla in l_rules:   
-        print(l_rules[regla]['classes_matched'])
+    #for regla in l_rules:   
+    #    print(l_rules[regla]['classes_matched'])
     return l_rules

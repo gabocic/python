@@ -29,4 +29,3 @@ def split_data_in_clusters(estimator,data):
             clusters[clusterid] = np.array([data[it.index,:]])
         it.iternext()
     return clusters
-
