@@ -30,27 +30,43 @@ def dbscan_clustering(data,plot,p_n_jobs):
     distances, indices = nbrs.kneighbors(data)
     sorteddist = np.sort(distances,axis=None)
 
+    # Detecting elbow
+    dx = int(0.01 * sorteddist.shape[0])
+    minvar=0
+    minidxul=0
+    print('dx',dx)
     k = sorteddist.shape[0] -1
-    minvar1 = 0
-    minvar2 = 0
+    l_ranupplim = []
     while k >= 0:
-        print(k,'-',k-9)
-        variance = (sorteddist[k] - sorteddist[k-9])/10
-        print(variance)
-        if k == sorteddist.shape[0]-1:
-            minvar1 = variance
-            minvarran1 = (k,k-9)
-            minvar2 = variance
-            minvarran2 = (k,k-9)
-        else:
-            if variance < minvar1:
-                minvar2 = minvar1
-                minvarran2 = minvarran1
-                minvar1 = variance
-                minvarran1 = (k,k-9)
-        k = k-10
-    print('min variance',minvar1,minvarran1)
-    print('min variance',minvar2,minvarran2)
+        variance = ((sorteddist[k] - sorteddist[k-(dx-1)])/sorteddist[-1])/(dx/sorteddist.shape[0])
+        print(k,'-',k-(dx-1))
+        print('variance',variance)
+        print('')
+        #if k == sorteddist.shape[0]-1:
+        #    minvar = variance
+        #    minidxul = k
+        #else:
+        #    if variance !=0 and variance < minvar:
+        #        minvar = variance
+        #        minidxul=k
+
+        if 0.5 <= variance <= 0.6:
+            print(k,'-',k-(dx-1))
+            print(variance)
+            print('')
+            l_ranupplim.append(k-(dx-1))
+            #l_ranupplim.append(k)
+        k = k-dx
+
+    # Get the max upper limit for the winning ranges and use the middle value as eps
+    print('minidxul',minidxul)
+    #winidx = minidxul - int((dx-1)/2)
+    winidx = max(l_ranupplim) - (dx-1)
+    #winidx = max(l_ranupplim)
+    print(winidx)
+    v_eps = sorteddist[winidx]
+    print('v_eps',v_eps)
+
     
     #z = np.polyfit(np.arange(sorteddist.shape[0]),sorteddist, 3)
     #print(z)
@@ -65,8 +81,10 @@ def dbscan_clustering(data,plot,p_n_jobs):
         #print(valor)
         f.write(valor.__str__()+'\n')
     f.close()
-
-    dbscan = DBSCAN(eps=80000, min_samples=10,metric='euclidean',algorithm=NearestNeighborsAlg,n_jobs=p_n_jobs)
+    
+    #v_eps = input("eps:")
+    #v_eps = float(v_eps)
+    dbscan = DBSCAN(eps=v_eps, min_samples=10,metric='euclidean',algorithm=NearestNeighborsAlg,n_jobs=p_n_jobs)
 
     # Initial time mark
     t0 = time()
