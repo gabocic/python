@@ -199,5 +199,5 @@ def process_and_analyze(dataset):
     #rules_metrics(clusters,rules,dataset.shape[0])
 
 if __name__ == '__main__':
-    dataset = dataset_generation_and_validation(7,100,0,0,0,0)
+    dataset = dataset_generation_and_validation(7,500,0,0,0,0)
     process_and_analyze(dataset)
