@@ -127,7 +127,7 @@ def process_and_analyze(dataset):
             ]
 
     n_clusters = 4 # only for the algorithms that support this
-    clustering_alg = 'meanshift'
+    clustering_alg = 'kmeans_++'
     rulesind_alg = 'cart'
 
     # Scale data
@@ -181,9 +181,9 @@ def process_and_analyze(dataset):
     clusters = split_data_in_clusters(estimator,dataset)
 
     # Check that more than 1 cluster was found
-    #if len(clusters) <= 1:
-    #    print('Single cluster found. Exiting..')
-    #    sys.exit()
+    if len(clusters) <= 1:
+        print('Single cluster found. Exiting..')
+        sys.exit()
 
     for singleclus in clusters:
         print('Cluster '+singleclus.__str__()+':',len(clusters[singleclus]))
@@ -195,6 +195,7 @@ def process_and_analyze(dataset):
     # Induct group membership rules
 
     print('Induct group membership rules')
+    print('<<<<<<<<<<<<<<<<<<< I NEED TO TRY TO ASSOCIATE EACH RULE TO A CLUSTER BASED ON CASES COVERED. IF THE SAME RULE COVERS ALMOST THE SAME AMOUNT OF ELEMENTS FOR EVERY CLUSTER IS NOT USEFUL. FURTHERMORE, IF MORE THAN ONE RULE HAS GOOD COVERATE FOR A CLUSTER, WE NEED TO ANALYZE BOTH, AND CALCULATE METRICS FOR BOTH (NOT MUCH CODE CHANGES REQUIRED FOR THE LATER THOUGH). FINALLY, WE NEED TO STOP CALCULATING METRICS AVERAGE!!')
 
     if rulesind_alg == 'cart':
         rules = CART_classifier(dataset,estimator)
@@ -204,11 +205,11 @@ def process_and_analyze(dataset):
         print('Rules induction algorithm not found')
         sys.exit()
 
-    #for ruleid in rules:
-    #    print(ruleid,rules[ruleid]['classes_matched'])
+    for ruleid in rules:
+        print(ruleid,rules[ruleid]['classes_matched'])
     print(len(rules))
     # Compute rules metrics
-    #rules_metrics(clusters,rules,dataset.shape[0])
+    rules_metrics(clusters,rules,dataset.shape[0])
 
 if __name__ == '__main__':
     dataset = dataset_generation_and_validation(7,1000,0,0,0,0)
