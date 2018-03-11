@@ -127,7 +127,7 @@ def process_and_analyze(dataset):
             ]
 
     n_clusters = 4 # only for the algorithms that support this
-    clustering_alg = 'dbscan'
+    clustering_alg = 'meanshift'
     rulesind_alg = 'cart'
 
     # Scale data
@@ -145,18 +145,25 @@ def process_and_analyze(dataset):
         estimator,elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='PCA-based',p_n_clusters=n_clusters,p_n_init=10,p_n_jobs=4)
     elif clustering_alg == 'dbscan':
         estimator,elap_time = dbscan_clustering(data=scaleddata,plot=0,p_n_jobs=4)
-        
-        # Remove outliers
-        l_outliers = []
-        it = np.nditer(estimator.labels_, flags=['f_index'])
-        while not it.finished:
-            if it[0] == -1:
-                l_outliers.append(it.index)
-            it.iternext()
-        estimator.labels_ = np.delete(estimator.labels_,l_outliers,0)
-        scaleddata = np.delete(scaleddata,l_outliers,0)
-        dataset = np.delete(dataset,l_outliers,0)
-        print('Outliers #',len(l_outliers))
+    
+
+        # Check that at least one cluster was found
+
+        if estimator != None and len(np.unique([ label for label in estimator.labels_ if label > -1])) >=1:
+            # Remove outliers
+            l_outliers = []
+            it = np.nditer(estimator.labels_, flags=['f_index'])
+            while not it.finished:
+                if it[0] == -1:
+                    l_outliers.append(it.index)
+                it.iternext()
+            estimator.labels_ = np.delete(estimator.labels_,l_outliers,0)
+            scaleddata = np.delete(scaleddata,l_outliers,0)
+            dataset = np.delete(dataset,l_outliers,0)
+            print('Outliers #',len(l_outliers))
+        else:
+            print('No clusters were found')
+            sys.exit()
 
     elif clustering_alg == 'birch':
         estimator,elap_time = birch_clustering(data=scaleddata,plot=0,p_n_clusters=n_clusters,p_n_jobs=4)
@@ -172,10 +179,15 @@ def process_and_analyze(dataset):
     print('Split data in clusters')
     #clusters = split_data_in_clusters(estimator,scaleddata)
     clusters = split_data_in_clusters(estimator,dataset)
+
+    # Check that more than 1 cluster was found
+    #if len(clusters) <= 1:
+    #    print('Single cluster found. Exiting..')
+    #    sys.exit()
+
     for singleclus in clusters:
         print('Cluster '+singleclus.__str__()+':',len(clusters[singleclus]))
-    
-    #sys.exit()
+     
     # Compute clustering metrics
     sample_size = 50
     clustering_metrics(estimator, clustering_alg, scaleddata, elap_time, sample_size, clusters)
@@ -199,5 +211,5 @@ def process_and_analyze(dataset):
     #rules_metrics(clusters,rules,dataset.shape[0])
 
 if __name__ == '__main__':
-    dataset = dataset_generation_and_validation(7,500,0,0,0,0)
+    dataset = dataset_generation_and_validation(7,1000,0,0,0,0)
     process_and_analyze(dataset)
