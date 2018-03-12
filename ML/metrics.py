@@ -75,14 +75,16 @@ def rules_metrics(clusters,rules,n_samples):
 
         # In this case clusterid is the position of the value in the list since the clusters are also numbered by position
         for clusterid,clustercnt in enumerate(rules[ruleid]['classes_matched'][0]):
-            #print("Cluster",clusterid)
-            #print(clustercnt)
-            if clusterid not in d_cont_table[ruleid]:
-                d_cont_table[ruleid][clusterid] = {}
-            d_cont_table[ruleid][clusterid]['ncr'] = clustercnt
-            d_cont_table[ruleid][clusterid]['n!cr'] = sum(rules[ruleid]['classes_matched'][0]) - clustercnt
-            d_cont_table[ruleid][clusterid]['nc!r'] = len(clusters[clusterid]) - clustercnt
-            d_cont_table[ruleid][clusterid]['n!c!r'] = (n_samples - sum(rules[ruleid]['classes_matched'][0])) - (len(clusters[clusterid])+clustercnt)
+            if clustercnt/len(clusters[clusterid]) > 0.3:
+                #print("Cluster",clusterid)
+                #print(clustercnt)
+                #### <<<<< clustercnt = samples matched for this rule and cluster "clusterid"
+                if clusterid not in d_cont_table[ruleid]:
+                    d_cont_table[ruleid][clusterid] = {}
+                d_cont_table[ruleid][clusterid]['ncr'] = clustercnt
+                d_cont_table[ruleid][clusterid]['n!cr'] = sum(rules[ruleid]['classes_matched'][0]) - clustercnt
+                d_cont_table[ruleid][clusterid]['nc!r'] = len(clusters[clusterid]) - clustercnt
+                d_cont_table[ruleid][clusterid]['n!c!r'] = (n_samples - sum(rules[ruleid]['classes_matched'][0])) - (len(clusters[clusterid])+clustercnt)
 
     ## Weighted Sum of consistency and coverage (Michalsky, 1990)
     # Qws = w1 x cons(R) + w2 x cover(R), with
@@ -132,16 +134,17 @@ def rules_metrics(clusters,rules,n_samples):
 
     for rule in d_cont_table:
         print('Rule',rule)
-        sum_Qws = 0
-        sum_Qprod = 0
+        #sum_Qws = 0
+        #sum_Qprod = 0
         #sum_X2 = 0
-        sum_Qcohen = 0
-        sum_Qcoleman = 0
-        sum_Qis = 0
-        sum_Qls = 0
-        sum_Qmd = 0
+        #sum_Qcohen = 0
+        #sum_Qcoleman = 0
+        #sum_Qis = 0
+        #sum_Qls = 0
+        #sum_Qmd = 0
 
         for cluster in d_cont_table[rule]:
+            print('  Cluster:',cluster)
             ncr = d_cont_table[rule][cluster]['ncr']
             nIcr = d_cont_table[rule][cluster]['n!cr']
             ncIr = d_cont_table[rule][cluster]['nc!r']
@@ -152,11 +155,11 @@ def rules_metrics(clusters,rules,n_samples):
 
             # Qws
             Qws = w1 * cons + w2 * cover
-            sum_Qws = sum_Qws + Qws
+            #sum_Qws = sum_Qws + Qws
 
             # Qprod
             Qprod = cons * (e**(cover-1))
-            sum_Qprod = sum_Qprod + Qprod
+            #sum_Qprod = sum_Qprod + Qprod
 
             # X2
             nIcIr = d_cont_table[rule][cluster]['n!c!r']
@@ -175,46 +178,46 @@ def rules_metrics(clusters,rules,n_samples):
             fcr = ncr / n_samples
             fIcIr = nIcIr / n_samples
             Qcohen = (fcr + fIcIr - (fr * fc + fIr * fIc)) / (1 - (fr * fc + fIr * fIc))
-            sum_Qcohen = sum_Qcohen + Qcohen
+            #sum_Qcohen = sum_Qcohen + Qcohen
 
             # Qcoleman
             Qcoleman = (fcr - fr * fc)/(fr - fr * fc)
-            sum_Qcoleman = sum_Qcoleman + Qcoleman
+            #sum_Qcoleman = sum_Qcoleman + Qcoleman
 
             # Qis
             if ncr/nr == 0:
                 pass
             else:
-                Qis = -log(nc / n_samples) + log(ncr / nr)
-                sum_Qis = sum_Qis + Qis
+                Qis = -log((nc/n_samples),2) + log((ncr/nr),2)
+                print('Qis ',Qis)
+                #sum_Qis = sum_Qis + Qis
 
             # Qls
             if nc == 0 or nIc == 0 or nIcr/nIc == 0:
                 pass
             else:
                 Qls = (ncr/nc) / (nIcr/nIc)
-                sum_Qls = sum_Qls + Qls
+                print('Qls ',Qls)
+                #sum_Qls = sum_Qls + Qls
 
             # Qmd
             if ncIr == 0 or nIcIr == 0 or nIcr/nIcIr == 0 or (ncr/ncIr)/(nIcr/nIcIr) == 0:
                 pass
             else:
-                Qmd = log((ncr/ncIr)/(nIcr/nIcIr))
-                sum_Qmd = sum_Qmd + Qmd
+                Qmd = log((ncr/ncIr)/(nIcr/nIcIr),2)
+                print('Qmd ',Qmd)
+                #sum_Qmd = sum_Qmd + Qmd
+            
+            print('Qws: ',Qws)
+            print('Qprod: ',Qprod)
+            print('Qcohen: ',Qcohen)
+            print('Qcoleman: ',Qcoleman)
 
-        avg_Qws = round(sum_Qws / len(clusters),2)
-        avg_Qprod = round(sum_Qprod / len(clusters),2)
+        #avg_Qws = round(sum_Qws / len(clusters),2)
+        #avg_Qprod = round(sum_Qprod / len(clusters),2)
         #avg_X2 = round(sum_X2 / len(clusters),2)
-        avg_Qcohen = round(sum_Qcohen / len(clusters),2)
-        avg_Qcoleman = round(sum_Qcoleman / len(clusters),2)
-        avg_Qis = round(sum_Qis / len(clusters),2)
-        avg_Qls = round(sum_Qls / len(clusters),2)
-        avg_Qmd = round(sum_Qmd / len(clusters),2)
-        print('avg_Qws: ',avg_Qws)
-        print('avg_Qprod: ',avg_Qprod)
-        #print('avg_X2: ',avg_X2)
-        print('avg_Qcohen: ',avg_Qcohen)
-        print('avg_Qcoleman: ',avg_Qcoleman)
-        print('avg_Qis ',avg_Qis)
-        print('avg_Qls ',avg_Qls)
-        print('avg_Qmd ',avg_Qmd)
+        #avg_Qcohen = round(sum_Qcohen / len(clusters),2)
+        #avg_Qcoleman = round(sum_Qcoleman / len(clusters),2)
+        #avg_Qis = round(sum_Qis / len(clusters),2)
+        #avg_Qls = round(sum_Qls / len(clusters),2)
+        #avg_Qmd = round(sum_Qmd / len(clusters),2)
