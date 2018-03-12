@@ -12,6 +12,7 @@ def clustering_metrics(estimator, name, data, time, sample_size,clusters):
 
 
     def dunn_index(estimator,data):
+    # The higher the value, the “better” the clustering will be
 
         def get_inter_cluster_distances(i, j, clusters):
             distances = []
@@ -75,16 +76,17 @@ def rules_metrics(clusters,rules,n_samples):
 
         # In this case clusterid is the position of the value in the list since the clusters are also numbered by position
         for clusterid,clustercnt in enumerate(rules[ruleid]['classes_matched'][0]):
+
+            # Filter out any rules not covering at least 30% of the cluster samples
             if clustercnt/len(clusters[clusterid]) > 0.3:
-                #print("Cluster",clusterid)
-                #print(clustercnt)
-                #### <<<<< clustercnt = samples matched for this rule and cluster "clusterid"
                 if clusterid not in d_cont_table[ruleid]:
                     d_cont_table[ruleid][clusterid] = {}
                 d_cont_table[ruleid][clusterid]['ncr'] = clustercnt
                 d_cont_table[ruleid][clusterid]['n!cr'] = sum(rules[ruleid]['classes_matched'][0]) - clustercnt
                 d_cont_table[ruleid][clusterid]['nc!r'] = len(clusters[clusterid]) - clustercnt
-                d_cont_table[ruleid][clusterid]['n!c!r'] = (n_samples - sum(rules[ruleid]['classes_matched'][0])) - (len(clusters[clusterid])+clustercnt)
+                d_cont_table[ruleid][clusterid]['n!c!r'] = (n_samples - sum(rules[ruleid]['classes_matched'][0])) - len(clusters[clusterid]) + clustercnt
+                print(d_cont_table[ruleid][clusterid])
+
 
     ## Weighted Sum of consistency and coverage (Michalsky, 1990)
     # Qws = w1 x cons(R) + w2 x cover(R), with
@@ -118,10 +120,11 @@ def rules_metrics(clusters,rules,n_samples):
 
     ## Information Score (Kononenko and Bratko, 1991)
     #
-    # Qis = -log(nc / N) + log(nrc / nr)
+    # Qis = -log2(nc / N) + log2(nrc / nr)
     #
+    # This score could oscilate between 0 and +oo. The higher the score, the higher the information provided, which is better
     # Information score calculation will fail for every Rule-Cluster combination for which the rule doesn't cover any cluster members (ncr = 0)
-    # All Rule-Cluster combinations where ncr = 0  won't be considered in the average (avg_Qis)
+    # All Rule-Cluster combinations where ncr = 0  won't be considered
 
 
     ## Measure of logical sufficiency (Duda, Gaschnig and Hart, 1979; Ali, Pazzani, 1993)
@@ -130,6 +133,7 @@ def rules_metrics(clusters,rules,n_samples):
 
     ## Measure of discrimination (An and Cercone, 1998)
     #
+    # The higher the better
     # Qmd = log((ncr/ncIr)/(nIcr/nIcIr))
 
     for rule in d_cont_table:
@@ -204,7 +208,7 @@ def rules_metrics(clusters,rules,n_samples):
             if ncIr == 0 or nIcIr == 0 or nIcr/nIcIr == 0 or (ncr/ncIr)/(nIcr/nIcIr) == 0:
                 pass
             else:
-                Qmd = log((ncr/ncIr)/(nIcr/nIcIr),2)
+                Qmd = log((ncr/ncIr)/(nIcr/nIcIr))
                 print('Qmd ',Qmd)
                 #sum_Qmd = sum_Qmd + Qmd
             

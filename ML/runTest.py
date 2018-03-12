@@ -126,7 +126,7 @@ def process_and_analyze(dataset):
             'cn2'
             ]
 
-    n_clusters = 4 # only for the algorithms that support this
+    n_clusters = 3 # only for the algorithms that support this
     clustering_alg = 'kmeans_++'
     rulesind_alg = 'cart'
 
