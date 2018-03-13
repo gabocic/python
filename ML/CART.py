@@ -1,6 +1,5 @@
 #!/home/gabriel/pythonenvs/v3.5/bin/python
 
-from sklearn.datasets import load_iris
 from sklearn import tree
 from sklearn.tree import _tree
 import numpy as np

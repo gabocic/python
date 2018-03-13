@@ -6,6 +6,7 @@ from sklearn.neighbors import NearestNeighbors
 import numpy as np
 from plot_2d_3d import plot_2d_3d
 from scipy.misc import derivative
+from bisect import bisect_right
 
 def dbscan_clustering(data,plot,p_n_jobs):
 
@@ -36,7 +37,11 @@ def dbscan_clustering(data,plot,p_n_jobs):
     for j in np.arange(1.01, 1.1, 0.01):
         l_eps.append(midval*j)
         l_eps.append(midval/j)
-   
+ 
+    # If all distances for the range are zero, just use the smallest value
+    if sum(l_eps) == 0:
+        l_eps=[sorteddist(bisect_right(sorteddist.tolist(),0))]
+
     # Running DBSCAN for each of the above eps until at least "min_clusters" is found
     winning_dbscan = None
     winning_elap_time = None
