@@ -3,7 +3,6 @@
 import sys
 from dataset import create_dataset
 from analyze import analyze_dataset
-from preprocessing import sklearn_scale
 from metrics import clustering_metrics
 from metrics import rules_metrics
 from kmeans import k_means_clustering
@@ -14,6 +13,7 @@ from CART import CART_classifier
 from CN2 import CN2_classifier
 from common import split_data_in_clusters
 import numpy as np
+
 from sklearn.preprocessing import StandardScaler
 
 class bcolors:
@@ -120,9 +120,7 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
     n_clusters = 3 # only for the algorithms that support this
 
     # Scale data
-    #scaleddata = sklearn_scale(dataset) 
-    #scaleddata = StandardScaler().fit_transform(dataset)
-    scaleddata = dataset
+    scaleddata = StandardScaler().fit_transform(dataset)
 
     # Clustering phase
 
@@ -133,13 +131,13 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
     print("")
     
     if clustering_alg == 'kmeans_++':
-        estimator,elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='k-means++',p_n_clusters=n_clusters,p_n_init=10,p_n_jobs=4)
+        estimator,c_elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='k-means++',p_n_clusters=n_clusters,p_n_init=10,p_n_jobs=4)
     elif clustering_alg == 'kmeans_random':
-        estimator,elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='random',p_n_clusters=n_clusters,p_n_init=10,p_n_jobs=4)
+        estimator,c_elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='random',p_n_clusters=n_clusters,p_n_init=10,p_n_jobs=4)
     elif clustering_alg == 'kmeans_pca':
-        estimator,elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='PCA-based',p_n_clusters=n_clusters,p_n_init=10,p_n_jobs=4)
+        estimator,c_elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='PCA-based',p_n_clusters=n_clusters,p_n_init=10,p_n_jobs=4)
     elif clustering_alg == 'dbscan':
-        estimator,elap_time = dbscan_clustering(data=scaleddata,plot=0,p_n_jobs=4)
+        estimator,c_elap_time = dbscan_clustering(data=scaleddata,plot=0,p_n_jobs=4)
     
 
         # Check that at least one cluster was found
@@ -161,9 +159,9 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
             return -1
 
     elif clustering_alg == 'birch':
-        estimator,elap_time = birch_clustering(data=scaleddata,plot=0,p_n_clusters=n_clusters,p_n_jobs=4)
+        estimator,c_elap_time = birch_clustering(data=scaleddata,plot=0,p_n_clusters=n_clusters,p_n_jobs=4)
     elif clustering_alg == 'meanshift':
-        estimator,elap_time = meanshift_clustering(data=scaleddata,plot=0,p_n_jobs=4)
+        estimator,c_elap_time = meanshift_clustering(data=scaleddata,plot=0,p_n_jobs=4)
 
     else:
         print('Clustering algorithm not found')
@@ -188,7 +186,7 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
     print("*"*70)
     print("")
     sample_size = 50
-    clus_metrics = clustering_metrics(estimator, clustering_alg, scaleddata, elap_time, sample_size, clusters)
+    clus_metrics = clustering_metrics(estimator, clustering_alg, scaleddata, c_elap_time, sample_size, clusters)
     print(clus_metrics)
 
     # Induct group membership rules
@@ -200,9 +198,9 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
     print("")
 
     if rulesind_alg == 'cart':
-        rules = CART_classifier(dataset,estimator)
+        rules,r_elap_time = CART_classifier(dataset,estimator)
     elif rulesind_alg == 'cn2':
-        rules = CN2_classifier(dataset,estimator)
+        rules,r_elap_time = CN2_classifier(dataset,estimator)
     else:
         print('Rules induction algorithm not found')
         return -1
@@ -217,12 +215,13 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
     print("Calculate rules metrics")
     print("*"*70)
     print("")
-    metrics = rules_metrics(clusters,rules,dataset.shape[0])
+    metrics = rules_metrics(clusters,rules,dataset.shape[0],r_elap_time)
     print(metrics)
 
 if __name__ == '__main__':
-    dataset = dataset_generation_and_validation(10,1000,0,50,3,0)
-    process_and_analyze(dataset,'dbscan','cart')
+
+    dataset = dataset_generation_and_validation(10,1000,0,0,0,20)
+#    process_and_analyze(dataset,'dbscan','cart')
 
     l_clustering_alg = [
             'kmeans_++',
@@ -237,7 +236,8 @@ if __name__ == '__main__':
             'cn2'
             ]
 
-#    for clustering_alg in l_clustering_alg:
-#        for ruleind_alg in l_ruleind_alg:
-#            process_and_analyze(dataset,clustering_alg,ruleind_alg)
+    lowest_time=0
+    for clustering_alg in l_clustering_alg:
+        for ruleind_alg in l_ruleind_alg:
+            process_and_analyze(dataset,clustering_alg,ruleind_alg)
 

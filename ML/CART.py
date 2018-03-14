@@ -3,6 +3,7 @@
 from sklearn import tree
 from sklearn.tree import _tree
 import numpy as np
+from time import time
 
 def CART_classifier(data,estimator):
 
@@ -29,8 +30,16 @@ def CART_classifier(data,estimator):
         #recurse(0, 1)
 
     ## Main ##
+
     clf = tree.DecisionTreeClassifier(min_samples_leaf=0.1)
+
+    # Initial time mark
+    t0 = time()
+
     clf = clf.fit(data, estimator.labels_)
+
+    # Calculate process time
+    elap_time = (time() - t0)
    
     # feature_names
     feature_names = np.array([])
@@ -115,4 +124,4 @@ def CART_classifier(data,estimator):
     #tree_to_code(clf,feature_names)
     #for regla in l_rules:   
     #    print(l_rules[regla]['classes_matched'])
-    return l_rules
+    return l_rules,elap_time

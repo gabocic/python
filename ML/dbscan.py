@@ -40,7 +40,7 @@ def dbscan_clustering(data,plot,p_n_jobs):
  
     # If all distances for the range are zero, just use the smallest value
     if sum(l_eps) == 0:
-        l_eps=[sorteddist(bisect_right(sorteddist.tolist(),0))]
+        l_eps=[sorteddist[bisect_right(sorteddist,0)]]
 
     # Running DBSCAN for each of the above eps until at least "min_clusters" is found
     winning_dbscan = None

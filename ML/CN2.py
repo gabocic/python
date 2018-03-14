@@ -3,8 +3,7 @@
 import Orange
 from sklearn import datasets
 import numpy as np
-
-
+from time import time
 
 def CN2_classifier(data,estimator):
 
@@ -15,15 +14,8 @@ def CN2_classifier(data,estimator):
         l_attr.append(Orange.data.ContinuousVariable(name='f'+i.__str__(), compute_value=None))
 
     # Define target value
-    #classv = Orange.data.DiscreteVariable(name='classv',values=estimator.labels_)
-    #print(estimator.labels_.tolist())
-    
     l_label = [str(i) for i in np.unique(estimator.labels_).tolist()]
     
-    #print('<<<<<<<<<<<<<<<<<<<<< EN CN2!! <<<<',estimator.labels_)
-    #for label in estimator.labels_:
-    #    if label != -1:
-    #        l_label.append(label.__str__())    
     classv = Orange.data.DiscreteVariable(name='classv',values=l_label)
 
     # Create domain based on the above attributes
@@ -47,14 +39,18 @@ def CN2_classifier(data,estimator):
     # found rules may combine at most 2 selectors (conditions)
     #learner.rule_finder.general_validator.max_rule_length = 3
 
+    # Initial time mark
+    t0 = time()
+
     classifier = learner(table)
+
+    # Calculate process time
+    elap_time = (time() - t0)
 
     # Generate rules dictionary
     l_rules={}
     ruleid = 0
     for myrule in classifier.rule_list:
-        #print(myrule.initial_class_dist)
-        #print(myrule.prior_class_dist)
         l_rules[ruleid]={}
         n_covexamples = 0
         for boolean in myrule.covered_examples:
@@ -74,4 +70,4 @@ def CN2_classifier(data,estimator):
         #print(dir(myrule.domain))
         #print(myrule.domain.class_var)
         ruleid+=1
-    return l_rules
+    return l_rules,elap_time

@@ -67,7 +67,7 @@ def clustering_metrics(estimator, name, data, time, sample_size,clusters):
 
     return clus_metrics
 
-def rules_metrics(clusters,rules,n_samples):
+def rules_metrics(clusters,rules,n_samples,elap_time):
 
     ## Create contingency table for each Rule,Cluster pair:
     # -Cluster 'c' examples covered by rule 'r'
@@ -206,5 +206,6 @@ def rules_metrics(clusters,rules,n_samples):
                 Qmd = round(log((ncr/ncIr)/(nIcr/nIcIr)),3)
             e_rules_metrics['Qmd'] = Qmd
 
-        rules_metrics.append(e_rules_metrics)           
-    return rules_metrics
+        rules_metrics.append(e_rules_metrics)          
+    dict_rules_metrics={"time":elap_time,"rules_metrics":rules_metrics}
+    return dict_rules_metrics
