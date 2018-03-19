@@ -28,4 +28,18 @@ def split_data_in_clusters(estimator,data):
         else:
             clusters[clusterid] = np.array([data[it.index,:]])
         it.iternext()
-    return clusters
+
+    # Remove single-element clusters
+    single_ele_clus=0
+    clus_to_remove=[]
+    for c in clusters:
+        # Saving key to remove it after the loop is done (to avoid "dictionary changed size during iteration")
+        if clusters[c].shape[0] == 1:
+            single_ele_clus+=1
+            clus_to_remove.append(c)
+
+    # Removing single-element cluster data
+    for sec in clus_to_remove:
+        clusters.pop(sec,None)
+
+    return clusters,single_ele_clus

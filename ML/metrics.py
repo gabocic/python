@@ -9,7 +9,7 @@ from math import log
 from scipy.spatial.distance import pdist
 from sklearn.metrics.pairwise import pairwise_distances
 
-def clustering_metrics(estimator, name, data, time, sample_size,clusters):
+def clustering_metrics(estimator, name, data, time, sample_size,clusters,sin_ele_clus):
 
 
     def dunn_index(estimator,data):
@@ -24,33 +24,42 @@ def clustering_metrics(estimator, name, data, time, sample_size,clusters):
 
 
         # Calculates the maximum internal distance.
+        #single_ele_clus = 0
         l_micd = []
+        #clus_to_remove = []
         for c in clusters:
-            # Ignore single element clusters
-            if clusters[c].shape[0] == 1:
-                print("<<<< SINGLE ELEMENT CLUSTER WAS GENERATED >>>>")
-            else:
-                ## Condensed distance matrix
-                icd = pdist(clusters[c])
-                micd = np.max(icd)
-                l_micd.append(micd)
+            ## Ignore single element clusters
+            #if clusters[c].shape[0] == 1:
+            #    #<<<< SINGLE ELEMENT CLUSTER WAS GENERATED >>>>
+            #    single_ele_clus+=1
+            #    # Saving key to remove it after the loop is done (to avoid "dictionary changed size during iteration")
+            #    clus_to_remove.append(c)
+            #else:
+            ## Condensed distance matrix
+            icd = pdist(clusters[c])
+            micd = np.max(icd)
+            l_micd.append(micd)
+       
+
+        # Removing single-element cluster data
+        #for sec in clus_to_remove:
+        #    clusters.pop(sec,None)
         
         ## Obtain the minimum distance across all clusters
         max_intra_cluster_dist = np.max(l_micd)
                     
    
         # Calculate the minimum inter cluster distance
-
         distances = []
-        for i in range(len(clusters)-1):
-            for j in range(i+1,len(clusters)):
-                #distances.append(get_inter_cluster_distances(i, j, clusters))
+        for i in clusters.keys():
+            for j in clusters.keys():
+                if j > i:
+                    # Pairwise distance between cluster i and j
+                    print('Pairwise distance between cluster ',i,' and ',j)
+                    pd = pairwise_distances(clusters[i],clusters[j],n_jobs=1) # n_jobs > 1 was slowing down the process when several small clusters were formed
 
-                # Pairwise disntance between cluster i and j
-                pd = pairwise_distances(clusters[i],clusters[j],n_jobs=4)
-
-                # Save the minimum distance from the pd matrix
-                distances.append(np.min(pd))
+                    # Save the minimum distance from the pd matrix
+                    distances.append(np.min(pd))
 
         # Obtain the minimum of the minimum distances
         min_inter_cluster_dist = np.min(distances)
@@ -64,6 +73,7 @@ def clustering_metrics(estimator, name, data, time, sample_size,clusters):
     clus_metrics['calinski_harabaz_score'] = metrics.calinski_harabaz_score(data, estimator.labels_)
     clus_metrics['silhouette_score'] = metrics.silhouette_score(data, estimator.labels_,metric='euclidean',sample_size=sample_size)
     clus_metrics['dunn_index'] = dunn_index(estimator,data)
+    clus_metrics['sin_ele_clus'] = sin_ele_clus
 
     return clus_metrics
 
