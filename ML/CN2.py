@@ -5,7 +5,8 @@ from sklearn import datasets
 import numpy as np
 from time import time
 
-def CN2_classifier(data,estimator):
+#def CN2_classifier(data,estimator):
+def CN2_classifier(data,labels):
 
     ## Creating an Orange "Domain" to work with the data and the tags
     # Define each attribute
@@ -14,7 +15,7 @@ def CN2_classifier(data,estimator):
         l_attr.append(Orange.data.ContinuousVariable(name='f'+i.__str__(), compute_value=None))
 
     # Define target value
-    l_label = [str(i) for i in np.unique(estimator.labels_).tolist()]
+    l_label = [str(i) for i in np.unique(labels).tolist()]
     
     classv = Orange.data.DiscreteVariable(name='classv',values=l_label)
 
@@ -22,7 +23,7 @@ def CN2_classifier(data,estimator):
     mydomain = Orange.data.Domain(attributes=l_attr,class_vars=classv)
 
     ## Loading data and tags in ndarray format into a an Orange.Table
-    table = Orange.data.Table.from_numpy(mydomain,data,Y=estimator.labels_)
+    table = Orange.data.Table.from_numpy(mydomain,data,Y=labels)
 
     # construct the learning algorithm and use it to induce a classifier
     learner = Orange.classification.CN2Learner()
@@ -56,7 +57,7 @@ def CN2_classifier(data,estimator):
         for boolean in myrule.covered_examples:
             if boolean:
                 n_covexamples+=1
-        l_rules[ruleid]['classes_matched'] = np.zeros((1,max(estimator.labels_)+1))
+        l_rules[ruleid]['classes_matched'] = np.zeros((1,max(labels)+1))
         #print(type(myrule.domain.class_var.values[myrule.prediction]))
         l_rules[ruleid]['classes_matched'][0,int(myrule.domain.class_var.values[myrule.prediction])] = n_covexamples
         l_rules[ruleid]['rules'] = []

@@ -169,7 +169,7 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
 
 
     # Split data in clusters
-    clusters,sin_ele_clus = split_data_in_clusters(estimator,dataset)
+    clusters,sin_ele_clus,cleandata,cleanlabels = split_data_in_clusters(estimator,scaleddata)
 
     # Check that more than 1 cluster was found
     if len(clusters) <= 1:
@@ -186,7 +186,7 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
     print("*"*70)
     print("")
     sample_size = 50
-    clus_metrics = clustering_metrics(estimator, clustering_alg, scaleddata, c_elap_time, sample_size, clusters,sin_ele_clus)
+    clus_metrics = clustering_metrics(cleanlabels, clustering_alg,cleandata, c_elap_time, sample_size, clusters,sin_ele_clus)
     print(clus_metrics)
 
     # Induct group membership rules
@@ -198,9 +198,9 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
     print("")
 
     if rulesind_alg == 'cart':
-        rules,r_elap_time = CART_classifier(dataset,estimator)
+        rules,r_elap_time = CART_classifier(dataset,estimator.labels_)
     elif rulesind_alg == 'cn2':
-        rules,r_elap_time = CN2_classifier(dataset,estimator)
+        rules,r_elap_time = CN2_classifier(dataset,estimator.labels_)
     else:
         print('Rules induction algorithm not found')
         return -1
@@ -215,7 +215,7 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
     print("Calculate rules metrics")
     print("*"*70)
     print("")
-    metrics = rules_metrics(clusters,rules,dataset.shape[0],r_elap_time)
+    metrics = rules_metrics(clusters,rules,cleandata.shape[0],r_elap_time)
     print(metrics)
 
 if __name__ == '__main__':

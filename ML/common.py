@@ -18,10 +18,16 @@ def get_intra_cluster_distances(data):
 
 def split_data_in_clusters(estimator,data):
 
+    # Look for any unique labels
+    unique, counts = np.unique(estimator.labels_, return_counts=True)
+
     # Split data into the different clusters
+    samples_to_del=[]
     clusters={}
     it = np.nditer(estimator.labels_, flags=['f_index'])
     while not it.finished:
+        if counts[it[0]] == 1:
+            samples_to_del.append(it.index)
         clusterid = int(it[0])
         if clusterid in clusters: 
             clusters[clusterid] = np.append(clusters[clusterid],[data[it.index,:]],axis=0)
@@ -29,17 +35,22 @@ def split_data_in_clusters(estimator,data):
             clusters[clusterid] = np.array([data[it.index,:]])
         it.iternext()
 
+    cleandata=np.delete(data,samples_to_del,0)
+    cleanlabels=np.delete(estimator.labels_,samples_to_del,0)
+
+    print('Samples to be considered for clustering metrics:',cleandata.shape[0],cleanlabels.shape[0])
+
     # Remove single-element clusters
-    single_ele_clus=0
-    clus_to_remove=[]
-    for c in clusters:
-        # Saving key to remove it after the loop is done (to avoid "dictionary changed size during iteration")
-        if clusters[c].shape[0] == 1:
-            single_ele_clus+=1
-            clus_to_remove.append(c)
+#    single_ele_clus=0
+#    clus_to_remove=[]
+#    for c in clusters:
+#        # Saving key to remove it after the loop is done (to avoid "dictionary changed size during iteration")
+#        if clusters[c].shape[0] == 1:
+#            single_ele_clus+=1
+#            clus_to_remove.append(c)
 
     # Removing single-element cluster data
-    for sec in clus_to_remove:
-        clusters.pop(sec,None)
+#    for sec in clus_to_remove:
+#        clusters.pop(sec,None)
 
-    return clusters,single_ele_clus
+    return clusters,len(samples_to_del),cleandata,cleanlabels

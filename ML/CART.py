@@ -5,7 +5,8 @@ from sklearn.tree import _tree
 import numpy as np
 from time import time
 
-def CART_classifier(data,estimator):
+#def CART_classifier(data,estimator):
+def CART_classifier(data,labels):
 
     def tree_to_code(tree, feature_names):
         tree_ = tree.tree_
@@ -36,7 +37,7 @@ def CART_classifier(data,estimator):
     # Initial time mark
     t0 = time()
 
-    clf = clf.fit(data, estimator.labels_)
+    clf = clf.fit(data, labels)
 
     # Calculate process time
     elap_time = (time() - t0)
