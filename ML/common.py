@@ -54,3 +54,4 @@ def split_data_in_clusters(estimator,data):
 #        clusters.pop(sec,None)
 
     return clusters,len(samples_to_del),cleandata,cleanlabels
+

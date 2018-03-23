@@ -13,6 +13,7 @@ from CART import CART_classifier
 from CN2 import CN2_classifier
 from common import split_data_in_clusters
 import numpy as np
+from parameters import *
 
 from sklearn.preprocessing import StandardScaler
 
@@ -29,8 +30,6 @@ def fatal_error():
 
 def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc_repeated,p_n_groups,p_perc_outliers):
 
-    error = 0.05 # 5% 
-
     print("")
     print("")
     print("Dataset generation")
@@ -38,14 +37,14 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
     print("")
 
     # Generate dataset
-    while True:
+    dscount=0
+    while dscount < dataset_gen_retry:
         dataset = create_dataset(n_samples=p_n_samples, n_features=p_n_features,
                             perc_lin=p_perc_lin, perc_repeated=p_perc_repeated, n_groups=p_n_groups,perc_outliers=p_perc_outliers,
                             debug=1,plot=0,save_to_file=0)
         
         if dataset.shape == (1,0):
             fatal_error()
-
 
         print("")
         print("")
@@ -74,16 +73,16 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
             rep_lowlimit = 0
             rep_highlimit = 5
         else:
-            rep_lowlimit = p_perc_repeated*(1-error)
-            rep_highlimit = p_perc_repeated*(1+error)
+            rep_lowlimit = p_perc_repeated*(1-dataset_parameters_error_margin)
+            rep_highlimit = p_perc_repeated*(1+dataset_parameters_error_margin)
 
 
         if p_perc_outliers == 0:
             ol_lowlimit = 0
             ol_highlimit = 5
         else:
-            ol_lowlimit = p_perc_outliers*(1-error)
-            ol_highlimit = p_perc_outliers*(1+error)
+            ol_lowlimit = p_perc_outliers*(1-dataset_parameters_error_margin)
+            ol_highlimit = p_perc_outliers*(1+dataset_parameters_error_margin)
         
 
         print(analysis_results)
@@ -99,7 +98,7 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
             break
         else:
             print('INVALID DATASET')
-        
+        dscount+=1    
     return dataset
 
 def process_and_analyze(dataset,clustering_alg,rulesind_alg):
@@ -185,7 +184,7 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
     print("Calculate cluster metrics")
     print("*"*70)
     print("")
-    sample_size = 50
+    sample_size = None
     clus_metrics = clustering_metrics(cleanlabels, clustering_alg,cleandata, c_elap_time, sample_size, clusters,sin_ele_clus)
     print(clus_metrics)
 
@@ -221,7 +220,7 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
 if __name__ == '__main__':
 
     dataset = dataset_generation_and_validation(8,1000,0,0,0,20)
-    process_and_analyze(dataset,'meanshift','cart')
+    process_and_analyze(dataset,'meanshift','cn2')
 
     l_clustering_alg = [
             'kmeans_++',

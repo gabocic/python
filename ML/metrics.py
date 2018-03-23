@@ -8,11 +8,12 @@ from math import e
 from math import log
 from scipy.spatial.distance import pdist
 from sklearn.metrics.pairwise import pairwise_distances
+from parameters import *
 
 def clustering_metrics(labels, name, data, time, sample_size,clusters,sin_ele_clus):
 
 
-    def dunn_index(data):
+    def dunn_index():
     # The higher the value, the “better” the clustering will be
 
         #def get_inter_cluster_distances(i, j, clusters):
@@ -30,7 +31,7 @@ def clustering_metrics(labels, name, data, time, sample_size,clusters,sin_ele_cl
         for c in clusters:
             ## Ignore single element clusters
             if clusters[c].shape[0] == 1:
-                #<<<< SINGLE ELEMENT CLUSTER WAS GENERATED >>>>
+                #print('<<<< SINGLE ELEMENT CLUSTER WAS GENERATED >>>>','cluster',c)
                 # Saving key to remove it after the loop is done (to avoid "dictionary changed size during iteration")
                 #clus_to_remove.append(c)
                 pass
@@ -68,10 +69,10 @@ def clustering_metrics(labels, name, data, time, sample_size,clusters,sin_ele_cl
 
     clus_metrics={}
     clus_metrics['name'] =  name
-    clus_metrics['time'] = time
-    clus_metrics['calinski_harabaz_score'] = metrics.calinski_harabaz_score(data, labels)
-    clus_metrics['silhouette_score'] = metrics.silhouette_score(data, labels,metric='euclidean',sample_size=sample_size)
-    clus_metrics['dunn_index'] = dunn_index(data)
+    clus_metrics['time'] = round(time,metric_decimals)
+    clus_metrics['dunn_index'] = round(dunn_index(),metric_decimals)
+    clus_metrics['calinski_harabaz_score'] = round(metrics.calinski_harabaz_score(data, labels),metric_decimals)
+    clus_metrics['silhouette_score'] = round(metrics.silhouette_score(data, labels,metric='euclidean',sample_size=sample_size),metric_decimals)
     clus_metrics['sin_ele_clus'] = sin_ele_clus
 
     return clus_metrics
@@ -173,11 +174,11 @@ def rules_metrics(clusters,rules,n_samples,elap_time):
             w2 = 0.5 - (1/4 * cons)
 
             # Qws
-            Qws = round(w1 * cons + w2 * cover,3)
+            Qws = round(w1 * cons + w2 * cover,metric_decimals)
             e_rules_metrics['Qws'] = Qws
 
             # Qprod
-            Qprod = round(cons * (e**(cover-1)),3)
+            Qprod = round(cons * (e**(cover-1)),metric_decimals)
             e_rules_metrics['Qprod'] = Qprod
 
             # Qcohen
@@ -187,32 +188,32 @@ def rules_metrics(clusters,rules,n_samples,elap_time):
             fIc = nIc / n_samples
             fcr = ncr / n_samples
             fIcIr = nIcIr / n_samples
-            Qcohen = round((fcr + fIcIr - (fr * fc + fIr * fIc)) / (1 - (fr * fc + fIr * fIc)),3)
+            Qcohen = round((fcr + fIcIr - (fr * fc + fIr * fIc)) / (1 - (fr * fc + fIr * fIc)),metric_decimals)
             e_rules_metrics['Qcohen'] = Qcohen
 
             # Qcoleman
-            Qcoleman = round((fcr - fr * fc)/(fr - fr * fc),3)
+            Qcoleman = round((fcr - fr * fc)/(fr - fr * fc),metric_decimals)
             e_rules_metrics['Qcoleman'] = Qcoleman
 
             # Qis
             if ncr/nr == 0:
                 Qis = None
             else:
-                Qis = round(-log((nc/n_samples),2) + log((ncr/nr),2),3)
+                Qis = round(-log((nc/n_samples),2) + log((ncr/nr),2),metric_decimals)
             e_rules_metrics['Qis'] = Qis
 
             # Qls
             if nc == 0 or nIc == 0 or nIcr/nIc == 0:
                 Qls = None 
             else:
-                Qls = round((ncr/nc) / (nIcr/nIc),3)
+                Qls = round((ncr/nc) / (nIcr/nIc),metric_decimals)
             e_rules_metrics['Qls'] = Qls
 
             # Qmd
             if ncIr == 0 or nIcIr == 0 or nIcr/nIcIr == 0 or (ncr/ncIr)/(nIcr/nIcIr) == 0:
                 Qmd = None
             else:
-                Qmd = round(log((ncr/ncIr)/(nIcr/nIcIr)),3)
+                Qmd = round(log((ncr/ncIr)/(nIcr/nIcIr)),metric_decimals)
             e_rules_metrics['Qmd'] = Qmd
 
         rules_metrics.append(e_rules_metrics)          

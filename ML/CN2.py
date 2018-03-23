@@ -1,7 +1,6 @@
 #!/home/gabriel/pythonenvs/v3.5/bin/python
 
 import Orange
-from sklearn import datasets
 import numpy as np
 from time import time
 
