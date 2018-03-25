@@ -55,7 +55,6 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
 
         # Validate dataset is within the specifications
         analysis_results = analyze_dataset(data=dataset,debug=1,plot=0,load_from_file=None)
-        #{'repeatedperc': 50.0, 'linpointsperc': 0.63, 'repeatedgrps': 2, 'samples': 10000, 'features': 3, 'outliersbyperpenperc': 0, 'outliersperc': 7.72}
        
         # Linear points ranges
         if 0 <= p_perc_lin < 20:
@@ -87,7 +86,6 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
 
         print(analysis_results)
 
-                #ol_lowlimit <= analysis_results['outliersperc'] + analysis_results['outliersbyperpenperc'] < ol_highlimit and \
         if analysis_results['samples'] == p_n_samples and \
                 ol_lowlimit <= analysis_results['outliersperc'] < ol_highlimit and \
                 lin_lowlimit <= analysis_results['linpointsperc'] < lin_highlimit and \
@@ -219,8 +217,8 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
 
 if __name__ == '__main__':
 
-    dataset = dataset_generation_and_validation(8,1000,0,0,0,20)
-    process_and_analyze(dataset,'meanshift','cn2')
+    dataset = dataset_generation_and_validation(8,1000,0,0,0,0)
+    process_and_analyze(dataset,'kmeans_++','cn2')
 
     l_clustering_alg = [
             'kmeans_++',
