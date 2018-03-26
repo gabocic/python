@@ -6,6 +6,7 @@ from sklearn.decomposition import PCA
 from plot_2d_3d import plot_2d_3d
 from metrics import clustering_metrics
 from common import split_data_in_clusters
+from collections import Counter
 
 def k_means_clustering(data,plot,p_init,p_n_clusters,p_n_init,p_n_jobs):
 
@@ -25,6 +26,7 @@ def k_means_clustering(data,plot,p_init,p_n_clusters,p_n_init,p_n_jobs):
 
     l_clus_range=3
     h_clus_range=10
+    flag_sel=0 #flag to detect single element clusters
     for n_clusters in range(l_clus_range,h_clus_range+1):
         if p_init == 'PCA-based':
             pca = PCA(n_components=p_n_clusters).fit(data)
@@ -68,6 +70,9 @@ def k_means_clustering(data,plot,p_init,p_n_clusters,p_n_init,p_n_jobs):
             if clus_metrics['sin_ele_clus'] < metrics_win_val[3]:
                 metrics_winners[3] = n_clusters
                 metrics_win_val[3] = clus_metrics['sin_ele_clus']
+            if clus_metrics['sin_ele_clus'] > 0:
+                flag_sel=1
+
         else:
             metrics_winners[0] = n_clusters
             metrics_win_val[0] = clus_metrics['silhouette_score']
@@ -79,9 +84,18 @@ def k_means_clustering(data,plot,p_init,p_n_clusters,p_n_init,p_n_jobs):
             metrics_win_val[3] = clus_metrics['sin_ele_clus']
         
         # Save metrics 
+        all_metrics[n_clusters] = clus_metrics
+        
         print(metrics_winners)
         print(metrics_win_val)
-        all_metrics[n_clusters] = clus_metrics
+
+        # If no iteration generated single element clusters, do not consider this metric 
+    if flag_sel == 0:
+        del metrics_winners[3]
+        del metrics_win_val[3]
+    ocurrences = Counter(metrics_winners)
+    print(ocurrences)
+
 
 #    for metric_group in all_metrics:
 #        print(all_metrics[metric_group])
