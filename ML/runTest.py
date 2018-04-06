@@ -128,11 +128,11 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
     print("")
     
     if clustering_alg == 'kmeans_++':
-        estimator,c_elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='k-means++',p_n_clusters=n_clusters,p_n_init=10,p_n_jobs=4)
+        estimator,c_elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='k-means++',p_n_init=10,p_n_jobs=4)
     elif clustering_alg == 'kmeans_random':
-        estimator,c_elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='random',p_n_clusters=n_clusters,p_n_init=10,p_n_jobs=4)
+        estimator,c_elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='random',p_n_init=10,p_n_jobs=4)
     elif clustering_alg == 'kmeans_pca':
-        estimator,c_elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='PCA-based',p_n_clusters=n_clusters,p_n_init=10,p_n_jobs=4)
+        estimator,c_elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='PCA-based',p_n_init=10,p_n_jobs=4)
     elif clustering_alg == 'dbscan':
         estimator,c_elap_time = dbscan_clustering(data=scaleddata,plot=0,p_n_jobs=4)
     
@@ -218,7 +218,7 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
 if __name__ == '__main__':
 
     dataset = dataset_generation_and_validation(8,1000,0,0,0,0)
-    process_and_analyze(dataset,'kmeans_++','cn2')
+    process_and_analyze(dataset,'birch','cn2')
 
     l_clustering_alg = [
             'kmeans_++',

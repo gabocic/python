@@ -9,7 +9,7 @@ from common import split_data_in_clusters
 from collections import Counter
 import numpy as np
 
-def k_means_clustering(data,plot,p_init,p_n_clusters,p_n_init,p_n_jobs):
+def k_means_clustering(data,plot,p_init,p_n_init,p_n_jobs):
 
     ## Creating KMeans object to process the dataset
     ## **********************************************
@@ -19,11 +19,15 @@ def k_means_clustering(data,plot,p_init,p_n_clusters,p_n_init,p_n_jobs):
 
     # We need to run this for different number of clusters and determine which one has better parameters
   
-    all_metrics={}
+    #all_metrics={}
 
     # #0: silhouette_score  #1:calinski_harabaz_score #2: dunn_index  #3: sin_ele_clus
-    metrics_winners=[0,0,0,0]
-    metrics_win_val=[0,0,0,0]
+    #metrics_winners=[0,0,0,0]
+    #metrics_win_val=[0,0,0,0]
+
+    estimators = []
+    wbindexes = []
+    elaptimes = []
 
     l_clus_range=3
     h_clus_range=10
@@ -47,8 +51,8 @@ def k_means_clustering(data,plot,p_init,p_n_clusters,p_n_init,p_n_jobs):
 
         # Split data in clusters
         clusters,sin_ele_clus,cleandata,cleanlabels = split_data_in_clusters(kmeans,data)
-        for singleclus in clusters:
-            print('Cluster '+singleclus.__str__()+':',len(clusters[singleclus]))
+        #for singleclus in clusters:
+        #    print('Cluster '+singleclus.__str__()+':',len(clusters[singleclus]))
 
         
         ### As per the "Investigation of Internal Validity Measures for K-Means Clustering" paper, the Sum-of-squares method was found to be the most effective for predicting the 'best' number of clusters        ### To calculate the Sum-of-Squares index we need to calculate the Sum-of-Squares 'within the clusters' (SSW) and the Sum-of-squares 'between the clusters' (SSB)
@@ -56,27 +60,35 @@ def k_means_clustering(data,plot,p_init,p_n_clusters,p_n_init,p_n_jobs):
         ## SSW
         ssac = 0
         clustermeans = []
+        clusterlen = []
         for clusterid in clusters:
-            # Save cluster mean for SSB calculation
+            # Save cluster mean and length for SSB calculation
             clustermean = clusters[clusterid].mean()
             clustermeans.append(clustermean)
+            clusterlen.append(len(clusters[clusterid]))
 
             # For each cluster, calculate the sum of squares
-            ssc = np.sum((clusters[clusterid]-clustermean)**2
+            ssc = np.sum((clusters[clusterid]-clustermean)**2)
 
             # Add all partial sum-of-squares
             ssac += ssc
 
         # Calculate Sum-of-Squares Within as the average between all Sum-of-Squares
         ssw = ssac/cleandata.shape[0]
-        print('ssw',ssw)
 
         ## SSB
         dscentroid = cleandata.mean()
         clustermeans = np.asarray(clustermeans)
         dist = (clustermeans - dscentroid)**2
+        ssb = (np.sum(dist * np.array(clusterlen)))/cleandata.shape[0]
 
+        ## WB index (aka Sum-of-squares)
+        wb = (ssw/ssb)*len(clustermeans)
 
+        ## Store the WB indexes, estimators and elapsed times
+        wbindexes.append(wb)
+        estimators.append(kmeans)
+        elaptimes.append(elap_time)
 
 #        # Calculate metrics. To solve ties, I'm prioritizing runs with less amount of clusters
 #        clus_metrics = clustering_metrics(cleanlabels, 'k-means_'+n_clusters.__str__()+'clus',cleandata, elap_time, None, clusters,sin_ele_clus)
@@ -129,6 +141,10 @@ def k_means_clustering(data,plot,p_init,p_n_clusters,p_n_init,p_n_jobs):
 #    for metric_group in all_metrics:
 #        print(all_metrics[metric_group])
 
+    ## Find the winner "K" by looking for the minimum WB index
+    minwbidx = wbindexes.index(min(wbindexes))
+
+
     ## Save centroids for plotting
     centroids=kmeans.cluster_centers_
 
@@ -139,4 +155,4 @@ def k_means_clustering(data,plot,p_init,p_n_clusters,p_n_init,p_n_jobs):
         element_list.append(element)
         plot_2d_3d(element_list,3)
 
-    return kmeans,elap_time
+    return estimators[minwbidx],elaptimes[minwbidx]
