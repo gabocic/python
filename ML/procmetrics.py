@@ -83,6 +83,16 @@ def dunn_index(clusters):
     return min_inter_cluster_dist/max_intra_cluster_dist
 
 
+    clus_metrics={}
+    clus_metrics['wb_index'] = round(wb_index(),metric_decimals)
+    clus_metrics['name'] =  name
+    clus_metrics['time'] = round(time,metric_decimals)
+    clus_metrics['dunn_index'] = round(dunn_index(),metric_decimals)
+    clus_metrics['calinski_harabaz_score'] = round(metrics.calinski_harabaz_score(data, labels),metric_decimals)
+    clus_metrics['silhouette_score'] = round(metrics.silhouette_score(data, labels,metric='euclidean',sample_size=sample_size),metric_decimals)
+    clus_metrics['sin_ele_clus'] = sin_ele_clus
+
+
 def rules_metrics(clusters,rules,n_samples,elap_time):
 
     ## Create contingency table for each Rule,Cluster pair:
