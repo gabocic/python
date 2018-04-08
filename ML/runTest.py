@@ -230,7 +230,7 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
 if __name__ == '__main__':
 
     dataset = dataset_generation_and_validation(8,1000,0,0,0,0)
-#    process_and_analyze(dataset,'kmeans_++','cn2')
+    process_and_analyze(dataset,'kmeans_++','cn2')
 
     l_clustering_alg = [
             'kmeans_++',
@@ -246,7 +246,7 @@ if __name__ == '__main__':
             ]
 
     lowest_time=0
-    for clustering_alg in l_clustering_alg:
-        for ruleind_alg in l_ruleind_alg:
-            process_and_analyze(dataset,clustering_alg,ruleind_alg)
+#    for clustering_alg in l_clustering_alg:
+#        for ruleind_alg in l_ruleind_alg:
+#            process_and_analyze(dataset,clustering_alg,ruleind_alg)
 

@@ -24,15 +24,23 @@ def k_means_clustering(data,plot,p_init,p_n_init,p_n_jobs):
     elaptimes = []
 
     l_clus_range=3
-    h_clus_range=10
+
+    if p_init == 'PCA-based':
+        h_clus_range=data.shape[1]
+    else:
+        h_clus_range=10
+
     flag_sel=0 #flag to detect single element clusters
+
     for n_clusters in range(l_clus_range,h_clus_range+1):
         if p_init == 'PCA-based':
             pca = PCA(n_components=n_clusters).fit(data)
-            p_init=pca.components_
+            centinit=pca.components_
             p_n_init=1
+        else:
+            centinit=p_init
 
-        kmeans = KMeans(init=p_init, n_clusters=n_clusters, n_init=p_n_init, n_jobs=p_n_jobs)
+        kmeans = KMeans(init=centinit, n_clusters=n_clusters, n_init=p_n_init, n_jobs=p_n_jobs)
         
         # Initial time mark
         t0 = time()
