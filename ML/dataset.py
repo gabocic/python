@@ -5,6 +5,8 @@ from sklearn import datasets
 from numpy.linalg import norm
 from scipy.spatial import distance_matrix
 from plot_2d_3d import plot_2d_3d
+from parameters import *
+
 
 class TooFewPoints(Exception):
     def __init__(self, value):
@@ -24,9 +26,6 @@ def create_dataset(n_samples=20, n_features=3,
 
     ### Main ####
 
-    max_special_points_perc = 90
-    min_dataset_size = 100
-
     ## A few safety checks
     
     # Sample types percentage should not exceed 100%
@@ -34,7 +33,7 @@ def create_dataset(n_samples=20, n_features=3,
         logger('The sum of special points percentages cannot exceed '+max_special_points_perc.__str__(),0)
         return np.array([[]])
     
-    # Minimum amount of outliers
+    # Check that the amount of samples is above the minimum
     if n_samples < min_dataset_size:
         logger('The minimum number of samples is '+min_dataset_size.__str__(),0)
         return np.array([[]])
@@ -62,9 +61,6 @@ def create_dataset(n_samples=20, n_features=3,
     logger("uniform features: "+unifor_feat.__str__(),1)
     logger("standard features: "+standa_feat.__str__(),1)
 
-    # Harcoded value range: all sample values will be between value_limit and -value_limit
-    value_limit = 100000
-
     # Initialize dataset. Including out_samples as they will be moved away from the mean later
     X = np.zeros((usef_samples+out_samples, n_features))
     Xs = np.zeros((usef_samples+out_samples, standa_feat))
@@ -86,7 +82,7 @@ def create_dataset(n_samples=20, n_features=3,
         Xs[:usef_samples+out_samples, i:i+1] = m
 
     # Round Xs values to 3 decimals
-    Xs = np.around(Xs,3)
+    Xs = np.around(Xs,feat_values_decimals)
 
     logger("Standard attributes:",2)
     logger(Xs,2)
@@ -129,20 +125,7 @@ def create_dataset(n_samples=20, n_features=3,
         ## Choose a ramdom sample
         generator = np.random
         sampleidx = (generator.random_integers(low=0, high=usef_samples-1, size=(1)))[0]
-        #logger("Winning samples:",2)
         p0 = Xmean
-        #logger("p0:",2)
-        #logger(p0,2)
-
-        ## Choose another point based on p0 
-        #if sampleidx+1 <= X.shape[0]-1:
-        #    p1 = X[sampleidx+1]
-        #elif sampleidx-1 >= 0:
-        #    p1 = X[sampleidx-1]
-        #else:
-        #    raise TooFewPoints('Not able to find two points to generate pseudo linear samples')
-        #logger("p1:",2)
-        #logger(p1,2)
         
         lin_points = np.zeros((lin_samples,n_features))
        
@@ -150,36 +133,31 @@ def create_dataset(n_samples=20, n_features=3,
         lin_samples_d0 = int(lin_samples/2)
         lin_samples_d1 = int(lin_samples - lin_samples_d0)
 
-        #d0 = np.array(p1 - p0)
         d0 = V[0]
         for a in range(0,lin_samples_d0+1):
-            # Making constants smaller to prevent too many outliers
-            #lins = p0+a*(0.1)*d0
-            lins = p0+300*a*d0
+            # Adjusting point "lambda" to prevent too many outliers
+            lins = p0+linear_points_lambda_adj_factor*a*d0
             lin_points[a-1:a,:] = lins
         maxlins = lins 
 
         d1 = -1*V[0]
         for b in range(0,lin_samples_d1+1):
-            # Making constants smaller to prevent too many outliers
-            #lins = p0+b*(0.1)*d1
-            lins = p0+300*b*d1
+            # Adjusting point "lambda" to prevent too many outliers
+            lins = p0+linear_points_lambda_adj_factor*b*d1
             a+=1
             lin_points[a-1:a,:] = lins
         minlins = lins 
 
         # Add some noise 
-        #boxnorm = norm(np.amax(lin_points,axis=0) - np.amin(lin_points,axis=0))
         boxnorm = norm(maxlins - minlins)
-        lin_points += np.random.normal(size=lin_points.shape) * boxnorm * 0.01
+        lin_points += np.random.normal(size=lin_points.shape) * boxnorm * linear_noise_factor
 
         logger("Linear points:",2)
         logger(lin_points,2)
 
     # Repeated samples generation
     if rep_samples > 0:
-        #if (rep_samples / n_groups) < (0.05*n_samples) or n_groups > usef_samples:
-        if (rep_samples / n_groups) < (0.05*n_samples):
+        if (rep_samples / n_groups) < (repeated_min_samples_per_group_perc*n_samples):
             logger('The number of samples per group should not be lower than 5% of total samples. Also, there cannot be more groups than completely random samples',0) 
             return np.array([[]])
 
@@ -212,9 +190,9 @@ def create_dataset(n_samples=20, n_features=3,
     #print('*********************************************************')
     # Stack useful,linear and repeated samples
     if lin_samples > 0:
-        Xf = np.vstack((X,np.around(lin_points,3)))
+        Xf = np.vstack((X,np.around(lin_points,feat_values_decimals)))
     if rep_samples > 0:
-        Xf = np.vstack((Xf,np.around(repeated,3)))
+        Xf = np.vstack((Xf,np.around(repeated,feat_values_decimals)))
 
 
     logger("\n Final Dataset:\n *****************",2)
@@ -238,31 +216,25 @@ def create_dataset(n_samples=20, n_features=3,
         # Get the 20% furthest points
         last20 = int(sortd2midx.shape[0]*.2)
         l_20percfur = np.take(dist2mean,sortd2midx[-last20:])
-        #print('l_20percfur',l_20percfur)
 
         # Outlier threshold
-        olthres = 1.5 * np.take(dist2mean,sortd2midx[-last20-1:-last20])
-        print('olthres',olthres)
+        olthres = analysis_outlier_factor * np.take(dist2mean,sortd2midx[-last20-1:-last20])
 
         # Look for the first sample further than 'threshold' (ie. first outlier, if exists)
         firstolpos = np.searchsorted(l_20percfur.T[0],olthres)[0,0]
         
         # Determine number of outlier 
         numol = l_20percfur.shape[0] - firstolpos
-        print('firstolpos',firstolpos)
-        print('numol',numol)
-
         points_to_fix = numol - out_samples
 
         # If there are points to fix..
         if points_to_fix != 0:
-            print('points_to_fix',points_to_fix)
             # Absolute position of the first outlier: Total samples - further20% + first oultlier position but within l_20percfur -1 (To obtain the index)
             abs_firstolpos = sortd2midx.shape[0] - last20 + firstolpos -1
             
             ## Distance factor: distance for first outlier divided by threshold distance
-            v_lambda = 1.5 * olthres / dist2mean[abs_firstolpos]
-            print('v_lambda',v_lambda)
+            #v_lambda = 1.5 * olthres / dist2mean[abs_firstolpos]
+            v_lambda = olthres / dist2mean[abs_firstolpos]
 
             if points_to_fix > 0:
                 # Get the necessary points closer to the mean

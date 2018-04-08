@@ -6,6 +6,7 @@ from sklearn import datasets
 from numpy.linalg import norm
 from scipy.spatial import distance_matrix
 from plot_2d_3d import plot_2d_3d
+from parameters import *
 
 
 class DatafileNotFound(Exception):
@@ -26,7 +27,8 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
             print(message,var)
 
     ### Main ##
-
+    
+    # Attempting to load data from a file if None was passed
     if data is None and load_from_file is not None:
         try:
             dataspmat,tags = datasets.load_svmlight_file(load_from_file)
@@ -50,7 +52,9 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
     ########################
 
     uniq,arrcount = np.unique(data,axis=0,return_counts=True)
-    groups = [ count for count in arrcount if count >= 0.05 * data.shape[0]] 
+
+    # Only consider a group when it has more than n% of samples
+    groups = [ count for count in arrcount if count >= analysis_group_min_members_perc * data.shape[0]] 
     
     n_groups = len(groups)
     n_repeated = sum(groups) - n_groups
@@ -73,7 +77,7 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
     l_20percfur = np.take(dist2mean,sortd2midx[-last20:])
 
     # Outlier threshold
-    olthres = 1.5 * np.take(dist2mean,sortd2midx[-last20-1:-last20])
+    olthres = analysis_outlier_factor * np.take(dist2mean,sortd2midx[-last20-1:-last20])
 
     # Look for the first sample further than 'threshold' (ie. first outlier, if exists)
     firstolpos = np.searchsorted(l_20percfur.T[0],olthres)[0,0]
@@ -173,7 +177,7 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
             logger("Candidate point",r_lambda,dbg_level=2)
 
     # Define radius for which points will be considered as "linear"
-    dthres = (norm(l_hlpoints[0]-l_hlpoints[1])) * 0.025
+    dthres = (norm(l_hlpoints[0]-l_hlpoints[1])) * analysis_fit_line_fraction
 
     ## Parametric line: r-> = ro + kv->
     linepts = V[0] * np.mgrid[l_lambdas[0]:l_lambdas[1]:2j][:, np.newaxis]
@@ -210,7 +214,7 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
 
     # If the dataset is fairly linear, check for outliers by perpendicularity
     if linpointsperc > 60:
-        perpolthres = (norm(l_hlpoints[0]-l_hlpoints[1])) * 0.3
+        perpolthres = (norm(l_hlpoints[0]-l_hlpoints[1])) * analysis_fit_line_fraction_outliers
         perpol = [ dist2line for dist2line in nlinpd if dist2line >= perpolthres ] 
         outliersbyperpenperc = round(100*(len(perpol)/data.shape[0]),2)
     else:

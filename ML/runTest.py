@@ -97,7 +97,11 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
             break
         else:
             print('INVALID DATASET')
-        dscount+=1    
+        dscount+=1   
+    if dscount == dataset_gen_retry:
+        print('Unable to generate a valid dataset after '+dataset_gen_retry.__str__()+' attempts')
+        dataset=np.zeros([0])
+
     return dataset
 
 def process_and_analyze(dataset,clustering_alg,rulesind_alg):
@@ -115,8 +119,6 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
             'cn2'
             ]
 
-    #n_clusters = 3 # only for the algorithms that support this
-
     # Scale data
     scaleddata = StandardScaler().fit_transform(dataset)
 
@@ -129,17 +131,15 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
     print("")
     
     if clustering_alg == 'kmeans_++':
-        estimator,c_elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='k-means++',p_n_init=10,p_n_jobs=4)
+        estimator,c_elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='k-means++',p_n_init=10,p_n_jobs=parallelism)
     elif clustering_alg == 'kmeans_random':
-        estimator,c_elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='random',p_n_init=10,p_n_jobs=4)
+        estimator,c_elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='random',p_n_init=10,p_n_jobs=parallelism)
     elif clustering_alg == 'kmeans_pca':
-        estimator,c_elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='PCA-based',p_n_init=10,p_n_jobs=4)
+        estimator,c_elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='PCA-based',p_n_init=10,p_n_jobs=parallelism)
     elif clustering_alg == 'dbscan':
-        estimator,c_elap_time = dbscan_clustering(data=scaleddata,plot=0,p_n_jobs=4)
-    
+        estimator,c_elap_time = dbscan_clustering(data=scaleddata,plot=0,p_n_jobs=parallelism)
 
         # Check that at least one cluster was found
-
         if estimator != None and len(np.unique([ label for label in estimator.labels_ if label > -1])) >=1:
             # Remove outliers
             l_outliers = []
@@ -157,9 +157,9 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
             return -1
 
     elif clustering_alg == 'birch':
-        estimator,c_elap_time = birch_clustering(data=scaleddata,plot=0,p_n_jobs=4)
+        estimator,c_elap_time = birch_clustering(data=scaleddata,plot=0,p_n_jobs=parallelism)
     elif clustering_alg == 'meanshift':
-        estimator,c_elap_time = meanshift_clustering(data=scaleddata,plot=0,p_n_jobs=4)
+        estimator,c_elap_time = meanshift_clustering(data=scaleddata,plot=0,p_n_jobs=parallelism)
 
     else:
         print('Clustering algorithm not found')
@@ -177,25 +177,21 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
     for singleclus in clusters:
         print('Cluster '+singleclus.__str__()+':',len(clusters[singleclus]))
      
-    # Compute clustering metrics
     print("")
     print("")
     print("Calculate cluster metrics")
     print("*"*70)
     print("")
-    sample_size = None
-    #clus_metrics = clustering_metrics(cleanlabels, clustering_alg,cleandata, c_elap_time, sample_size, clusters,sin_ele_clus)
 
+    # Compute clustering metrics
     clus_metrics={}
     clus_metrics['wb_index'] = round(wb_index(clusters,cleandata),metric_decimals)
     clus_metrics['name'] = clustering_alg
     clus_metrics['time'] = round(c_elap_time,metric_decimals)
     clus_metrics['dunn_index'] = round(dunn_index(clusters),metric_decimals)
     clus_metrics['calinski_harabaz_score'] = round(calinski_harabaz_score(cleandata, cleanlabels),metric_decimals)
-    clus_metrics['silhouette_score'] = round(silhouette_score(cleandata, cleanlabels,metric='euclidean',sample_size=sample_size),metric_decimals)
+    clus_metrics['silhouette_score'] = round(silhouette_score(cleandata, cleanlabels,metric='euclidean',sample_size=None),metric_decimals)
     clus_metrics['sin_ele_clus'] = sin_ele_clus
-
-
     print(clus_metrics)
 
     # Induct group membership rules
@@ -229,8 +225,12 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
 
 if __name__ == '__main__':
 
-    dataset = dataset_generation_and_validation(8,1000,0,0,0,0)
-    process_and_analyze(dataset,'kmeans_++','cn2')
+    dataset = dataset_generation_and_validation(8,1000,40,0,0,0)
+
+    if dataset.shape[0] == 0:
+        sys.exit()
+    else:
+        process_and_analyze(dataset,'meanshift','cn2')
 
     l_clustering_alg = [
             'kmeans_++',
