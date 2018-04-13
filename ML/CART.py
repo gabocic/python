@@ -5,7 +5,6 @@ from sklearn.tree import _tree
 import numpy as np
 from time import time
 
-#def CART_classifier(data,estimator):
 def CART_classifier(data,labels):
 
     def tree_to_code(tree, feature_names):
@@ -14,7 +13,6 @@ def CART_classifier(data,labels):
             feature_names[i] if i != _tree.TREE_UNDEFINED else "undefined!"
             for i in tree_.feature
         ]
-        #print("def tree({}):".format(", ".join(feature_names)))
 
         def recurse(node, depth):
             indent = "  " * depth

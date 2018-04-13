@@ -10,7 +10,7 @@ min_dataset_size = 100
 value_limit = 100000
 
 # Numbers of attempts to generate a dataset that fulfill the specified characteristics 
-dataset_gen_retry = 20
+dataset_gen_retry = 100
 
 # Number of decimals for features values
 feat_values_decimals = 3
@@ -57,3 +57,14 @@ analysis_fit_line_fraction_outliers = 0.3
 
 # Percentage of dataset samples used to estimate bandwidth
 #ms_estimate_bandwidth_samples_perc = 1 # 100%
+
+
+
+#### DBSCAN ###############
+
+# Minimum percentage of the total dataset to be considered a cluster
+dbs_min_samples_per_cluster_perc = 0.1 # 10%
+
+# Minimum amount of clusters
+min_clusters = 2
+

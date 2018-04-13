@@ -4,7 +4,6 @@ import Orange
 import numpy as np
 from time import time
 
-#def CN2_classifier(data,estimator):
 def CN2_classifier(data,labels):
 
     ## Creating an Orange "Domain" to work with the data and the tags

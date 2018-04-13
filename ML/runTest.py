@@ -225,28 +225,64 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
 
 if __name__ == '__main__':
 
-    dataset = dataset_generation_and_validation(8,1000,40,0,0,0)
+    paramlist = []
+    #paramlist.append([8,1000,10,0,0,0])
+    #paramlist.append([16,1000,10,0,0,0])
+    #paramlist.append([24,1000,10,0,0,0])
+    #paramlist.append([8,1000,40,0,0,0])
+    #paramlist.append([8,1000,80,0,0,0])
+    #paramlist.append([8,1000,0,10,2,0])
+    #paramlist.append([8,1000,0,40,2,0])
+    #paramlist.append([8,1000,0,80,2,0])
+    #paramlist.append([8,1000,0,40,3,0])
+    #paramlist.append([8,1000,0,80,3,0])
+    #paramlist.append([8,1000,0,40,4,0])
+    #paramlist.append([8,1000,0,80,4,0])
+    #paramlist.append([8,1000,0,0,0,6])
+    #paramlist.append([8,1000,0,0,0,12])
+    #paramlist.append([8,1000,0,0,0,18])
+    #paramlist.append([8,1000,10,10,2,6])
+    #paramlist.append([8,1000,10,10,2,12])
+    #paramlist.append([8,1000,10,10,2,18])
+    #paramlist.append([8,1000,10,40,2,6])
+    #paramlist.append([8,1000,10,40,2,12])
+    #paramlist.append([8,1000,10,40,2,18])
+    #paramlist.append([8,1000,40,10,2,6])
+    #paramlist.append([8,1000,40,10,2,12])
+    #paramlist.append([8,1000,40,10,2,18])
+    paramlist.append([8,1000,40,40,2,6])
 
-    if dataset.shape[0] == 0:
-        sys.exit()
-    else:
-        process_and_analyze(dataset,'meanshift','cn2')
+    for params in paramlist:
+        print('')
+        print('')
+        print('#####################################################')
+        print('## ',params,'##')
+        print('#####################################################')
+        print('')
+        print('')
+        dataset = dataset_generation_and_validation(*params)
+        if dataset.shape[0] == 0:
+            sys.exit()
 
-    l_clustering_alg = [
-            'kmeans_++',
-            'kmeans_random',
-            'kmeans_pca',
-            'dbscan',
-            'birch',
-            'meanshift',
-            ]
-    l_ruleind_alg = [
-            'cart',
-            'cn2'
-            ]
+        else:
+            pass
+    #        process_and_analyze(dataset,'meanshift','cn2')
+    #        sys.exit()
 
-    lowest_time=0
-#    for clustering_alg in l_clustering_alg:
-#        for ruleind_alg in l_ruleind_alg:
-#            process_and_analyze(dataset,clustering_alg,ruleind_alg)
+            l_clustering_alg = [
+                    'kmeans_++',
+                    'kmeans_random',
+                    'kmeans_pca',
+                    'dbscan',
+                    'birch',
+                    'meanshift',
+                    ]
+            l_ruleind_alg = [
+                    'cart',
+                    'cn2'
+                    ]
+
+#            for clustering_alg in l_clustering_alg:
+#                for ruleind_alg in l_ruleind_alg:
+#                    process_and_analyze(dataset,clustering_alg,ruleind_alg)
 

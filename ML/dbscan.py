@@ -7,6 +7,7 @@ import numpy as np
 from plot_2d_3d import plot_2d_3d
 from scipy.misc import derivative
 from bisect import bisect_right
+from parameters import *
 
 def dbscan_clustering(data,plot,p_n_jobs):
 
@@ -20,10 +21,7 @@ def dbscan_clustering(data,plot,p_n_jobs):
     NearestNeighborsAlg = 'auto'
 
     # Defining min_samples as 10% of dataset size
-    min_samples = data.shape[0] * 0.1
-
-    # Minimum amount of clusters
-    min_clusters = 2
+    min_samples = data.shape[0] * dbs_min_samples_per_cluster_perc
 
     # Estimating eps
     nbrs = NearestNeighbors(n_neighbors=int(min_samples-1), algorithm='auto',n_jobs=p_n_jobs).fit(data)
@@ -47,7 +45,7 @@ def dbscan_clustering(data,plot,p_n_jobs):
     winning_elap_time = None
 
     for v_eps in l_eps:
-        dbscan = DBSCAN(eps=v_eps, min_samples=0.1*data.shape[0],metric='euclidean',algorithm=NearestNeighborsAlg,n_jobs=p_n_jobs)
+        dbscan = DBSCAN(eps=v_eps, min_samples=min_samples,metric='euclidean',algorithm=NearestNeighborsAlg,n_jobs=p_n_jobs)
         
         # Initial time mark
         t0 = time()
