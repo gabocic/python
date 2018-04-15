@@ -123,4 +123,4 @@ def CART_classifier(data,labels):
     #tree_to_code(clf,feature_names)
     #for regla in l_rules:   
     #    print(l_rules[regla]['classes_matched'])
-    return l_rules,elap_time
+    return l_rules,elap_time,clf.classes_

@@ -84,6 +84,7 @@ def dunn_index(clusters):
 
 
 def rules_metrics(clusters,rules,n_samples,elap_time):
+    print('HOLAAAAAAAAAA')
 
     ## Create contingency table for each Rule,Cluster pair:
     # -Cluster 'c' examples covered by rule 'r'
@@ -96,6 +97,11 @@ def rules_metrics(clusters,rules,n_samples,elap_time):
     for ruleid in rules:
 
         # In this case clusterid is the position of the value in the list since the clusters are also numbered by position
+
+        print('>>>>> Enumerate')
+        print(enumerate(rules[ruleid]['classes_matched'][0]))
+                
+
         for clusterid,clustercnt in enumerate(rules[ruleid]['classes_matched'][0]):
 
             # Filter out any rules not covering at least 30% of the cluster samples

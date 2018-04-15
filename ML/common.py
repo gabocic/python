@@ -28,13 +28,16 @@ def split_data_in_clusters(estimator,data):
     while not it.finished:
         if counts[it[0]] == 1:
             samples_to_del.append(it.index)
-        clusterid = int(it[0])
-        if clusterid in clusters: 
-            clusters[clusterid] = np.append(clusters[clusterid],[data[it.index,:]],axis=0)
         else:
-            clusters[clusterid] = np.array([data[it.index,:]])
+            clusterid = int(it[0])
+            if clusterid in clusters: 
+                clusters[clusterid] = np.append(clusters[clusterid],[data[it.index,:]],axis=0)
+            else:
+                clusters[clusterid] = np.array([data[it.index,:]])
         it.iternext()
 
+    print('Data position to delete',samples_to_del)
+    print('Cluster Id to remove:',np.take(estimator.labels_,samples_to_del))
     cleandata=np.delete(data,samples_to_del,0)
     cleanlabels=np.delete(estimator.labels_,samples_to_del,0)
 

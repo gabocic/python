@@ -105,6 +105,7 @@ def rules_metrics(clusters,rules,n_samples,elap_time):
 
     for ruleid in rules:
 
+
         # In this case clusterid is the position of the value in the list since the clusters are also numbered by position
         for clusterid,clustercnt in enumerate(rules[ruleid]['classes_matched'][0]):
 

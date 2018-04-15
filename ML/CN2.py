@@ -14,6 +14,8 @@ def CN2_classifier(data,labels):
 
     # Define target value
     l_label = [str(i) for i in np.unique(labels).tolist()]
+
+    print('labels',l_label)
     
     classv = Orange.data.DiscreteVariable(name='classv',values=l_label)
 
@@ -32,7 +34,7 @@ def CN2_classifier(data,labels):
     # continuous value space is constrained to reduce computation time
     learner.rule_finder.search_strategy.constrain_continuous = True
 
-    # found rules must cover at least 15 examples
+    # found rules must cover at least 10% of the examples
     learner.rule_finder.general_validator.min_covered_examples = data.shape[0]*0.1
 
     # found rules may combine at most 2 selectors (conditions)
