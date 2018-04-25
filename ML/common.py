@@ -21,6 +21,34 @@ def split_data_in_clusters(estimator,data):
     # Look for any unique labels
     unique, counts = np.unique(estimator.labels_, return_counts=True)
 
+    sec_idx = [ idx for idx,cnt in enumerate(counts) if cnt==1 ]
+    print('sec_idx',sec_idx)
+    #print('sec',np.where(estimator.labels_==idx))
+    print('sec',unique[sec_idx])
+
+    ## Now that I have the Single-element-cluster id I need to search for labels and samples that correspond to that cluster to delete them
+    pos_to_delete = []
+    for idx in sec_idx:
+        ptd = np.where(estimator.labels_==idx)
+        #pos_to_delete.append(ptd[0][0])
+        data=np.delete(data,ptd[0][0],0)
+        estimator.labels_=np.delete(estimator.labels_,ptd[0][0],0)
+
+    #print('pos to delete',pos_to_delete)
+
+    ## Rearrange tags
+    for sec in sec_idx:
+
+        # Check if the removed cluster had the highest id (no arrange is required) - we use "unique" because we have original number of clusters there already
+        if sec_idx == max(unique)
+            pass
+        else:
+            # Get the max cluster id and replace it by the cluster removed
+            data[data == max(estimator.labels_)] = sec_idx
+
+
+
+    
     # Split data into the different clusters
     samples_to_del=[]
     clusters={}
