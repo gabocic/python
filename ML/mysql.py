@@ -1,7 +1,7 @@
 import pymysql
 
 # Open database connection
-db = pymysql.connect("localhost","testuser","test123","TESTDB" )
+db = pymysql.connect("localhost","thesis","Clustering453!","thesisdb" )
 
 # prepare a cursor object using cursor() method
 cursor = db.cursor()

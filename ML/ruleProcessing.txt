@@ -1,0 +1,27 @@
+Clustering:
+******************
+
+1) Indexes
+
+
+Si hay un empate:
+
+	a) Single element clusters
+
+	b) Samples not considered
+
+	c) Amount of clusters
+
+
+
+Rules:
+****************
+
+1) Todos los clusters tienen al menos una regla?
+
+2) Indexes (regla a regla)
+
+
+Tenemos un set de metricas por regla
+
+2) Mas de una regla por cluster?
