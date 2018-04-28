@@ -22,54 +22,47 @@ def split_data_in_clusters(estimator,data):
     unique, counts = np.unique(estimator.labels_, return_counts=True)
 
     sec_idx = [ idx for idx,cnt in enumerate(counts) if cnt==1 ]
-    print('sec_idx',sec_idx)
-    #print('sec',np.where(estimator.labels_==idx))
-    print('sec',unique[sec_idx])
+    print('Single element clusters to be removed:',sec_idx)
 
     ## Now that I have the Single-element-cluster id I need to search for labels and samples that correspond to that cluster to delete them
-    pos_to_delete = []
     for idx in sec_idx:
+
+        # Search for the positions where the label to be removed is
         ptd = np.where(estimator.labels_==idx)
-        #pos_to_delete.append(ptd[0][0])
         data=np.delete(data,ptd[0][0],0)
         estimator.labels_=np.delete(estimator.labels_,ptd[0][0],0)
-
-    #print('pos to delete',pos_to_delete)
 
     ## Rearrange tags
     for sec in sec_idx:
 
-        # Check if the removed cluster had the highest id (no arrange is required) - we use "unique" because we have original number of clusters there already
-        if sec_idx == max(unique)
+        # Check if the removed cluster was among the highest (no arrange is required) - we use "unique" because we have original number of clusters there already
+        #if sec == max(unique):
+        if sec > max(estimator.labels_):
             pass
         else:
             # Get the max cluster id and replace it by the cluster removed
-            data[data == max(estimator.labels_)] = sec_idx
+            estimator.labels_[estimator.labels_ == max(estimator.labels_)] = sec
 
 
-
+    #unique, counts = np.unique(estimator.labels_, return_counts=True)
     
     # Split data into the different clusters
-    samples_to_del=[]
+    #samples_to_del=[]
     clusters={}
     it = np.nditer(estimator.labels_, flags=['f_index'])
     while not it.finished:
-        if counts[it[0]] == 1:
-            samples_to_del.append(it.index)
+        #if counts[it[0]] == 1:
+        #    samples_to_del.append(it.index)
+        #else:
+        clusterid = int(it[0])
+        if clusterid in clusters: 
+            clusters[clusterid] = np.append(clusters[clusterid],[data[it.index,:]],axis=0)
         else:
-            clusterid = int(it[0])
-            if clusterid in clusters: 
-                clusters[clusterid] = np.append(clusters[clusterid],[data[it.index,:]],axis=0)
-            else:
-                clusters[clusterid] = np.array([data[it.index,:]])
+            clusters[clusterid] = np.array([data[it.index,:]])
         it.iternext()
 
-    print('Data position to delete',samples_to_del)
-    print('Cluster Id to remove:',np.take(estimator.labels_,samples_to_del))
-    cleandata=np.delete(data,samples_to_del,0)
-    cleanlabels=np.delete(estimator.labels_,samples_to_del,0)
 
-    print('Samples to be considered for clustering metrics:',cleandata.shape[0],cleanlabels.shape[0])
+    print('Samples to be considered for clustering metrics:',data.shape[0],estimator.labels_.shape[0])
 
     # Remove single-element clusters
 #    single_ele_clus=0
@@ -84,5 +77,5 @@ def split_data_in_clusters(estimator,data):
 #    for sec in clus_to_remove:
 #        clusters.pop(sec,None)
 
-    return clusters,len(samples_to_del),cleandata,cleanlabels
+    return clusters,len(sec_idx),data,estimator.labels_
 

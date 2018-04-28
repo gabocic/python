@@ -13,10 +13,10 @@ def CN2_classifier(data,labels):
         l_attr.append(Orange.data.ContinuousVariable(name='f'+i.__str__(), compute_value=None))
 
     # Define target value
-    l_label = [str(i) for i in np.unique(labels+2).tolist()]
+    l_label = [str(i) for i in np.unique(labels).tolist()]
     #l_label = ['a']
 
-    print('labels',l_label)
+    #print('labels',l_label)
     
     classv = Orange.data.DiscreteVariable(name='classv',values=l_label)
 

@@ -210,8 +210,8 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
         print('Rules induction algorithm not found')
         return -1
 
-    for ruleid in rules:
-        print(ruleid,rules[ruleid]['classes_matched'])
+    #for ruleid in rules:
+    #    print(ruleid,rules[ruleid]['classes_matched'])
     print('Rules generated:',len(rules))
     
     # Compute rules metrics
@@ -229,7 +229,7 @@ if __name__ == '__main__':
 #    paramlist.append([8,1000,10,0,0,0])
 #    paramlist.append([16,1000,10,0,0,0])
 #    paramlist.append([24,1000,10,0,0,0])
-    paramlist.append([8,1000,40,0,0,0])
+#    paramlist.append([8,1000,40,0,0,0])
 #    paramlist.append([8,1000,80,0,0,0])
 #    paramlist.append([8,1000,0,10,2,0])
 #    paramlist.append([8,1000,0,40,2,0])
@@ -250,7 +250,7 @@ if __name__ == '__main__':
 #    paramlist.append([8,1000,40,10,2,6])
 #    paramlist.append([8,1000,40,10,2,12])
 #    paramlist.append([8,1000,40,10,2,18])
-#    paramlist.append([8,1000,40,40,2,6])
+    paramlist.append([8,1000,40,40,2,6])
 
     for params in paramlist:
         print('')
@@ -266,8 +266,8 @@ if __name__ == '__main__':
 
         else:
             pass
-            process_and_analyze(dataset,'meanshift','cn2')
-            sys.exit()
+#            process_and_analyze(dataset,'meanshift','cn2')
+#            sys.exit()
 
             l_clustering_alg = [
                     'kmeans_++',
@@ -282,7 +282,7 @@ if __name__ == '__main__':
                     'cn2'
                     ]
 
-#            for clustering_alg in l_clustering_alg:
-#                for ruleind_alg in l_ruleind_alg:
-#                    process_and_analyze(dataset,clustering_alg,ruleind_alg)
+            for clustering_alg in l_clustering_alg:
+                for ruleind_alg in l_ruleind_alg:
+                    process_and_analyze(dataset,clustering_alg,ruleind_alg)
 
