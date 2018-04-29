@@ -154,7 +154,7 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
             print('Outliers #',len(l_outliers))
         else:
             print('No clusters were found')
-            return -1
+            return {},{}
 
     elif clustering_alg == 'birch':
         estimator,c_elap_time = birch_clustering(data=scaleddata,plot=0,p_n_jobs=parallelism)
@@ -163,7 +163,7 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
 
     else:
         print('Clustering algorithm not found')
-        return -1
+        return {},{}
 
 
     # Split data in clusters
@@ -192,7 +192,7 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
     clus_metrics['calinski_harabaz_score'] = round(calinski_harabaz_score(cleandata, cleanlabels),metric_decimals)
     clus_metrics['silhouette_score'] = round(silhouette_score(cleandata, cleanlabels,metric='euclidean',sample_size=None),metric_decimals)
     clus_metrics['sin_ele_clus'] = sin_ele_clus
-    print(clus_metrics)
+    clus_metrics['single_cluster'] = False
 
     # Induct group membership rules
 
@@ -220,37 +220,41 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
     print("Calculate rules metrics")
     print("*"*70)
     print("")
-    metrics = rules_metrics(clusters,rules,cleandata.shape[0],round(r_elap_time,metric_decimals))
-    print(metrics)
+
+    print("<<<<<<<<<<<<<<<<<<< WE ARE USING SCALED DATA TO GENERATE RULES!!!!!! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+
+    rulind_metrics = rules_metrics(clusters,rules,cleandata.shape[0],round(r_elap_time,metric_decimals))
+    
+    return clus_metrics,rulind_metrics
 
 if __name__ == '__main__':
 
     paramlist = []
     paramlist.append([8,1000,10,0,0,0])
-    paramlist.append([16,1000,10,0,0,0])
-    paramlist.append([24,1000,10,0,0,0])
-    paramlist.append([8,1000,40,0,0,0])
-    paramlist.append([8,1000,80,0,0,0])
-    paramlist.append([8,1000,0,10,2,0])
-    paramlist.append([8,1000,0,40,2,0])
-    paramlist.append([8,1000,0,80,2,0])
-    paramlist.append([8,1000,0,40,3,0])
-    paramlist.append([8,1000,0,80,3,0])
-    paramlist.append([8,1000,0,40,4,0])
-    paramlist.append([8,1000,0,80,4,0])
-    paramlist.append([8,1000,0,0,0,6])
-    paramlist.append([8,1000,0,0,0,12])
-    paramlist.append([8,1000,0,0,0,18])
-    paramlist.append([8,1000,10,10,2,6])
-    paramlist.append([8,1000,10,10,2,12])
-    paramlist.append([8,1000,10,10,2,18])
-    paramlist.append([8,1000,10,40,2,6])
-    paramlist.append([8,1000,10,40,2,12])
-    paramlist.append([8,1000,10,40,2,18])
-    paramlist.append([8,1000,40,10,2,6])
-    paramlist.append([8,1000,40,10,2,12])
-    paramlist.append([8,1000,40,10,2,18])
-    paramlist.append([8,1000,40,40,2,6])
+#    paramlist.append([16,1000,10,0,0,0])
+#    paramlist.append([24,1000,10,0,0,0])
+#    paramlist.append([8,1000,40,0,0,0])
+#    paramlist.append([8,1000,80,0,0,0])
+#    paramlist.append([8,1000,0,10,2,0])
+#    paramlist.append([8,1000,0,40,2,0])
+#    paramlist.append([8,1000,0,80,2,0])
+#    paramlist.append([8,1000,0,40,3,0])
+#    paramlist.append([8,1000,0,80,3,0])
+#    paramlist.append([8,1000,0,40,4,0])
+#    paramlist.append([8,1000,0,80,4,0])
+#    paramlist.append([8,1000,0,0,0,6])
+#    paramlist.append([8,1000,0,0,0,12])
+#    paramlist.append([8,1000,0,0,0,18])
+#    paramlist.append([8,1000,10,10,2,6])
+#    paramlist.append([8,1000,10,10,2,12])
+#    paramlist.append([8,1000,10,10,2,18])
+#    paramlist.append([8,1000,10,40,2,6])
+#    paramlist.append([8,1000,10,40,2,12])
+#    paramlist.append([8,1000,10,40,2,18])
+#    paramlist.append([8,1000,40,10,2,6])
+#    paramlist.append([8,1000,40,10,2,12])
+#    paramlist.append([8,1000,40,10,2,18])
+#    paramlist.append([8,1000,40,40,2,6])
 
     for params in paramlist:
         print('')

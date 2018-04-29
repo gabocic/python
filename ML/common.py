@@ -4,19 +4,31 @@ import numpy as np
 from numpy.linalg import norm
 from scipy.special import comb
 
-def get_intra_cluster_distances(data):
-    print("Calculating distances...","Total values to compute: ",comb(data.shape[0], 2))
-    l_pp_dist=[]
-    i=1
-    for o_row in data:
-        for i_row in data[i:data.shape[0],]:
-            pp_dist = norm(o_row-i_row)
-            l_pp_dist.append(pp_dist)
-        i+=1
-    return l_pp_dist
-
-
 def split_data_in_clusters(estimator,data):
+
+    # Check that at least one cluster was found and do not consider "-1" labels
+    numclusters = len(np.unique([ label for label in estimator.labels_ if label > -1]))
+
+    ## TODO:
+        #1) Remove labels -1 only if they exist
+        #2) Exit if 0 or 1 clusters were found, but return the right return variables
+
+
+    if estimator != None and numclusters > 1:
+        # Remove outliers
+        l_outliers = []
+        it = np.nditer(estimator.labels_, flags=['f_index'])
+        while not it.finished:
+            if it[0] == -1:
+                l_outliers.append(it.index)
+            it.iternext()
+        estimator.labels_ = np.delete(estimator.labels_,l_outliers,0)
+        data = np.delete(scaleddata,l_outliers,0)
+        print('Outliers #',len(l_outliers))
+    else:
+        print("One or zero clusters found")
+        return {},{}
+
 
     # Look for any unique labels
     unique, counts = np.unique(estimator.labels_, return_counts=True)
@@ -36,7 +48,6 @@ def split_data_in_clusters(estimator,data):
     for sec in sec_idx:
 
         # Check if the removed cluster was among the highest (no arrange is required) - we use "unique" because we have original number of clusters there already
-        #if sec == max(unique):
         if sec > max(estimator.labels_):
             pass
         else:
@@ -44,16 +55,10 @@ def split_data_in_clusters(estimator,data):
             estimator.labels_[estimator.labels_ == max(estimator.labels_)] = sec
 
 
-    #unique, counts = np.unique(estimator.labels_, return_counts=True)
-    
     # Split data into the different clusters
-    #samples_to_del=[]
     clusters={}
     it = np.nditer(estimator.labels_, flags=['f_index'])
     while not it.finished:
-        #if counts[it[0]] == 1:
-        #    samples_to_del.append(it.index)
-        #else:
         clusterid = int(it[0])
         if clusterid in clusters: 
             clusters[clusterid] = np.append(clusters[clusterid],[data[it.index,:]],axis=0)
@@ -63,19 +68,6 @@ def split_data_in_clusters(estimator,data):
 
 
     print('Samples to be considered for clustering metrics:',data.shape[0],estimator.labels_.shape[0])
-
-    # Remove single-element clusters
-#    single_ele_clus=0
-#    clus_to_remove=[]
-#    for c in clusters:
-#        # Saving key to remove it after the loop is done (to avoid "dictionary changed size during iteration")
-#        if clusters[c].shape[0] == 1:
-#            single_ele_clus+=1
-#            clus_to_remove.append(c)
-
-    # Removing single-element cluster data
-#    for sec in clus_to_remove:
-#        clusters.pop(sec,None)
 
     return clusters,len(sec_idx),data,estimator.labels_
 
