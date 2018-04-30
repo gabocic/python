@@ -52,7 +52,7 @@ def k_means_clustering(data,plot,p_init,p_n_init,p_n_jobs):
         elap_time = (time() - t0)
 
         # Split data in clusters
-        clusters,sin_ele_clus,cleandata,cleanlabels = split_data_in_clusters(kmeans,data)
+        clusters,sin_ele_clus,cleandata,cleanlabels,l_outliers,cluster_cnt = split_data_in_clusters(kmeans,data)
         #for singleclus in clusters:
         #    print('Cluster '+singleclus.__str__()+':',len(clusters[singleclus]))
 
