@@ -57,7 +57,7 @@ def birch_clustering(data,plot,p_n_jobs):
 
 
         # Split data in clusters
-        clusters,sin_ele_clus,cleandata,cleanlabels = split_data_in_clusters(birch,data)
+        clusters,sin_ele_clus,cleandata,cleanlabels,l_outliers,cluster_cnt = split_data_in_clusters(birch,data)
         #for singleclus in clusters:
         #    print('Cluster '+singleclus.__str__()+':',len(clusters[singleclus]))
 
@@ -107,8 +107,8 @@ def birch_clustering(data,plot,p_n_jobs):
         # Save metrics 
         #all_metrics[n_clusters] = clus_metrics
         
-    print(metrics_winners)
-    print(metrics_win_val)
+    #print(metrics_winners)
+    #print(metrics_win_val)
 
     # If no iteration generated single element clusters, do not consider this metric 
     if flag_sel == 0:
@@ -116,7 +116,7 @@ def birch_clustering(data,plot,p_n_jobs):
         del metrics_win_val[3]
     
     most_common,num_most_common = Counter(metrics_winners).most_common(1)[0] 
-    print(most_common,num_most_common)
+    #print(most_common,num_most_common)
 
 
     #for metric_group in all_metrics:

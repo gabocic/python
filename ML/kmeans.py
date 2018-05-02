@@ -68,7 +68,7 @@ def k_means_clustering(data,plot,p_init,p_n_init,p_n_jobs):
 
     ## Find the winner "K" by looking for the minimum WB index
     minwbidx = wbindexes.index(min(wbindexes))
-    print(min(wbindexes))
+    #print(min(wbindexes))
 
     ## Save centroids for plotting
     centroids=kmeans.cluster_centers_

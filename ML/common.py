@@ -14,27 +14,24 @@ def split_data_in_clusters(estimator,data):
     if estimator != None:
 
         unique, counts = np.unique(estimator.labels_, return_counts=True)
-        print('unique',unique)
 
-        ## Check that at least one cluster was found
+        ## Check that at least two cluster were found
         if unique[-1] > 0:
 
-            ## If cluster algorithm is DBSCAN we need to remove any samples considered "Outliers" (read label = -1)
+            ## If cluster algorithm is DBSCAN we need to remove any samples considered "Outliers" (label = -1)
             if -1 in unique:
-                # Remove outliers
                 it = np.nditer(estimator.labels_, flags=['f_index'])
                 while not it.finished:
                     if it[0] == -1:
+                        # Save positions to remove
                         l_outliers.append(it.index)
                     it.iternext()
-                #estimator.labels_ = np.delete(estimator.labels_,l_outliers,0)
-                #data = np.delete(scaleddata,l_outliers,0)
                 print('Outliers #',len(l_outliers))
 
 
             # Look for any clusters with only one element
             sec_idx = [ idx for idx,cnt in enumerate(counts) if cnt==1 ]
-            print('Single element clusters to be removed:',sec_idx)
+            #print('Single element clusters to be removed:',sec_idx)
 
             ## Now that I have the Single-element-cluster id I need to search for labels and samples that correspond to that cluster to delete them
             for idx in sec_idx:
@@ -42,8 +39,6 @@ def split_data_in_clusters(estimator,data):
                 # Search for the positions where the label to be removed is
                 ptd = np.where(estimator.labels_==idx)
                 l_outliers.append(ptd[0][0])
-                #data=np.delete(data,ptd[0][0],0)
-                #estimator.labels_=np.delete(estimator.labels_,ptd[0][0],0)
 
             ## Delete corresponding data and labels
             data=np.delete(data,l_outliers,0)
@@ -52,7 +47,7 @@ def split_data_in_clusters(estimator,data):
             ## Rearrange tags
             for sec in sec_idx:
 
-                # Check if the removed cluster was among the highest (no arrange is required) - we use "unique" because we have original number of clusters there already
+                # Check if the removed clusters were among the highest (no arrange is required)
                 if sec > max(estimator.labels_):
                     pass
                 else:
@@ -70,7 +65,7 @@ def split_data_in_clusters(estimator,data):
                     clusters[clusterid] = np.array([data[it.index,:]])
                 it.iternext()
             cluster_cnt = len(clusters)
-            print('Samples to be considered for clustering metrics:',data.shape[0],estimator.labels_.shape[0])
+            #print('Samples to be considered for clustering metrics:',data.shape[0],estimator.labels_.shape[0])
 
         # If single cluster
         elif unique[-1] == 0:

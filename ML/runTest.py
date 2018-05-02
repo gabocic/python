@@ -15,6 +15,8 @@ import numpy as np
 from parameters import *
 from sklearn.metrics import calinski_harabaz_score,silhouette_score
 from procmetrics import dunn_index,wb_index
+from collections import Counter
+
 
 from sklearn.preprocessing import StandardScaler
 
@@ -31,31 +33,31 @@ def fatal_error():
 
 def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc_repeated,p_n_groups,p_perc_outliers):
 
-    print("")
-    print("")
-    print("Dataset generation")
-    print("*"*70)
-    print("")
+    #print("")
+    #print("")
+    #print("Dataset generation")
+    #print("*"*70)
+    #print("")
 
     # Generate dataset
     dscount=0
     while dscount < dataset_gen_retry:
         dataset = create_dataset(n_samples=p_n_samples, n_features=p_n_features,
                             perc_lin=p_perc_lin, perc_repeated=p_perc_repeated, n_groups=p_n_groups,perc_outliers=p_perc_outliers,
-                            debug=1,plot=0,save_to_file=0)
+                            debug=0,plot=0,save_to_file=0)
         
         if dataset.shape == (1,0):
             fatal_error()
 
-        print("")
-        print("")
-        print("")
-        print("Dataset validation")
-        print("*"*70)
-        print("")
+        #print("")
+        #print("")
+        #print("")
+        #print("Dataset validation")
+        #print("*"*70)
+        #print("")
 
         # Validate dataset is within the specifications
-        analysis_results = analyze_dataset(data=dataset,debug=1,plot=0,load_from_file=None)
+        analysis_results = analyze_dataset(data=dataset,debug=0,plot=0,load_from_file=None)
        
         # Linear points ranges
         if 0 <= p_perc_lin < 20:
@@ -85,7 +87,7 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
             ol_highlimit = p_perc_outliers*(1+dataset_parameters_error_margin)
         
 
-        print(analysis_results)
+        #print(analysis_results)
 
         if analysis_results['samples'] == p_n_samples and \
                 ol_lowlimit <= analysis_results['outliersperc'] < ol_highlimit and \
@@ -93,10 +95,11 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
                 rep_lowlimit <= analysis_results['repeatedperc'] < rep_highlimit and \
                 analysis_results['features'] == p_n_features and \
                 analysis_results['repeatedgrps'] == p_n_groups:
-            print('DATASET IS OK!!')
+            #print('DATASET IS OK!!')
             break
         else:
-            print('INVALID DATASET')
+            #print('INVALID DATASET')
+            pass
         dscount+=1   
     if dscount == dataset_gen_retry:
         print('Unable to generate a valid dataset after '+dataset_gen_retry.__str__()+' attempts')
@@ -124,11 +127,11 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
 
     # Clustering phase
 
-    print("")
-    print("")
-    print("Clusters discovery")
-    print("*"*70)
-    print("")
+    #print("")
+    #print("")
+    #print("Clusters discovery")
+    #print("*"*70)
+    #print("")
     
     if clustering_alg == 'kmeans_++':
         estimator,c_elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='k-means++',p_n_init=10,p_n_jobs=parallelism)
@@ -138,24 +141,6 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
         estimator,c_elap_time = k_means_clustering(data=scaleddata,plot=0,p_init='PCA-based',p_n_init=10,p_n_jobs=parallelism)
     elif clustering_alg == 'dbscan':
         estimator,c_elap_time = dbscan_clustering(data=scaleddata,plot=0,p_n_jobs=parallelism)
-
-#        # Check that at least one cluster was found
-#        if estimator != None and len(np.unique([ label for label in estimator.labels_ if label > -1])) >=1:
-#            # Remove outliers
-#            l_outliers = []
-#            it = np.nditer(estimator.labels_, flags=['f_index'])
-#            while not it.finished:
-#                if it[0] == -1:
-#                    l_outliers.append(it.index)
-#                it.iternext()
-#            estimator.labels_ = np.delete(estimator.labels_,l_outliers,0)
-#            scaleddata = np.delete(scaleddata,l_outliers,0)
-#            dataset = np.delete(dataset,l_outliers,0)
-#            print('Outliers #',len(l_outliers))
-#        else:
-#            print('No clusters were found')
-#            return {},{}
-
     elif clustering_alg == 'birch':
         estimator,c_elap_time = birch_clustering(data=scaleddata,plot=0,p_n_jobs=parallelism)
     elif clustering_alg == 'meanshift':
@@ -167,17 +152,17 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
 
 
     # Split data in clusters
-    clusters,sin_ele_clus,cleandata,cleanlabels,samples_to_delete,cluster_cnt= split_data_in_clusters(estimator,scaleddata)
+    clusters,sin_ele_clus,cleanscaleddata,cleanlabels,samples_to_delete,cluster_cnt= split_data_in_clusters(estimator,scaleddata)
 
 
     for singleclus in clusters:
         print('Cluster '+singleclus.__str__()+':',len(clusters[singleclus]))
      
-    print("")
-    print("")
-    print("Calculate cluster metrics")
-    print("*"*70)
-    print("")
+    #print("")
+    #print("")
+    #print("Calculate cluster metrics")
+    #print("*"*70)
+    #print("")
 
     # Compute clustering metrics
     clus_metrics={}
@@ -194,14 +179,13 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
         clus_metrics['silhouette_score'] = None
         clus_metrics['time'] = 0
         clus_metrics['wb_index'] = None
-        print(clus_metrics)
         return clus_metrics,{}
     else:
-        clus_metrics['wb_index'] = round(wb_index(clusters,cleandata),metric_decimals)
+        clus_metrics['wb_index'] = round(wb_index(clusters,cleanscaleddata),metric_decimals)
         clus_metrics['time'] = round(c_elap_time,metric_decimals)
         clus_metrics['dunn_index'] = round(dunn_index(clusters),metric_decimals)
-        clus_metrics['calinski_harabaz_score'] = round(calinski_harabaz_score(cleandata, cleanlabels),metric_decimals)
-        clus_metrics['silhouette_score'] = round(silhouette_score(cleandata, cleanlabels,metric='euclidean',sample_size=None),metric_decimals)
+        clus_metrics['calinski_harabaz_score'] = round(calinski_harabaz_score(cleanscaleddata, cleanlabels),metric_decimals)
+        clus_metrics['silhouette_score'] = round(silhouette_score(cleanscaleddata, cleanlabels,metric='euclidean',sample_size=None),metric_decimals)
 
 
     # Induct group membership rules
@@ -209,30 +193,28 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
     # Remove samples that were discarded for the clustering phase
     cleandata = np.delete(dataset,samples_to_delete,0)
 
-    print("")
-    print("")
-    print("Membership rules induction")
-    print("*"*70)
-    print("")
+    #print("")
+    #print("")
+    #print("Membership rules induction")
+    #print("*"*70)
+    #print("")
 
     if rulesind_alg == 'cart':
         rules,r_elap_time,classes = CART_classifier(cleandata,cleanlabels)
     elif rulesind_alg == 'cn2':
         rules,r_elap_time = CN2_classifier(cleandata,cleanlabels)
     else:
-        print('Rules induction algorithm not found')
-        return -1
+        #print('Rules induction algorithm not found')
+        return clus_metrics,{}
 
-    #for ruleid in rules:
-    #    print(ruleid,rules[ruleid]['classes_matched'])
     print('Rules generated:',len(rules))
     
     # Compute rules metrics
-    print("")
-    print("")
-    print("Calculate rules metrics")
-    print("*"*70)
-    print("")
+    #print("")
+    #print("")
+    #print("Calculate rules metrics")
+    #print("*"*70)
+    #print("")
 
 
     rulind_metrics = rules_metrics(clusters,rules,cleandata.shape[0],round(r_elap_time,metric_decimals))
@@ -242,38 +224,41 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
 if __name__ == '__main__':
 
     paramlist = []
-    paramlist.append([8,1000,10,0,0,0])
-    paramlist.append([16,1000,10,0,0,0])
-    paramlist.append([24,1000,10,0,0,0])
-    paramlist.append([8,1000,40,0,0,0])
-    paramlist.append([8,1000,80,0,0,0])
-    paramlist.append([8,1000,0,10,2,0])
-    paramlist.append([8,1000,0,40,2,0])
-    paramlist.append([8,1000,0,80,2,0])
-    paramlist.append([8,1000,0,40,3,0])
-    paramlist.append([8,1000,0,80,3,0])
-    paramlist.append([8,1000,0,40,4,0])
-    paramlist.append([8,1000,0,80,4,0])
-    paramlist.append([8,1000,0,0,0,6])
-    paramlist.append([8,1000,0,0,0,12])
-    paramlist.append([8,1000,0,0,0,18])
-    paramlist.append([8,1000,10,10,2,6])
-    paramlist.append([8,1000,10,10,2,12])
-    paramlist.append([8,1000,10,10,2,18])
-    paramlist.append([8,1000,10,40,2,6])
-    paramlist.append([8,1000,10,40,2,12])
-    paramlist.append([8,1000,10,40,2,18])
-    paramlist.append([8,1000,40,10,2,6])
-    paramlist.append([8,1000,40,10,2,12])
-    paramlist.append([8,1000,40,10,2,18])
-    paramlist.append([8,1000,40,40,2,6])
+    paramlist.append([8,1000,0,0,0,0])
+#    paramlist.append([8,1000,10,0,0,0])
+#    paramlist.append([16,1000,10,0,0,0])
+#    paramlist.append([24,1000,10,0,0,0])
+#    paramlist.append([8,1000,40,0,0,0])
+#    paramlist.append([8,1000,80,0,0,0])
+#    paramlist.append([8,1000,0,10,2,0])
+#    paramlist.append([8,1000,0,40,2,0])
+#    paramlist.append([8,1000,0,80,2,0])
+#    paramlist.append([8,1000,0,40,3,0])
+#    paramlist.append([8,1000,0,80,3,0])
+#    paramlist.append([8,1000,0,40,4,0])
+#    paramlist.append([8,1000,0,80,4,0])
+#    paramlist.append([8,1000,0,0,0,6])
+#    paramlist.append([8,1000,0,0,0,12])
+#    paramlist.append([8,1000,0,0,0,18])
+#    paramlist.append([8,1000,10,10,2,6])
+#    paramlist.append([8,1000,10,10,2,12])
+#    paramlist.append([8,1000,10,10,2,18])
+#    paramlist.append([8,1000,10,40,2,6])
+#    paramlist.append([8,1000,10,40,2,12])
+#    paramlist.append([8,1000,10,40,2,18])
+#    paramlist.append([8,1000,40,10,2,6])
+#    paramlist.append([8,1000,40,10,2,12])
+#    paramlist.append([8,1000,40,10,2,18])
+#    paramlist.append([8,1000,40,40,2,6])
 
     for params in paramlist:
         print('')
         print('')
-        print('#####################################################')
-        print('## ',params,'##')
-        print('#####################################################')
+        print('================================================================================================================')
+        print('================================================================================================================')
+        print('********************** ',params,'*********************************')
+        print('================================================================================================================')
+        print('================================================================================================================')
         print('')
         print('')
         dataset = dataset_generation_and_validation(*params)
@@ -286,19 +271,90 @@ if __name__ == '__main__':
 #            sys.exit()
 
             l_clustering_alg = [
-#                    'kmeans_++',
-#                    'kmeans_random',
-#                    'kmeans_pca',
+                    'kmeans_++',
+                    'kmeans_random',
+                    'kmeans_pca',
                     'dbscan',
-#                    'birch',
-#                    'meanshift',
+                    'birch',
+                    'meanshift',
                     ]
             l_ruleind_alg = [
-#                    'cart',
+                    'cart',
                     'cn2'
                     ]
+            all_metrics = {}
+            flag_sel=0 #flag to detect single element clusters
+            metrics_winners=[0,0,0,0]
+            metrics_win_val=[0,0,0,0]
+            for caidx,clustering_alg in enumerate(l_clustering_alg):
+                for riaidx,ruleind_alg in enumerate(l_ruleind_alg):
+                    print('')
+                    print('###############################################')
+                    print(clustering_alg.upper(),'&',ruleind_alg.upper())
+                    print('###############################################')
+                    print('')
+                    clus_metrics,rulind_metrics = process_and_analyze(dataset,clustering_alg,ruleind_alg)
+                    print(clus_metrics)
+                    print('')
+                    print(rulind_metrics)
 
-            for clustering_alg in l_clustering_alg:
-                for ruleind_alg in l_ruleind_alg:
-                    process_and_analyze(dataset,clustering_alg,ruleind_alg)
+                    if clus_metrics['cluster_cnt'] > 1:
+                    
+                        if metrics_winners[0] == 0:
+                            metrics_winners[0] = clus_metrics['name']
+                            metrics_win_val[0] = clus_metrics['silhouette_score']
+                            metrics_winners[1] = clus_metrics['name']
+                            metrics_win_val[1] = clus_metrics['calinski_harabaz_score']
+                            metrics_winners[2] = clus_metrics['name']
+                            metrics_win_val[2] = clus_metrics['dunn_index']
+                            metrics_winners[3] = clus_metrics['name']
+                            metrics_win_val[3] = clus_metrics['wb_index']
+                            #metrics_winners[4] = clus_metrics['name']
+                            #metrics_win_val[4] = clus_metrics['time']
+                            #metrics_winners[5] = clus_metrics['name']
+                            #metrics_win_val[5] = clus_metrics['sin_ele_clus']
+                        else:
+                            if clus_metrics['silhouette_score'] > metrics_win_val[0]:
+                                metrics_winners[0] = clus_metrics['name']
+                                metrics_win_val[0] = clus_metrics['silhouette_score']
+                            
+                            if clus_metrics['calinski_harabaz_score'] > metrics_win_val[1]:
+                                metrics_winners[1] = clus_metrics['name']
+                                metrics_win_val[1] = clus_metrics['calinski_harabaz_score']
+                            
+                            if clus_metrics['dunn_index'] > metrics_win_val[2]:
+                                metrics_winners[2] = clus_metrics['name']
+                                metrics_win_val[2] = clus_metrics['dunn_index']
+                            
+                            if clus_metrics['wb_index'] < metrics_win_val[3]:
+                                metrics_winners[3] = clus_metrics['name']
+                                metrics_win_val[3] = clus_metrics['wb_index']
+                            
+                            #if clus_metrics['time'] < metrics_win_val[4]:
+                            #    metrics_winners[4] = clus_metrics['name']
+                            #    metrics_win_val[4] = clus_metrics['time']
+                            
+                            #if clus_metrics['sin_ele_clus'] < metrics_win_val[5]:
+                            #    metrics_winners[5] = clus_metrics['name']
+                            #    metrics_win_val[5] = clus_metrics['sin_ele_clus']
+                            #if clus_metrics['sin_ele_clus'] > 0:
+                            #    flag_sel=1
+                    
+                    # Save metrics 
+                    all_metrics[clus_metrics['name']] = clus_metrics
+                    
+                    print(metrics_winners)
+                    print(metrics_win_val)
+
+            # If no iteration generated single element clusters, do not consider this metric 
+            #if flag_sel == 0:
+            #    del metrics_winners[5]
+            #    del metrics_win_val[5]
+            ocurrences = Counter(metrics_winners)
+            print(ocurrences)
+
+
+
+
+
 

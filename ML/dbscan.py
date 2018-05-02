@@ -58,7 +58,7 @@ def dbscan_clustering(data,plot,p_n_jobs):
         
         clusternum = len(np.unique([ label for label in dbscan.labels_ if label > -1]))
         if clusternum >=min_clusters:
-            print('cluster #',clusternum,'eps',v_eps)
+            #print('cluster #',clusternum,'eps',v_eps)
             winning_dbscan = dbscan
             winning_elap_time = elap_time
             break
