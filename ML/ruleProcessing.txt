@@ -10,7 +10,7 @@ Si hay un empate:
 
 	b) Samples not considered
 
-	c) Amount of clusters
+	c) Time
 
 
 

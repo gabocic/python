@@ -152,7 +152,7 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
 
 
     # Split data in clusters
-    clusters,sin_ele_clus,cleanscaleddata,cleanlabels,samples_to_delete,cluster_cnt= split_data_in_clusters(estimator,scaleddata)
+    clusters,sin_ele_clus,cleanscaleddata,cleanlabels,samples_to_delete,cluster_cnt,ignored_samples= split_data_in_clusters(estimator,scaleddata)
 
 
     for singleclus in clusters:
@@ -170,6 +170,7 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
     clus_metrics['name'] = clustering_alg
     clus_metrics['sin_ele_clus'] = sin_ele_clus
     clus_metrics['cluster_cnt'] = cluster_cnt
+    clus_metrics['ignored_samples'] = ignored_samples
 
     # Check that more than 1 cluster was found
     if cluster_cnt <= 1:
@@ -187,6 +188,7 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
         clus_metrics['calinski_harabaz_score'] = round(calinski_harabaz_score(cleanscaleddata, cleanlabels),metric_decimals)
         clus_metrics['silhouette_score'] = round(silhouette_score(cleanscaleddata, cleanlabels,metric='euclidean',sample_size=None),metric_decimals)
 
+    return clus_metrics,{}
 
     # Induct group membership rules
 
@@ -280,12 +282,14 @@ if __name__ == '__main__':
                     ]
             l_ruleind_alg = [
                     'cart',
-                    'cn2'
+                    #'cn2'
                     ]
             all_metrics = {}
             flag_sel=0 #flag to detect single element clusters
             metrics_winners=[0,0,0,0]
             metrics_win_val=[0,0,0,0]
+            metrics_winners2=[0,0,0,0]
+            metrics_win_val2=[0,0,0,0]
             for caidx,clustering_alg in enumerate(l_clustering_alg):
                 for riaidx,ruleind_alg in enumerate(l_ruleind_alg):
                     print('')
@@ -309,10 +313,12 @@ if __name__ == '__main__':
                             metrics_win_val[2] = clus_metrics['dunn_index']
                             metrics_winners[3] = clus_metrics['name']
                             metrics_win_val[3] = clus_metrics['wb_index']
-                            #metrics_winners[4] = clus_metrics['name']
-                            #metrics_win_val[4] = clus_metrics['time']
-                            #metrics_winners[5] = clus_metrics['name']
-                            #metrics_win_val[5] = clus_metrics['sin_ele_clus']
+                            metrics_winners2[0] = clus_metrics['name']
+                            metrics_win_val2[0] = clus_metrics['time']
+                            metrics_winners2[1] = clus_metrics['name']
+                            metrics_win_val2[1] = clus_metrics['sin_ele_clus']
+                            metrics_winners2[2] = clus_metrics['name']
+                            metrics_win_val2[2] = clus_metrics['ignored_samples']
                         else:
                             if clus_metrics['silhouette_score'] > metrics_win_val[0]:
                                 metrics_winners[0] = clus_metrics['name']
@@ -330,16 +336,21 @@ if __name__ == '__main__':
                                 metrics_winners[3] = clus_metrics['name']
                                 metrics_win_val[3] = clus_metrics['wb_index']
                             
-                            #if clus_metrics['time'] < metrics_win_val[4]:
-                            #    metrics_winners[4] = clus_metrics['name']
-                            #    metrics_win_val[4] = clus_metrics['time']
+                            if clus_metrics['time'] < metrics_win_val2[0]:
+                                metrics_winners2[0] = clus_metrics['name']
+                                metrics_win_val2[0] = clus_metrics['time']
                             
-                            #if clus_metrics['sin_ele_clus'] < metrics_win_val[5]:
-                            #    metrics_winners[5] = clus_metrics['name']
-                            #    metrics_win_val[5] = clus_metrics['sin_ele_clus']
-                            #if clus_metrics['sin_ele_clus'] > 0:
-                            #    flag_sel=1
+                            if clus_metrics['sin_ele_clus'] < metrics_win_val2[1]:
+                                metrics_winners2[1] = clus_metrics['name']
+                                metrics_win_val2[1] = clus_metrics['sin_ele_clus']
+                            if clus_metrics['sin_ele_clus'] > 0:
+                                flag_sel=1
                     
+                            if clus_metrics['ignored_samples'] < metrics_win_val2[2]:
+                                metrics_winners2[2] = clus_metrics['name']
+                                metrics_win_val2[2] = clus_metrics['ignored_samples']
+                            if clus_metrics['ignored_samples'] > 0:
+                                flag_is=1
                     # Save metrics 
                     all_metrics[clus_metrics['name']] = clus_metrics
                     
@@ -352,6 +363,17 @@ if __name__ == '__main__':
             #    del metrics_win_val[5]
             ocurrences = Counter(metrics_winners)
             print(ocurrences)
+            winners_cnt = max(ocurrences.values())
+            winners_idx = [i for i, j in enumerate(ocurrences.values()) if j == winners_cnt]
+
+            ocurrkeys = list(ocurrences.keys())
+            if len(winners_idx) == 1:
+                print('The winner is ',ocurrkeys[winners_idx[0]])
+            else:
+                print('We have a tie')
+                for winner_idx in winners_idx:
+                    print(ocurrkeys[winner_idx])
+                    print(all_metrics[ocurrkeys[winner_idx]])
 
 
 

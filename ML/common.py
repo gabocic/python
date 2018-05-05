@@ -10,6 +10,7 @@ def split_data_in_clusters(estimator,data):
     sec_idx=[]
     clusters={}
     l_outliers = []
+    ignored_samples = 0
     # Estimator will be null if we were not able to find a minimum amount of clusters (see dbscan.py)
     if estimator != None:
 
@@ -26,9 +27,11 @@ def split_data_in_clusters(estimator,data):
                         # Save positions to remove
                         l_outliers.append(it.index)
                     it.iternext()
-                print('Outliers #',len(l_outliers))
+            
+            ## Save the number of outliers, ie samples not included in any cluster
+            ignored_samples = len(l_outliers)
 
-
+            
             # Look for any clusters with only one element
             sec_idx = [ idx for idx,cnt in enumerate(counts) if cnt==1 ]
             #print('Single element clusters to be removed:',sec_idx)
@@ -80,5 +83,5 @@ def split_data_in_clusters(estimator,data):
         labels_ = None
 
 
-    return clusters,len(sec_idx),data,labels_,l_outliers,cluster_cnt
+    return clusters,len(sec_idx),data,labels_,l_outliers,cluster_cnt,ignored_samples
 

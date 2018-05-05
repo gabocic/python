@@ -57,7 +57,7 @@ def birch_clustering(data,plot,p_n_jobs):
 
 
         # Split data in clusters
-        clusters,sin_ele_clus,cleandata,cleanlabels,l_outliers,cluster_cnt = split_data_in_clusters(birch,data)
+        clusters,sin_ele_clus,cleandata,cleanlabels,l_outliers,cluster_cnt,ignored_samples = split_data_in_clusters(birch,data)
         #for singleclus in clusters:
         #    print('Cluster '+singleclus.__str__()+':',len(clusters[singleclus]))
 

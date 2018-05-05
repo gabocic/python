@@ -2,7 +2,6 @@
 
 from sklearn import metrics
 import numpy as np
-from common import split_data_in_clusters
 from numpy.linalg import norm
 from math import e
 from math import log
