@@ -226,7 +226,7 @@ def process_and_analyze(dataset,clustering_alg,rulesind_alg):
 if __name__ == '__main__':
 
     paramlist = []
-    paramlist.append([8,1000,0,0,0,0])
+#    paramlist.append([8,1000,0,0,0,0])
 #    paramlist.append([8,1000,10,0,0,0])
 #    paramlist.append([16,1000,10,0,0,0])
 #    paramlist.append([24,1000,10,0,0,0])
@@ -241,7 +241,7 @@ if __name__ == '__main__':
 #    paramlist.append([8,1000,0,80,4,0])
 #    paramlist.append([8,1000,0,0,0,6])
 #    paramlist.append([8,1000,0,0,0,12])
-#    paramlist.append([8,1000,0,0,0,18])
+    paramlist.append([8,1000,0,0,0,18])
 #    paramlist.append([8,1000,10,10,2,6])
 #    paramlist.append([8,1000,10,10,2,12])
 #    paramlist.append([8,1000,10,10,2,18])
@@ -285,11 +285,8 @@ if __name__ == '__main__':
                     #'cn2'
                     ]
             all_metrics = {}
-            flag_sel=0 #flag to detect single element clusters
             metrics_winners=[0,0,0,0]
             metrics_win_val=[0,0,0,0]
-            metrics_winners2=[0,0,0,0]
-            metrics_win_val2=[0,0,0,0]
             for caidx,clustering_alg in enumerate(l_clustering_alg):
                 for riaidx,ruleind_alg in enumerate(l_ruleind_alg):
                     print('')
@@ -313,12 +310,6 @@ if __name__ == '__main__':
                             metrics_win_val[2] = clus_metrics['dunn_index']
                             metrics_winners[3] = clus_metrics['name']
                             metrics_win_val[3] = clus_metrics['wb_index']
-                            metrics_winners2[0] = clus_metrics['name']
-                            metrics_win_val2[0] = clus_metrics['time']
-                            metrics_winners2[1] = clus_metrics['name']
-                            metrics_win_val2[1] = clus_metrics['sin_ele_clus']
-                            metrics_winners2[2] = clus_metrics['name']
-                            metrics_win_val2[2] = clus_metrics['ignored_samples']
                         else:
                             if clus_metrics['silhouette_score'] > metrics_win_val[0]:
                                 metrics_winners[0] = clus_metrics['name']
@@ -336,31 +327,12 @@ if __name__ == '__main__':
                                 metrics_winners[3] = clus_metrics['name']
                                 metrics_win_val[3] = clus_metrics['wb_index']
                             
-                            if clus_metrics['time'] < metrics_win_val2[0]:
-                                metrics_winners2[0] = clus_metrics['name']
-                                metrics_win_val2[0] = clus_metrics['time']
-                            
-                            if clus_metrics['sin_ele_clus'] < metrics_win_val2[1]:
-                                metrics_winners2[1] = clus_metrics['name']
-                                metrics_win_val2[1] = clus_metrics['sin_ele_clus']
-                            if clus_metrics['sin_ele_clus'] > 0:
-                                flag_sel=1
-                    
-                            if clus_metrics['ignored_samples'] < metrics_win_val2[2]:
-                                metrics_winners2[2] = clus_metrics['name']
-                                metrics_win_val2[2] = clus_metrics['ignored_samples']
-                            if clus_metrics['ignored_samples'] > 0:
-                                flag_is=1
                     # Save metrics 
                     all_metrics[clus_metrics['name']] = clus_metrics
                     
                     print(metrics_winners)
                     print(metrics_win_val)
 
-            # If no iteration generated single element clusters, do not consider this metric 
-            #if flag_sel == 0:
-            #    del metrics_winners[5]
-            #    del metrics_win_val[5]
             ocurrences = Counter(metrics_winners)
             print(ocurrences)
             winners_cnt = max(ocurrences.values())
@@ -371,9 +343,59 @@ if __name__ == '__main__':
                 print('The winner is ',ocurrkeys[winners_idx[0]])
             else:
                 print('We have a tie')
+                flag_sel=0 #flag to detect single element clusters
+                flag_is=0 #flag to detect ignored samples
+                metrics_winners=[0,0,0]
+                metrics_win_val=[0,0,0]
                 for winner_idx in winners_idx:
+                    algname = ocurrkeys[winner_idx]
                     print(ocurrkeys[winner_idx])
-                    print(all_metrics[ocurrkeys[winner_idx]])
+                    if metrics_winners[0] == 0:
+                        metrics_winners[0] = all_metrics[algname]['name']
+                        metrics_win_val[0] = all_metrics[algname]['time']
+                        metrics_winners[1] = all_metrics[algname]['name']
+                        metrics_win_val[1] = all_metrics[algname]['sin_ele_clus']
+                        metrics_winners[2] = all_metrics[algname]['name']
+                        metrics_win_val[2] = all_metrics[algname]['ignored_samples']
+                    else:
+                        if all_metrics[algname]['time'] < metrics_win_val[0]:
+                            metrics_winners[0] = all_metrics[algname]['name']
+                            metrics_win_val[0] = all_metrics[algname]['time']
+                        
+                        if all_metrics[algname]['sin_ele_clus'] < metrics_win_val[1]:
+                            metrics_winners[1] = all_metrics[algname]['name']
+                            metrics_win_val[1] = all_metrics[algname]['sin_ele_clus']
+                        if all_metrics[algname]['sin_ele_clus'] > 0:
+                            flag_sel=1
+                
+                        if all_metrics[algname]['ignored_samples'] < metrics_win_val[2]:
+                            metrics_winners[2] = all_metrics[algname]['name']
+                            metrics_win_val[2] = all_metrics[algname]['ignored_samples']
+                        if all_metrics[algname]['ignored_samples'] > 0:
+                            flag_is=1
+                    print(metrics_winners)
+                    print(metrics_win_val)
+
+                # If no iteration generated single element clusters, do not consider this metric 
+                if flag_sel == 0:
+                    del metrics_winners[1]
+                    del metrics_win_val[1]
+
+                # If no iteration has ingnore samples, do not consider this metric
+                if flag_is == 0:
+                    del metrics_winners[-1]
+                    del metrics_win_val[-1]
+
+                ocurrences = Counter(metrics_winners)
+                print(ocurrences)
+                winners_cnt = max(ocurrences.values())
+                winners_idx = [i for i, j in enumerate(ocurrences.values()) if j == winners_cnt]
+
+                ocurrkeys = list(ocurrences.keys())
+                if len(winners_idx) == 1:
+                    print('The winner is ',ocurrkeys[winners_idx[0]])
+                else:
+                    print('We have a tie')
 
 
 
