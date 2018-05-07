@@ -110,6 +110,8 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
 def clustering_and_metrics(dataset,clustering_alg):
 
     samples_to_delete=np.array([])
+    cleanlabels=np.array([])
+    clusters={}
 
     l_clustering_alg = [
             'kmeans_++',
@@ -140,7 +142,7 @@ def clustering_and_metrics(dataset,clustering_alg):
 
     else:
         print('Clustering algorithm not found')
-        return {},samples_to_delete
+        return {},samples_to_delete,cleanlabels,{}
 
 
     # Split data in clusters
@@ -173,9 +175,9 @@ def clustering_and_metrics(dataset,clustering_alg):
         clus_metrics['calinski_harabaz_score'] = round(calinski_harabaz_score(cleanscaleddata, cleanlabels),metric_decimals)
         clus_metrics['silhouette_score'] = round(silhouette_score(cleanscaleddata, cleanlabels,metric='euclidean',sample_size=None),metric_decimals)
 
-    return clus_metrics,samples_to_delete,cleanlabels
+    return clus_metrics,samples_to_delete,cleanlabels,clusters
 
-def rule_induction_and_metrics(dataset,rulesind_alg,samples_to_delete,cleanlabels):
+def rule_induction_and_metrics(dataset,rulesind_alg,samples_to_delete,cleanlabels,clusters):
 
     l_ruleind_alg = [
             'cart',
@@ -260,6 +262,9 @@ if __name__ == '__main__':
                     'meanshift',
                     ]
             all_metrics = {}
+            all_samples_to_delete = {}
+            all_labels = {}
+            all_clusters = {}
             metrics_winners=[0,0,0,0]
             metrics_win_val=[0,0,0,0]
             for caidx,clustering_alg in enumerate(l_clustering_alg):
@@ -268,7 +273,7 @@ if __name__ == '__main__':
                 print(clustering_alg.upper())
                 print('####################################')
                 print('')
-                clus_metrics,samples_to_delete = clustering_and_metrics(dataset,clustering_alg)
+                clus_metrics,samples_to_delete,cleanlabels,clusters = clustering_and_metrics(dataset,clustering_alg)
                 print(clus_metrics)
                 print('')
 
@@ -300,8 +305,11 @@ if __name__ == '__main__':
                             metrics_winners[3] = clus_metrics['name']
                             metrics_win_val[3] = clus_metrics['wb_index']
                         
-                # Save metrics 
+                # Save metrics, labels and samples_to_remove, and data splitted in clusters
                 all_metrics[clus_metrics['name']] = clus_metrics
+                all_labels[clus_metrics['name']] = cleanlabels
+                all_samples_to_delete[clus_metrics['name']] = samples_to_delete
+                all_clusters[clus_metrics['name']] = clusters
                 
                 print(metrics_winners)
                 print(metrics_win_val)
@@ -312,8 +320,9 @@ if __name__ == '__main__':
         winners_idx = [i for i, j in enumerate(ocurrences.values()) if j == winners_cnt]
 
         ocurrkeys = list(ocurrences.keys())
+        winners = [algo for algo in ocurrkeys if ocurrkeys.index(algo) in winners_idx]
         if len(winners_idx) == 1:
-            print('The winner is ',ocurrkeys[winners_idx[0]])
+            print('The winner is ',winners[0])
         else:
             print('We have a tie')
             flag_sel=0 #flag to detect single element clusters
@@ -323,6 +332,10 @@ if __name__ == '__main__':
             for winner_idx in winners_idx:
                 algname = ocurrkeys[winner_idx]
                 print(ocurrkeys[winner_idx])
+                if all_metrics[algname]['ignored_samples'] > 0:
+                    flag_is=1
+                if all_metrics[algname]['sin_ele_clus'] > 0:
+                    flag_sel=1
                 if metrics_winners[0] == 0:
                     metrics_winners[0] = all_metrics[algname]['name']
                     metrics_win_val[0] = all_metrics[algname]['time']
@@ -338,24 +351,22 @@ if __name__ == '__main__':
                     if all_metrics[algname]['sin_ele_clus'] < metrics_win_val[1]:
                         metrics_winners[1] = all_metrics[algname]['name']
                         metrics_win_val[1] = all_metrics[algname]['sin_ele_clus']
-                    if all_metrics[algname]['sin_ele_clus'] > 0:
-                        flag_sel=1
             
                     if all_metrics[algname]['ignored_samples'] < metrics_win_val[2]:
                         metrics_winners[2] = all_metrics[algname]['name']
                         metrics_win_val[2] = all_metrics[algname]['ignored_samples']
-                    if all_metrics[algname]['ignored_samples'] > 0:
-                        flag_is=1
                 print(metrics_winners)
                 print(metrics_win_val)
 
             # If no iteration generated single element clusters, do not consider this metric 
             if flag_sel == 0:
+                print('not considering single-element-cluster')
                 del metrics_winners[1]
                 del metrics_win_val[1]
 
             # If no iteration has ingnore samples, do not consider this metric
             if flag_is == 0:
+                print('not considering ignored-samples')
                 del metrics_winners[-1]
                 del metrics_win_val[-1]
 
@@ -365,18 +376,27 @@ if __name__ == '__main__':
             winners_idx = [i for i, j in enumerate(ocurrences.values()) if j == winners_cnt]
 
             ocurrkeys = list(ocurrences.keys())
+            winners = [algo for algo in ocurrkeys if ocurrkeys.index(algo) in winners_idx]
             if len(winners_idx) == 1:
-                print('The winner is ',ocurrkeys[winners_idx[0]])
+                print('The winner is ',winners[0])
             else:
                 print('We have a tie')
-                print(ocurrkeys)
+                print(winners)
            
         # Induct rules for the winner clustering
         l_ruleind_alg = [
                 'cart',
                 'cn2'
                 ]
-        for clusalg in ocurrkeys:
+        
+        print('')
+        print('')
+        print("<<<<<<<<<<< ToDo: We need to include rules ignored as part of the metrics >>>>>>>>>>>>>>>>")
+        print('')
+        print('')
+        for clusalg in winners:
             for riaidx,ruleind_alg in enumerate(l_ruleind_alg):
-                rimetrics = rule_induction_and_metrics(dataset,ruleind_alg,samples_to_delete)
-                print(rimetrics)
+                rimetrics = rule_induction_and_metrics(dataset,ruleind_alg,all_samples_to_delete[clusalg],all_labels[clusalg],all_clusters[clusalg])
+                iterador = ('ruleid: '+item['ruleid'].__str__()+', Cluster covered: '+item['cluster'].__str__() for item in rimetrics['rules_metrics'])
+                for item in iterador:
+                    print(item)
