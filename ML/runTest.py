@@ -4,6 +4,7 @@ import sys
 from dataset import create_dataset
 from analyze import analyze_dataset
 from procmetrics import rules_metrics
+from procmetrics import rule_induction_process_metric
 from kmeans import k_means_clustering
 from dbscan import dbscan_clustering
 from birch import birch_clustering
@@ -190,15 +191,17 @@ def rule_induction_and_metrics(dataset,rulesind_alg,samples_to_delete,cleanlabel
     cleandata = np.delete(dataset,samples_to_delete,0)
 
     if rulesind_alg == 'cart':
-        rules,r_elap_time,classes = CART_classifier(cleandata,cleanlabels)
+        rules,r_elap_time,classes,predicted_labels = CART_classifier(cleandata,cleanlabels)
     elif rulesind_alg == 'cn2':
-        rules,r_elap_time = CN2_classifier(cleandata,cleanlabels)
+        rules,r_elap_time,predicted_labels = CN2_classifier(cleandata,cleanlabels)
     else:
         print('Rules induction algorithm not found')
         return {}
-
     print('Rules generated:',len(rules))
-   
+  
+    # Calculate rule induction process metrics
+    rule_induction_process_metric(cleanlabels,predicted_labels)
+
     # Calculate rule metrics
     rulind_metrics = rules_metrics(clusters,rules,cleandata.shape[0],round(r_elap_time,metric_decimals))
     
@@ -207,7 +210,7 @@ def rule_induction_and_metrics(dataset,rulesind_alg,samples_to_delete,cleanlabel
 if __name__ == '__main__':
 
     paramlist = []
-#    paramlist.append([8,1000,0,0,0,0])
+    paramlist.append([8,1000,0,0,0,0])
 #    paramlist.append([8,1000,10,0,0,0])
 #    paramlist.append([16,1000,10,0,0,0])
 #    paramlist.append([24,1000,10,0,0,0])
@@ -222,7 +225,7 @@ if __name__ == '__main__':
 #    paramlist.append([8,1000,0,80,4,0])
 #    paramlist.append([8,1000,0,0,0,6])
 #    paramlist.append([8,1000,0,0,0,12])
-    paramlist.append([8,1000,0,0,0,18])
+#    paramlist.append([8,1000,0,0,0,18])
 #    paramlist.append([8,1000,10,10,2,6])
 #    paramlist.append([8,1000,10,10,2,12])
 #    paramlist.append([8,1000,10,10,2,18])
@@ -255,11 +258,11 @@ if __name__ == '__main__':
 
             l_clustering_alg = [
                     'kmeans_++',
-                    'kmeans_random',
-                    'kmeans_pca',
-                    'dbscan',
-                    'birch',
-                    'meanshift',
+#                    'kmeans_random',
+#                    'kmeans_pca',
+#                    'dbscan',
+#                    'birch',
+#                    'meanshift',
                     ]
             all_metrics = {}
             all_samples_to_delete = {}
@@ -389,14 +392,11 @@ if __name__ == '__main__':
                 'cn2'
                 ]
         
-        print('')
-        print('')
-        print("<<<<<<<<<<< ToDo: We need to include rules ignored as part of the metrics >>>>>>>>>>>>>>>>")
-        print('')
-        print('')
         for clusalg in winners:
             for riaidx,ruleind_alg in enumerate(l_ruleind_alg):
+                print(ruleind_alg)
                 rimetrics = rule_induction_and_metrics(dataset,ruleind_alg,all_samples_to_delete[clusalg],all_labels[clusalg],all_clusters[clusalg])
+                print(rimetrics)
                 iterador = ('ruleid: '+item['ruleid'].__str__()+', Cluster covered: '+item['cluster'].__str__() for item in rimetrics['rules_metrics'])
                 for item in iterador:
                     print(item)

@@ -49,6 +49,10 @@ def CN2_classifier(data,labels):
     # Calculate process time
     elap_time = (time() - t0)
 
+    # Obtain predicted labels array
+    predicted_labels_prob = classifier.predict(data)
+    predicted_labels = np.argmax(predicted_labels_prob,1)
+
     # Generate rules dictionary
     l_rules={}
     ruleid = 0
@@ -72,4 +76,4 @@ def CN2_classifier(data,labels):
         #print(dir(myrule.domain))
         #print(myrule.domain.class_var)
         ruleid+=1
-    return l_rules,elap_time
+    return l_rules,elap_time,predicted_labels

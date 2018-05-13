@@ -84,6 +84,20 @@ def dunn_index(clusters):
         max_intra_cluster_dist = 0.0000001
     return min_inter_cluster_dist/max_intra_cluster_dist
 
+def rule_induction_process_metric(ori_labels,predicted_labels):
+    accuracy = metrics.accuracy_score(ori_labels,predicted_labels)
+    print('accuracy',accuracy)
+    #auc = metrics.auc(ori_labels,predicted_labels)
+    #print('auc',auc)
+    report = metrics.classification_report(ori_labels,predicted_labels)
+    print(report)
+    f1score = metrics.f1_score(ori_labels,predicted_labels)
+    print('f1score',f1score)
+    hl = metrics.hamming_loss(ori_labels,predicted_labels)
+    print('hamming loss',hl)
+    jaccard = metrics.jaccard_similarity_score(ori_labels,predicted_labels)
+    print('jaccard',jaccard)
+
 def rules_metrics(clusters,rules,n_samples,elap_time):
 
     ## Create contingency table for each Rule,Cluster pair:
@@ -98,18 +112,22 @@ def rules_metrics(clusters,rules,n_samples,elap_time):
 
 
         # In this case clusterid is the position of the value in the list since the clusters are also numbered by position
-        for clusterid,clustercnt in enumerate(rules[ruleid]['classes_matched'][0]):
+        # for clusterid,clustercnt in enumerate(rules[ruleid]['classes_matched'][0]):
 
             # Filter out any rules not covering at least 30% of the cluster samples
-            if clustercnt/len(clusters[clusterid]) > 0.3:
-                if ruleid not in d_cont_table:
-                    d_cont_table[ruleid] = {}
-                if clusterid not in d_cont_table[ruleid]:
-                    d_cont_table[ruleid][clusterid] = {}
-                d_cont_table[ruleid][clusterid]['ncr'] = clustercnt
-                d_cont_table[ruleid][clusterid]['n!cr'] = sum(rules[ruleid]['classes_matched'][0]) - clustercnt
-                d_cont_table[ruleid][clusterid]['nc!r'] = len(clusters[clusterid]) - clustercnt
-                d_cont_table[ruleid][clusterid]['n!c!r'] = (n_samples - sum(rules[ruleid]['classes_matched'][0])) - len(clusters[clusterid]) + clustercnt
+        #    if clustercnt/len(clusters[clusterid]) > 0.3:
+
+    # Get the Cluster ID for which more examples were covered
+        clustercnt = max(rules[ruleid]['classes_matched'][0])
+        clusterid = np.argmax(rules[ruleid]['classes_matched'][0])
+        if ruleid not in d_cont_table:
+            d_cont_table[ruleid] = {}
+        if clusterid not in d_cont_table[ruleid]:
+            d_cont_table[ruleid][clusterid] = {}
+        d_cont_table[ruleid][clusterid]['ncr'] = clustercnt
+        d_cont_table[ruleid][clusterid]['n!cr'] = sum(rules[ruleid]['classes_matched'][0]) - clustercnt
+        d_cont_table[ruleid][clusterid]['nc!r'] = len(clusters[clusterid]) - clustercnt
+        d_cont_table[ruleid][clusterid]['n!c!r'] = (n_samples - sum(rules[ruleid]['classes_matched'][0])) - len(clusters[clusterid]) + clustercnt
 
     ## Weighted Sum of consistency and coverage (Michalsky, 1990)
     # Qws = w1 x cons(R) + w2 x cover(R), with
