@@ -42,6 +42,9 @@ def CART_classifier(data,labels):
 
     # Return predicted label for the training set (read, the dataset itself)
     predicted_labels = clf.predict(data)
+    
+    # Return predicted probabilities for the training set (read, the dataset itself)
+    predicted_proba = clf.predict_proba(data)
    
     # feature_names
     feature_names = np.array([])
@@ -126,4 +129,4 @@ def CART_classifier(data,labels):
     #tree_to_code(clf,feature_names)
     #for regla in l_rules:   
     #    print(l_rules[regla]['classes_matched'])
-    return l_rules,elap_time,clf.classes_,predicted_labels
+    return l_rules,elap_time,clf.classes_,predicted_labels,predicted_proba

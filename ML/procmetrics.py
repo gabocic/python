@@ -84,19 +84,35 @@ def dunn_index(clusters):
         max_intra_cluster_dist = 0.0000001
     return min_inter_cluster_dist/max_intra_cluster_dist
 
-def rule_induction_process_metric(ori_labels,predicted_labels):
-    accuracy = metrics.accuracy_score(ori_labels,predicted_labels)
-    print('accuracy',accuracy)
-    #auc = metrics.auc(ori_labels,predicted_labels)
-    #print('auc',auc)
-    report = metrics.classification_report(ori_labels,predicted_labels)
-    print(report)
-    f1score = metrics.f1_score(ori_labels,predicted_labels)
-    print('f1score',f1score)
+def rule_induction_process_metric(ori_labels,predicted_labels,predicted_proba):
+    ruleindmetrics_dict = {}
+
+    accuracy = metrics.accuracy_score(y_true=ori_labels,y_pred=predicted_labels)
+    ruleindmetrics_dict['accuracy'] = accuracy
+    
+    auc = metrics.auc(ori_labels,predicted_labels,True)
+    ruleindmetrics_dict['auc'] = auc
+    
+    f1score = metrics.f1_score(y_true=ori_labels,y_pred=predicted_labels,average='weighted')
+    ruleindmetrics_dict['f1score'] = f1score
+    
     hl = metrics.hamming_loss(ori_labels,predicted_labels)
-    print('hamming loss',hl)
-    jaccard = metrics.jaccard_similarity_score(ori_labels,predicted_labels)
-    print('jaccard',jaccard)
+    ruleindmetrics_dict['hl'] = hl
+    
+    jaccard = metrics.jaccard_similarity_score(y_true=ori_labels,y_pred=predicted_labels)
+    ruleindmetrics_dict['jaccard'] = jaccard
+    
+    precision = metrics.precision_score(y_true=ori_labels,y_pred=predicted_labels,average='weighted')
+    ruleindmetrics_dict['precision'] = precision
+    
+    recall = metrics.recall_score(y_true=ori_labels,y_pred=predicted_labels,average='weighted')
+    ruleindmetrics_dict['recall'] = recall
+    
+    mse = metrics.mean_squared_error(y_true=ori_labels,y_pred=predicted_labels)
+    ruleindmetrics_dict['mse'] = mse
+
+    return ruleindmetrics_dict
+    
 
 def rules_metrics(clusters,rules,n_samples,elap_time):
 

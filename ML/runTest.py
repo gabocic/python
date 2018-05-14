@@ -191,20 +191,25 @@ def rule_induction_and_metrics(dataset,rulesind_alg,samples_to_delete,cleanlabel
     cleandata = np.delete(dataset,samples_to_delete,0)
 
     if rulesind_alg == 'cart':
-        rules,r_elap_time,classes,predicted_labels = CART_classifier(cleandata,cleanlabels)
+        rules,r_elap_time,classes,predicted_labels,predicted_proba = CART_classifier(cleandata,cleanlabels)
     elif rulesind_alg == 'cn2':
-        rules,r_elap_time,predicted_labels = CN2_classifier(cleandata,cleanlabels)
+        rules,r_elap_time,predicted_labels,predicted_proba = CN2_classifier(cleandata,cleanlabels)
     else:
         print('Rules induction algorithm not found')
         return {}
-    print('Rules generated:',len(rules))
-  
+
     # Calculate rule induction process metrics
-    rule_induction_process_metric(cleanlabels,predicted_labels)
+    rulind_metrics = rule_induction_process_metric(cleanlabels,predicted_labels,predicted_proba)
 
     # Calculate rule metrics
-    rulind_metrics = rules_metrics(clusters,rules,cleandata.shape[0],round(r_elap_time,metric_decimals))
-    
+    #rulind_metrics = rules_metrics(clusters,rules,cleandata.shape[0],round(r_elap_time,metric_decimals))
+   
+    # Append time to the metrics dict
+    rulind_metrics['time'] = r_elap_time
+
+    # Append number of rules too
+    rulind_metrics['n_rules'] = len(rules)
+
     return rulind_metrics
 
 if __name__ == '__main__':
@@ -397,6 +402,3 @@ if __name__ == '__main__':
                 print(ruleind_alg)
                 rimetrics = rule_induction_and_metrics(dataset,ruleind_alg,all_samples_to_delete[clusalg],all_labels[clusalg],all_clusters[clusalg])
                 print(rimetrics)
-                iterador = ('ruleid: '+item['ruleid'].__str__()+', Cluster covered: '+item['cluster'].__str__() for item in rimetrics['rules_metrics'])
-                for item in iterador:
-                    print(item)
