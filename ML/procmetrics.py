@@ -88,28 +88,28 @@ def rule_induction_process_metric(ori_labels,predicted_labels,predicted_proba):
     ruleindmetrics_dict = {}
 
     accuracy = metrics.accuracy_score(y_true=ori_labels,y_pred=predicted_labels)
-    ruleindmetrics_dict['accuracy'] = accuracy
+    ruleindmetrics_dict['accuracy'] = round(accuracy,metric_decimals)
     
     auc = metrics.auc(ori_labels,predicted_labels,True)
-    ruleindmetrics_dict['auc'] = auc
+    ruleindmetrics_dict['auc'] = round(auc,metric_decimals)
     
     f1score = metrics.f1_score(y_true=ori_labels,y_pred=predicted_labels,average='weighted')
-    ruleindmetrics_dict['f1score'] = f1score
+    ruleindmetrics_dict['f1score'] = round(f1score,metric_decimals)
     
     hl = metrics.hamming_loss(ori_labels,predicted_labels)
-    ruleindmetrics_dict['hl'] = hl
+    ruleindmetrics_dict['hl'] = round(hl,metric_decimals)
     
     jaccard = metrics.jaccard_similarity_score(y_true=ori_labels,y_pred=predicted_labels)
-    ruleindmetrics_dict['jaccard'] = jaccard
+    ruleindmetrics_dict['jaccard'] = round(jaccard,metric_decimals)
     
     precision = metrics.precision_score(y_true=ori_labels,y_pred=predicted_labels,average='weighted')
-    ruleindmetrics_dict['precision'] = precision
+    ruleindmetrics_dict['precision'] = round(precision,metric_decimals)
     
     recall = metrics.recall_score(y_true=ori_labels,y_pred=predicted_labels,average='weighted')
-    ruleindmetrics_dict['recall'] = recall
+    ruleindmetrics_dict['recall'] = round(recall,metric_decimals)
     
     mse = metrics.mean_squared_error(y_true=ori_labels,y_pred=predicted_labels)
-    ruleindmetrics_dict['mse'] = mse
+    ruleindmetrics_dict['mse'] = round(mse,metric_decimals)
 
     return ruleindmetrics_dict
     

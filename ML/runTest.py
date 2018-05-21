@@ -18,6 +18,7 @@ from sklearn.metrics import calinski_harabaz_score,silhouette_score
 from procmetrics import dunn_index,wb_index
 from collections import Counter
 
+from davies_bouldin import davies_bouldin_score
 
 from sklearn.preprocessing import StandardScaler
 
@@ -152,7 +153,8 @@ def clustering_and_metrics(dataset,clustering_alg):
 
     for singleclus in clusters:
         print('Cluster '+singleclus.__str__()+':',len(clusters[singleclus]))
-     
+    
+
     # Compute clustering metrics
     clus_metrics={}
 
@@ -169,12 +171,14 @@ def clustering_and_metrics(dataset,clustering_alg):
         clus_metrics['silhouette_score'] = None
         clus_metrics['time'] = 0
         clus_metrics['wb_index'] = None
+        clus_metrics['davies_bouldin_score'] = None
     else:
         clus_metrics['time'] = round(c_elap_time,metric_decimals)
         clus_metrics['wb_index'] = round(wb_index(clusters,cleanscaleddata),metric_decimals)
         clus_metrics['dunn_index'] = round(dunn_index(clusters),metric_decimals)
         clus_metrics['calinski_harabaz_score'] = round(calinski_harabaz_score(cleanscaleddata, cleanlabels),metric_decimals)
         clus_metrics['silhouette_score'] = round(silhouette_score(cleanscaleddata, cleanlabels,metric='euclidean',sample_size=None),metric_decimals)
+        clus_metrics['davies_bouldin_score'] = round(davies_bouldin_score(cleanscaleddata,cleanlabels),metric_decimals)
 
     return clus_metrics,samples_to_delete,cleanlabels,clusters
 
@@ -205,7 +209,7 @@ def rule_induction_and_metrics(dataset,rulesind_alg,samples_to_delete,cleanlabel
     #rulind_metrics = rules_metrics(clusters,rules,cleandata.shape[0],round(r_elap_time,metric_decimals))
    
     # Append time to the metrics dict
-    rulind_metrics['time'] = r_elap_time
+    rulind_metrics['time'] = round(r_elap_time,metric_decimals)
 
     # Append number of rules too
     rulind_metrics['n_rules'] = len(rules)
@@ -215,7 +219,7 @@ def rule_induction_and_metrics(dataset,rulesind_alg,samples_to_delete,cleanlabel
 if __name__ == '__main__':
 
     paramlist = []
-    paramlist.append([8,1000,0,0,0,0])
+#    paramlist.append([8,1000,0,0,0,0])
 #    paramlist.append([8,1000,10,0,0,0])
 #    paramlist.append([16,1000,10,0,0,0])
 #    paramlist.append([24,1000,10,0,0,0])
@@ -235,7 +239,7 @@ if __name__ == '__main__':
 #    paramlist.append([8,1000,10,10,2,12])
 #    paramlist.append([8,1000,10,10,2,18])
 #    paramlist.append([8,1000,10,40,2,6])
-#    paramlist.append([8,1000,10,40,2,12])
+    paramlist.append([8,1000,10,40,2,12])
 #    paramlist.append([8,1000,10,40,2,18])
 #    paramlist.append([8,1000,40,10,2,6])
 #    paramlist.append([8,1000,40,10,2,12])
@@ -263,18 +267,18 @@ if __name__ == '__main__':
 
             l_clustering_alg = [
                     'kmeans_++',
-#                    'kmeans_random',
-#                    'kmeans_pca',
-#                    'dbscan',
-#                    'birch',
-#                    'meanshift',
+                    'kmeans_random',
+                    'kmeans_pca',
+                    'dbscan',
+                    'birch',
+                    'meanshift',
                     ]
             all_metrics = {}
             all_samples_to_delete = {}
             all_labels = {}
             all_clusters = {}
-            metrics_winners=[0,0,0,0]
-            metrics_win_val=[0,0,0,0]
+            metrics_winners=[0,0,0,0,0]
+            metrics_win_val=[0,0,0,0,0]
             for caidx,clustering_alg in enumerate(l_clustering_alg):
                 print('')
                 print('####################################')
@@ -296,6 +300,8 @@ if __name__ == '__main__':
                         metrics_win_val[2] = clus_metrics['dunn_index']
                         metrics_winners[3] = clus_metrics['name']
                         metrics_win_val[3] = clus_metrics['wb_index']
+                        metrics_winners[4] = clus_metrics['name']
+                        metrics_win_val[4] = clus_metrics['davies_bouldin_score']
                     else:
                         if clus_metrics['silhouette_score'] > metrics_win_val[0]:
                             metrics_winners[0] = clus_metrics['name']
@@ -312,6 +318,10 @@ if __name__ == '__main__':
                         if clus_metrics['wb_index'] < metrics_win_val[3]:
                             metrics_winners[3] = clus_metrics['name']
                             metrics_win_val[3] = clus_metrics['wb_index']
+                        
+                        if clus_metrics['davies_bouldin_score'] < metrics_win_val[4]:
+                            metrics_winners[4] = clus_metrics['name']
+                            metrics_win_val[4] = clus_metrics['davies_bouldin_score']
                         
                 # Save metrics, labels and samples_to_remove, and data splitted in clusters
                 all_metrics[clus_metrics['name']] = clus_metrics
