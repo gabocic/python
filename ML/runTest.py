@@ -1,6 +1,7 @@
 #!/home/gabriel/pythonenvs/v3.5/bin/python
 
 import sys
+import warnings
 from dataset import create_dataset
 from analyze import analyze_dataset
 from procmetrics import rules_metrics
@@ -178,7 +179,11 @@ def clustering_and_metrics(dataset,clustering_alg):
         clus_metrics['dunn_index'] = round(dunn_index(clusters),metric_decimals)
         clus_metrics['calinski_harabaz_score'] = round(calinski_harabaz_score(cleanscaleddata, cleanlabels),metric_decimals)
         clus_metrics['silhouette_score'] = round(silhouette_score(cleanscaleddata, cleanlabels,metric='euclidean',sample_size=None),metric_decimals)
-        clus_metrics['davies_bouldin_score'] = round(davies_bouldin_score(cleanscaleddata,cleanlabels),metric_decimals)
+
+        # Supress expected runtime "divide by zero" warning
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            clus_metrics['davies_bouldin_score'] = round(davies_bouldin_score(cleanscaleddata,cleanlabels),metric_decimals)
 
     return clus_metrics,samples_to_delete,cleanlabels,clusters
 
@@ -213,6 +218,10 @@ def rule_induction_and_metrics(dataset,rulesind_alg,samples_to_delete,cleanlabel
 
     # Append number of rules too
     rulind_metrics['n_rules'] = len(rules)
+
+    # Append algorithm name
+    rulind_metrics['name'] = rulesind_alg
+
 
     return rulind_metrics
 
@@ -267,11 +276,11 @@ if __name__ == '__main__':
 
             l_clustering_alg = [
                     'kmeans_++',
-                    'kmeans_random',
-                    'kmeans_pca',
-                    'dbscan',
-                    'birch',
-                    'meanshift',
+#                    'kmeans_random',
+#                    'kmeans_pca',
+#                    'dbscan',
+#                    'birch',
+#                    'meanshift',
                     ]
             all_metrics = {}
             all_samples_to_delete = {}
@@ -403,12 +412,62 @@ if __name__ == '__main__':
            
         # Induct rules for the winner clustering
         l_ruleind_alg = [
-                'cart',
-                'cn2'
+                'cn2',
+                'cart'
                 ]
         
         for clusalg in winners:
+            ri_metrics_winners=[0,0,0,0,0,0]
+            ri_metrics_win_val=[0,0,0,0,0,0]
             for riaidx,ruleind_alg in enumerate(l_ruleind_alg):
                 print(ruleind_alg)
                 rimetrics = rule_induction_and_metrics(dataset,ruleind_alg,all_samples_to_delete[clusalg],all_labels[clusalg],all_clusters[clusalg])
-                print(rimetrics)
+                if ri_metrics_winners[0] == 0:
+                    ri_metrics_winners[0] = rimetrics['name']
+                    ri_metrics_win_val[0] = rimetrics['accuracy']
+                    ri_metrics_winners[1] = rimetrics['name']
+                    ri_metrics_win_val[1] = rimetrics['auc']
+                    ri_metrics_winners[2] = rimetrics['name']
+                    ri_metrics_win_val[2] = rimetrics['f1score']
+                    ri_metrics_winners[3] = rimetrics['name']
+                    ri_metrics_win_val[3] = rimetrics['hl']
+                    ri_metrics_winners[4] = rimetrics['name']
+                    ri_metrics_win_val[4] = rimetrics['precision']
+                    ri_metrics_winners[5] = rimetrics['name']
+                    ri_metrics_win_val[5] = rimetrics['recall']
+                else:
+                    if rimetrics['accuracy'] > ri_metrics_win_val[0]:
+                        ri_metrics_winners[0] = rimetrics['name']
+                        ri_metrics_win_val[0] = rimetrics['accuracy']
+                    
+                    if rimetrics['auc'] > ri_metrics_win_val[1]:
+                        ri_metrics_winners[1] = rimetrics['name']
+                        ri_metrics_win_val[1] = rimetrics['auc']
+                    
+                    if rimetrics['f1score'] > ri_metrics_win_val[2]:
+                        ri_metrics_winners[2] = rimetrics['name']
+                        ri_metrics_win_val[2] = rimetrics['f1score']
+                    
+                    if rimetrics['hl'] < ri_metrics_win_val[3]:
+                        ri_metrics_winners[3] = rimetrics['name']
+                        ri_metrics_win_val[3] = rimetrics['hl']
+                    
+                    if rimetrics['precision'] > ri_metrics_win_val[4]:
+                        ri_metrics_winners[4] = rimetrics['name']
+                        ri_metrics_win_val[4] = rimetrics['precision']
+
+                    if rimetrics['recall'] > ri_metrics_win_val[4]:
+                        ri_metrics_winners[5] = rimetrics['name']
+                        ri_metrics_win_val[5] = rimetrics['recall']
+                print(ri_metrics_winners)
+            ocurrences = Counter(ri_metrics_winners)
+            print(ocurrences)
+            winners_cnt = max(ocurrences.values())
+            winners_idx = [i for i, j in enumerate(ocurrences.values()) if j == winners_cnt]
+
+            ocurrkeys = list(ocurrences.keys())
+            winners = [algo for algo in ocurrkeys if ocurrkeys.index(algo) in winners_idx]
+            if len(winners_idx) == 1:
+                print('The winner is ',winners[0])
+            else:
+                print('We have a tie')

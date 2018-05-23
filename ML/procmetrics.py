@@ -99,8 +99,8 @@ def rule_induction_process_metric(ori_labels,predicted_labels,predicted_proba):
     hl = metrics.hamming_loss(ori_labels,predicted_labels)
     ruleindmetrics_dict['hl'] = round(hl,metric_decimals)
     
-    jaccard = metrics.jaccard_similarity_score(y_true=ori_labels,y_pred=predicted_labels)
-    ruleindmetrics_dict['jaccard'] = round(jaccard,metric_decimals)
+    #jaccard = metrics.jaccard_similarity_score(y_true=ori_labels,y_pred=predicted_labels)
+    #ruleindmetrics_dict['jaccard'] = round(jaccard,metric_decimals)
     
     precision = metrics.precision_score(y_true=ori_labels,y_pred=predicted_labels,average='weighted')
     ruleindmetrics_dict['precision'] = round(precision,metric_decimals)
@@ -108,8 +108,8 @@ def rule_induction_process_metric(ori_labels,predicted_labels,predicted_proba):
     recall = metrics.recall_score(y_true=ori_labels,y_pred=predicted_labels,average='weighted')
     ruleindmetrics_dict['recall'] = round(recall,metric_decimals)
     
-    mse = metrics.mean_squared_error(y_true=ori_labels,y_pred=predicted_labels)
-    ruleindmetrics_dict['mse'] = round(mse,metric_decimals)
+    #mse = metrics.mean_squared_error(y_true=ori_labels,y_pred=predicted_labels)
+    #ruleindmetrics_dict['mse'] = round(mse,metric_decimals)
 
     return ruleindmetrics_dict
     
