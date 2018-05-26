@@ -4,6 +4,8 @@ from sklearn import tree
 from sklearn.tree import _tree
 import numpy as np
 from time import time
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import train_test_split
 
 def CART_classifier(data,labels):
 
@@ -28,38 +30,6 @@ def CART_classifier(data,labels):
 
         #recurse(0, 1)
 
-    ## Main ##
-
-    clf = tree.DecisionTreeClassifier(min_samples_leaf=0.1)
-
-    # Initial time mark
-    t0 = time()
-
-    clf = clf.fit(data, labels)
-
-    # Calculate process time
-    elap_time = (time() - t0)
-
-    # Return predicted label for the training set (read, the dataset itself)
-    predicted_labels = clf.predict(data)
-    
-    # Return predicted probabilities for the training set (read, the dataset itself)
-    predicted_proba = clf.predict_proba(data)
-   
-    # feature_names
-    feature_names = np.array([])
-    for i in range(0,data.shape[1]):
-        feature_names = np.append(feature_names,'f'+i.__str__())
-
-    ## Rules extractor
-            ## Strategy:
-            # 1) Search for a leaf node
-            # 2) Check children_left and children_right to find it's parent
-            # 3) Extract the condition for that parent using 'feature' and 'threshold'
-            # 4) Repeat the process until node 0 is reached
-
-    ## http://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html
-
     def retrieve_parent_rule(i):
         right=0
         parentid = np.argwhere(children_left == i)
@@ -75,6 +45,54 @@ def CART_classifier(data,labels):
         rule = {'feature':feature[parentid],'symbol':symbol,'threshold':threshold[parentid]}
         return parentid,rule
 
+    ## Main ##
+
+    
+    ###  Cross-validation
+    ###  Test what value of min_samples_leaf produces better results as per AUC
+
+    ## Split the dataset into a training and and a testing set
+    X_train, X_test, y_train, y_test = train_test_split(data,labels,test_size=0.2,random_state=0)
+
+    l_scores=[]
+    # min_samples_leaf range: 5% to 14%
+    for msl in range(5,15):
+        clf = tree.DecisionTreeClassifier(min_samples_leaf=msl/100)
+        scores = cross_val_score(clf, X_train, y_train, cv=5,scoring='fowlkes_mallows_score')
+        print('msl:',msl,'AUC mean:',scores.mean())
+        l_scores.append(scores.mean())
+
+    winneridx = np.argmax(l_scores)
+    winnerpct = winneridx +5 
+    print('winner %',winnerpct)
+
+    # Instantiate a classifier with the winning min_samples_leaf
+    clf = tree.DecisionTreeClassifier(min_samples_leaf=winnerpct/100)
+
+    # Initial time mark
+    t0 = time()
+
+    clf = clf.fit(X_train, y_train)
+
+    # Calculate process time
+    elap_time = (time() - t0)
+
+    # Return predicted label for the testing set 
+    predicted_labels = clf.predict(X_test)
+
+    # feature_names
+    feature_names = np.array([])
+    for i in range(0,data.shape[1]):
+        feature_names = np.append(feature_names,'f'+i.__str__())
+
+    ## Rules extractor
+            ## Strategy:
+            # 1) Search for a leaf node
+            # 2) Check children_left and children_right to find it's parent
+            # 3) Extract the condition for that parent using 'feature' and 'threshold'
+            # 4) Repeat the process until node 0 is reached
+
+    ## http://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html
     n_nodes = clf.tree_.node_count
     children_left = clf.tree_.children_left
     children_right = clf.tree_.children_right
@@ -129,4 +147,4 @@ def CART_classifier(data,labels):
     #tree_to_code(clf,feature_names)
     #for regla in l_rules:   
     #    print(l_rules[regla]['classes_matched'])
-    return l_rules,elap_time,clf.classes_,predicted_labels,predicted_proba
+    return l_rules,elap_time,predicted_labels,y_test

@@ -200,15 +200,15 @@ def rule_induction_and_metrics(dataset,rulesind_alg,samples_to_delete,cleanlabel
     cleandata = np.delete(dataset,samples_to_delete,0)
 
     if rulesind_alg == 'cart':
-        rules,r_elap_time,classes,predicted_labels,predicted_proba = CART_classifier(cleandata,cleanlabels)
+        rules,r_elap_time,predicted_labels,y_test = CART_classifier(cleandata,cleanlabels)
     elif rulesind_alg == 'cn2':
-        rules,r_elap_time,predicted_labels,predicted_proba = CN2_classifier(cleandata,cleanlabels)
+        rules,r_elap_time,predicted_labels,y_test = CN2_classifier(cleandata,cleanlabels)
     else:
         print('Rules induction algorithm not found')
         return {}
 
     # Calculate rule induction process metrics
-    rulind_metrics = rule_induction_process_metric(cleanlabels,predicted_labels,predicted_proba)
+    rulind_metrics = rule_induction_process_metric(y_test,predicted_labels)
 
     # Calculate rule metrics
     #rulind_metrics = rules_metrics(clusters,rules,cleandata.shape[0],round(r_elap_time,metric_decimals))
@@ -413,52 +413,54 @@ if __name__ == '__main__':
         # Induct rules for the winner clustering
         l_ruleind_alg = [
                 'cn2',
-                'cart'
+                #'cart'
                 ]
         
         for clusalg in winners:
-            ri_metrics_winners=[0,0,0,0,0,0]
-            ri_metrics_win_val=[0,0,0,0,0,0]
+            #ri_metrics_winners=[0,0,0,0,0,0]
+            #ri_metrics_win_val=[0,0,0,0,0,0]
+            ri_metrics_winners=[0]
+            ri_metrics_win_val=[0]
             for riaidx,ruleind_alg in enumerate(l_ruleind_alg):
                 print(ruleind_alg)
                 rimetrics = rule_induction_and_metrics(dataset,ruleind_alg,all_samples_to_delete[clusalg],all_labels[clusalg],all_clusters[clusalg])
                 if ri_metrics_winners[0] == 0:
                     ri_metrics_winners[0] = rimetrics['name']
-                    ri_metrics_win_val[0] = rimetrics['accuracy']
-                    ri_metrics_winners[1] = rimetrics['name']
-                    ri_metrics_win_val[1] = rimetrics['auc']
-                    ri_metrics_winners[2] = rimetrics['name']
-                    ri_metrics_win_val[2] = rimetrics['f1score']
-                    ri_metrics_winners[3] = rimetrics['name']
-                    ri_metrics_win_val[3] = rimetrics['hl']
-                    ri_metrics_winners[4] = rimetrics['name']
-                    ri_metrics_win_val[4] = rimetrics['precision']
-                    ri_metrics_winners[5] = rimetrics['name']
-                    ri_metrics_win_val[5] = rimetrics['recall']
+                    ri_metrics_win_val[0] = rimetrics['auc']
+                    #ri_metrics_winners[1] = rimetrics['name']
+                    #ri_metrics_win_val[1] = rimetrics['accuracy']
+                    #ri_metrics_winners[2] = rimetrics['name']
+                    #ri_metrics_win_val[2] = rimetrics['f1score']
+                    #ri_metrics_winners[3] = rimetrics['name']
+                    #ri_metrics_win_val[3] = rimetrics['hl']
+                    #ri_metrics_winners[4] = rimetrics['name']
+                    #ri_metrics_win_val[4] = rimetrics['precision']
+                    #ri_metrics_winners[5] = rimetrics['name']
+                    #ri_metrics_win_val[5] = rimetrics['recall']
                 else:
-                    if rimetrics['accuracy'] > ri_metrics_win_val[0]:
+                    if rimetrics['auc'] > ri_metrics_win_val[0]:
                         ri_metrics_winners[0] = rimetrics['name']
-                        ri_metrics_win_val[0] = rimetrics['accuracy']
+                        ri_metrics_win_val[0] = rimetrics['auc']
                     
-                    if rimetrics['auc'] > ri_metrics_win_val[1]:
-                        ri_metrics_winners[1] = rimetrics['name']
-                        ri_metrics_win_val[1] = rimetrics['auc']
+                    #if rimetrics['accuracy'] > ri_metrics_win_val[0]:
+                    #    ri_metrics_winners[1] = rimetrics['name']
+                    #    ri_metrics_win_val[1] = rimetrics['accuracy']
                     
-                    if rimetrics['f1score'] > ri_metrics_win_val[2]:
-                        ri_metrics_winners[2] = rimetrics['name']
-                        ri_metrics_win_val[2] = rimetrics['f1score']
+                    #if rimetrics['f1score'] > ri_metrics_win_val[2]:
+                    #    ri_metrics_winners[2] = rimetrics['name']
+                    #    ri_metrics_win_val[2] = rimetrics['f1score']
                     
-                    if rimetrics['hl'] < ri_metrics_win_val[3]:
-                        ri_metrics_winners[3] = rimetrics['name']
-                        ri_metrics_win_val[3] = rimetrics['hl']
+                    #if rimetrics['hl'] < ri_metrics_win_val[3]:
+                    #    ri_metrics_winners[3] = rimetrics['name']
+                    #    ri_metrics_win_val[3] = rimetrics['hl']
                     
-                    if rimetrics['precision'] > ri_metrics_win_val[4]:
-                        ri_metrics_winners[4] = rimetrics['name']
-                        ri_metrics_win_val[4] = rimetrics['precision']
+                    #if rimetrics['precision'] > ri_metrics_win_val[4]:
+                    #    ri_metrics_winners[4] = rimetrics['name']
+                    #    ri_metrics_win_val[4] = rimetrics['precision']
 
-                    if rimetrics['recall'] > ri_metrics_win_val[4]:
-                        ri_metrics_winners[5] = rimetrics['name']
-                        ri_metrics_win_val[5] = rimetrics['recall']
+                    #if rimetrics['recall'] > ri_metrics_win_val[4]:
+                    #    ri_metrics_winners[5] = rimetrics['name']
+                    #    ri_metrics_win_val[5] = rimetrics['recall']
                 print(ri_metrics_winners)
             ocurrences = Counter(ri_metrics_winners)
             print(ocurrences)

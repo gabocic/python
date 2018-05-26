@@ -84,29 +84,29 @@ def dunn_index(clusters):
         max_intra_cluster_dist = 0.0000001
     return min_inter_cluster_dist/max_intra_cluster_dist
 
-def rule_induction_process_metric(ori_labels,predicted_labels,predicted_proba):
+def rule_induction_process_metric(ori_labels,predicted_labels):
     ruleindmetrics_dict = {}
 
-    accuracy = metrics.accuracy_score(y_true=ori_labels,y_pred=predicted_labels)
-    ruleindmetrics_dict['accuracy'] = round(accuracy,metric_decimals)
+    #accuracy = metrics.accuracy_score(y_true=ori_labels,y_pred=predicted_labels)
+    #ruleindmetrics_dict['accuracy'] = round(accuracy,metric_decimals)
     
     auc = metrics.auc(ori_labels,predicted_labels,True)
     ruleindmetrics_dict['auc'] = round(auc,metric_decimals)
     
-    f1score = metrics.f1_score(y_true=ori_labels,y_pred=predicted_labels,average='weighted')
-    ruleindmetrics_dict['f1score'] = round(f1score,metric_decimals)
+    #f1score = metrics.f1_score(y_true=ori_labels,y_pred=predicted_labels,average='weighted')
+    #ruleindmetrics_dict['f1score'] = round(f1score,metric_decimals)
     
-    hl = metrics.hamming_loss(ori_labels,predicted_labels)
-    ruleindmetrics_dict['hl'] = round(hl,metric_decimals)
+    #hl = metrics.hamming_loss(ori_labels,predicted_labels)
+    #ruleindmetrics_dict['hl'] = round(hl,metric_decimals)
     
     #jaccard = metrics.jaccard_similarity_score(y_true=ori_labels,y_pred=predicted_labels)
     #ruleindmetrics_dict['jaccard'] = round(jaccard,metric_decimals)
     
-    precision = metrics.precision_score(y_true=ori_labels,y_pred=predicted_labels,average='weighted')
-    ruleindmetrics_dict['precision'] = round(precision,metric_decimals)
+    #precision = metrics.precision_score(y_true=ori_labels,y_pred=predicted_labels,average='weighted')
+    #ruleindmetrics_dict['precision'] = round(precision,metric_decimals)
     
-    recall = metrics.recall_score(y_true=ori_labels,y_pred=predicted_labels,average='weighted')
-    ruleindmetrics_dict['recall'] = round(recall,metric_decimals)
+    #recall = metrics.recall_score(y_true=ori_labels,y_pred=predicted_labels,average='weighted')
+    #ruleindmetrics_dict['recall'] = round(recall,metric_decimals)
     
     #mse = metrics.mean_squared_error(y_true=ori_labels,y_pred=predicted_labels)
     #ruleindmetrics_dict['mse'] = round(mse,metric_decimals)
