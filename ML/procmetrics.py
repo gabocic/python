@@ -89,8 +89,10 @@ def rule_induction_process_metric(ori_labels,predicted_labels):
 
     #accuracy = metrics.accuracy_score(y_true=ori_labels,y_pred=predicted_labels)
     #ruleindmetrics_dict['accuracy'] = round(accuracy,metric_decimals)
-    
-    auc = metrics.auc(ori_labels,predicted_labels,True)
+   
+    ori_labels=np.sort(ori_labels)
+    #predicted_labels = np.sort(predicted_labels)
+    auc = metrics.auc(ori_labels,predicted_labels,False)
     ruleindmetrics_dict['auc'] = round(auc,metric_decimals)
     
     #f1score = metrics.f1_score(y_true=ori_labels,y_pred=predicted_labels,average='weighted')

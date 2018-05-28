@@ -413,7 +413,7 @@ if __name__ == '__main__':
         # Induct rules for the winner clustering
         l_ruleind_alg = [
                 'cn2',
-                #'cart'
+                'cart'
                 ]
         
         for clusalg in winners:

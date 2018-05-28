@@ -4,8 +4,12 @@ from sklearn import tree
 from sklearn.tree import _tree
 import numpy as np
 from time import time
-from sklearn.model_selection import cross_val_score
+#from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
+from sklearn import metrics
+
+import Orange
 
 def CART_classifier(data,labels):
 
@@ -47,20 +51,40 @@ def CART_classifier(data,labels):
 
     ## Main ##
 
+    ## Split the dataset into a training and and a testing set
+    X_train, X_test, y_train, y_test = train_test_split(data,labels,test_size=0.2,random_state=0)
     
     ###  Cross-validation
     ###  Test what value of min_samples_leaf produces better results as per AUC
-
-    ## Split the dataset into a training and and a testing set
-    X_train, X_test, y_train, y_test = train_test_split(data,labels,test_size=0.2,random_state=0)
-
+    splits=5
     l_scores=[]
     # min_samples_leaf range: 5% to 14%
     for msl in range(5,15):
         clf = tree.DecisionTreeClassifier(min_samples_leaf=msl/100)
-        scores = cross_val_score(clf, X_train, y_train, cv=5,scoring='fowlkes_mallows_score')
-        print('msl:',msl,'AUC mean:',scores.mean())
-        l_scores.append(scores.mean())
+        print('msl',msl)
+        kf = KFold(n_splits=splits)
+        sumauc=0
+        for kf_train_index, kf_test_index in kf.split(X_train):
+            kf_X_train, kf_X_test = X_train[kf_train_index], X_train[kf_test_index]
+            kf_y_train, kf_y_test = y_train[kf_train_index], y_train[kf_test_index]
+
+            # Fit training set
+            clf = clf.fit(kf_X_train, kf_y_train)
+
+            # Obtain predicted labels array
+            predicted_labels = clf.predict(kf_X_test)
+
+            # Sort y_test as it is pre-requisite
+            s_kf_y_test = np.sort(kf_y_test)
+            auc = metrics.auc(s_kf_y_test,predicted_labels,False)
+            print('auc',auc)
+            sumauc+=auc
+        avg_auc=sumauc/splits
+        print('avg_auc',avg_auc)
+
+        #scores = cross_val_score(clf, X_train, y_train, cv=5,scoring='v_measure_score')
+        #print('msl:',msl,'AUC mean:',scores.mean())
+        l_scores.append(avg_auc)
 
     winneridx = np.argmax(l_scores)
     winnerpct = winneridx +5 

@@ -4,7 +4,8 @@ import Orange
 import numpy as np
 from time import time
 from sklearn.model_selection import train_test_split
-
+from sklearn.model_selection import KFold
+from sklearn import metrics
 
 def CN2_classifier(data,labels):
 
@@ -25,13 +26,6 @@ def CN2_classifier(data,labels):
     # Create domain based on the above attributes
     mydomain = Orange.data.Domain(attributes=l_attr,class_vars=classv)
 
-    ## Split the dataset into a training and and a testing set
-    X_train, X_test, y_train, y_test = train_test_split(data,labels,test_size=0.2,random_state=0)
-
-    ## Loading data and tags in ndarray format into a an Orange.Table
-    table_train = Orange.data.Table.from_numpy(mydomain,X_train,Y=y_train)
-    table_test = Orange.data.Table.from_numpy(mydomain,X_test,Y=y_test)
-
     # construct the learning algorithm and use it to induce a classifier
     learner = Orange.classification.CN2Learner()
 
@@ -41,18 +35,50 @@ def CN2_classifier(data,labels):
     # continuous value space is constrained to reduce computation time
     learner.rule_finder.search_strategy.constrain_continuous = True
 
+    ## Split the dataset into a training and and a testing set
+    X_train, X_test, y_train, y_test = train_test_split(data,labels,test_size=0.2,random_state=0)
 
     ###  Cross-validation
     ###  Test what value of min_samples_leaf produces better results as per AUC
     l_scores=[]
+    splits=5
     # min_samples_leaf range: 5% to 14%
     for msl in range(5,15):
         learner.rule_finder.general_validator.min_covered_examples = msl/100
-        cv = Orange.evaluation.CrossValidation(table_train, [learner], k=5)
-        auc = Orange.evaluation.AUC(cv)
+        print('msl',msl)
+        kf = KFold(n_splits=splits)
+        sumauc=0
+        for kf_train_index, kf_test_index in kf.split(X_train):
+            kf_X_train, kf_X_test = X_train[kf_train_index], X_train[kf_test_index]
+            kf_y_train, kf_y_test = y_train[kf_train_index], y_train[kf_test_index]
+
+            ## Loading data and tags in ndarray format into a an Orange.Table
+            table_train = Orange.data.Table.from_numpy(mydomain,kf_X_train,Y=kf_y_train)
+            #table_test = Orange.data.Table.from_numpy(mydomain,kf_X_test,Y=kf_y_test)
+
+            # Fit training set
+            classifier = learner(table_train)
+
+            # Obtain predicted labels array
+            predicted_labels_prob = classifier.predict(kf_X_test)
+            predicted_labels = np.argmax(predicted_labels_prob,1)
+
+            # Sort y_test as it is pre-requisite
+            s_kf_y_test = np.sort(kf_y_test)
+            auc = metrics.auc(s_kf_y_test,predicted_labels,False)
+            print('auc',auc)
+            sumauc+=auc
+        avg_auc=sumauc/splits
+        print('avg_auc',avg_auc)
+        l_scores.append(avg_auc)
+
+
+        #table_train = Orange.data.Table.from_numpy(mydomain,X_train,Y=y_train)
+        #cv = Orange.evaluation.CrossValidation(table_train, [learner], k=5, n_jobs=4)
+        #auc = Orange.evaluation.AUC(cv)
         
-        print('msl:',msl,'AUC mean:',auc[0])
-        l_scores.append(auc[0])
+        #print('msl:',msl,'AUC mean:',auc[0])
+        #l_scores.append(auc[0])
 
     winneridx = np.argmax(l_scores)
     winnerpct = winneridx +5
@@ -64,13 +90,13 @@ def CN2_classifier(data,labels):
     # Initial time mark
     t0 = time()
 
-    classifier = learner(table_test)
+    classifier = learner(table_train)
 
     # Calculate process time
     elap_time = (time() - t0)
 
     # Obtain predicted labels array
-    predicted_labels_prob = classifier.predict()
+    predicted_labels_prob = classifier.predict(X_test)
     predicted_labels = np.argmax(predicted_labels_prob,1)
 
     # Generate rules dictionary
