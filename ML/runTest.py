@@ -422,8 +422,8 @@ if __name__ == '__main__':
             ri_metrics_winners=[0]
             ri_metrics_win_val=[0]
             for riaidx,ruleind_alg in enumerate(l_ruleind_alg):
-                print(ruleind_alg)
                 rimetrics = rule_induction_and_metrics(dataset,ruleind_alg,all_samples_to_delete[clusalg],all_labels[clusalg],all_clusters[clusalg])
+                print('ruleind_alg:',ruleind_alg,'auc:',rimetrics['auc'])
                 if ri_metrics_winners[0] == 0:
                     ri_metrics_winners[0] = rimetrics['name']
                     ri_metrics_win_val[0] = rimetrics['auc']
@@ -437,11 +437,23 @@ if __name__ == '__main__':
                     #ri_metrics_win_val[4] = rimetrics['precision']
                     #ri_metrics_winners[5] = rimetrics['name']
                     #ri_metrics_win_val[5] = rimetrics['recall']
+                    all_metrics[rimetrics['name']] = rimetrics
                 else:
-                    if rimetrics['auc'] > ri_metrics_win_val[0]:
-                        ri_metrics_winners[0] = rimetrics['name']
-                        ri_metrics_win_val[0] = rimetrics['auc']
-                    
+
+                    # The auc value should be at least 5% higher or 5% lowe than the existing winner or % lo
+                    if rimetrics['auc'] > ri_metrics_win_val[0]*(1+.05):
+                        winner = rimetrics['name']
+                    elif rimetrics['auc'] < ri_metrics_win_val[0]*(1-.05):
+                        winner = ri_metrics_winners[0] 
+                    else:
+                        print('We have a tie')
+                        if rimetrics['time'] > all_metrics[ri_metrics_winners[0]]['time']:
+                            winner = rimetrics['name']
+                        else:
+                            winner = ri_metrics_winners[0]
+                    print('winner',winner)
+
+
                     #if rimetrics['accuracy'] > ri_metrics_win_val[0]:
                     #    ri_metrics_winners[1] = rimetrics['name']
                     #    ri_metrics_win_val[1] = rimetrics['accuracy']
@@ -461,15 +473,16 @@ if __name__ == '__main__':
                     #if rimetrics['recall'] > ri_metrics_win_val[4]:
                     #    ri_metrics_winners[5] = rimetrics['name']
                     #    ri_metrics_win_val[5] = rimetrics['recall']
-                print(ri_metrics_winners)
-            ocurrences = Counter(ri_metrics_winners)
-            print(ocurrences)
-            winners_cnt = max(ocurrences.values())
-            winners_idx = [i for i, j in enumerate(ocurrences.values()) if j == winners_cnt]
+            #    print(ri_metrics_val)
+            #    print(ri_metrics_winners)
+            #ocurrences = Counter(ri_metrics_winners)
+            #print(ocurrences)
+            #winners_cnt = max(ocurrences.values())
+            #winners_idx = [i for i, j in enumerate(ocurrences.values()) if j == winners_cnt]
 
-            ocurrkeys = list(ocurrences.keys())
-            winners = [algo for algo in ocurrkeys if ocurrkeys.index(algo) in winners_idx]
-            if len(winners_idx) == 1:
-                print('The winner is ',winners[0])
-            else:
-                print('We have a tie')
+            #ocurrkeys = list(ocurrences.keys())
+            #winners = [algo for algo in ocurrkeys if ocurrkeys.index(algo) in winners_idx]
+            #if len(winners_idx) == 1:
+            #    print('The winner is ',winners[0])
+            #else:
+            #    print('We have a tie')

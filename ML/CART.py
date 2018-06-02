@@ -58,8 +58,8 @@ def CART_classifier(data,labels):
     ###  Test what value of min_samples_leaf produces better results as per AUC
     splits=5
     l_scores=[]
-    # min_samples_leaf range: 5% to 14%
-    for msl in range(5,15):
+    # min_samples_leaf range: 5% to 11%
+    for msl in range(5,11):
         clf = tree.DecisionTreeClassifier(min_samples_leaf=msl/100)
         print('msl',msl)
         kf = KFold(n_splits=splits)

@@ -6,6 +6,7 @@ from time import time
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 from sklearn import metrics
+from threading import Thread
 
 def CN2_classifier(data,labels):
 
@@ -27,48 +28,87 @@ def CN2_classifier(data,labels):
     mydomain = Orange.data.Domain(attributes=l_attr,class_vars=classv)
 
     # construct the learning algorithm and use it to induce a classifier
-    learner = Orange.classification.CN2Learner()
+    #learner = Orange.classification.CN2Learner()
 
     # consider up to 10 solution streams at one time
-    learner.rule_finder.search_algorithm.beam_width = 10
+    #learner.rule_finder.search_algorithm.beam_width = 10
 
     # continuous value space is constrained to reduce computation time
-    learner.rule_finder.search_strategy.constrain_continuous = True
+    #learner.rule_finder.search_strategy.constrain_continuous = True
 
     ## Split the dataset into a training and and a testing set
     X_train, X_test, y_train, y_test = train_test_split(data,labels,test_size=0.2,random_state=0)
+
+
+    def threadFitData(kf_train_index,kf_test_index,results,index,msl):
+        learner = Orange.classification.CN2Learner()
+        learner.rule_finder.search_algorithm.beam_width = 10
+        learner.rule_finder.search_strategy.constrain_continuous = True
+        #learner.rule_finder.general_validator.min_covered_examples = msl/100
+        learner.rule_finder.general_validator.min_covered_examples = 0.15*data.shape[0]
+
+        kf_X_train, kf_X_test = X_train[kf_train_index], X_train[kf_test_index]
+        kf_y_train, kf_y_test = y_train[kf_train_index], y_train[kf_test_index]
+
+        ## Loading data and tags in ndarray format into a an Orange.Table
+        table_train = Orange.data.Table.from_numpy(mydomain,kf_X_train,Y=kf_y_train)
+        #table_test = Orange.data.Table.from_numpy(mydomain,kf_X_test,Y=kf_y_test)
+
+        # Fit training set
+        classifier = learner(table_train)
+
+        # Obtain predicted labels array
+        predicted_labels_prob = classifier.predict(kf_X_test)
+        predicted_labels = np.argmax(predicted_labels_prob,1)
+
+        # Sort y_test as it is pre-requisite
+        s_kf_y_test = np.sort(kf_y_test)
+        auc = metrics.auc(s_kf_y_test,predicted_labels,False)
+        results[index] = auc
+
 
     ###  Cross-validation
     ###  Test what value of min_samples_leaf produces better results as per AUC
     l_scores=[]
     splits=5
-    # min_samples_leaf range: 5% to 14%
-    for msl in range(5,15):
-        learner.rule_finder.general_validator.min_covered_examples = msl/100
+    # min_samples_leaf range: 5% to 10%
+    for msl in range(5,11):
+        #learner.rule_finder.general_validator.min_covered_examples = msl/100
         print('msl',msl)
         kf = KFold(n_splits=splits)
-        sumauc=0
+        #sumauc=0
+        index = 0
+        threads = [None] * 5
+        results = [None] * 5
         for kf_train_index, kf_test_index in kf.split(X_train):
-            kf_X_train, kf_X_test = X_train[kf_train_index], X_train[kf_test_index]
-            kf_y_train, kf_y_test = y_train[kf_train_index], y_train[kf_test_index]
+            threads[index] = Thread(target=threadFitData,args=(kf_train_index,kf_test_index,results,index,msl))
+            threads[index].start()
+            index+=1
+            #kf_X_train, kf_X_test = X_train[kf_train_index], X_train[kf_test_index]
+            #kf_y_train, kf_y_test = y_train[kf_train_index], y_train[kf_test_index]
 
-            ## Loading data and tags in ndarray format into a an Orange.Table
-            table_train = Orange.data.Table.from_numpy(mydomain,kf_X_train,Y=kf_y_train)
-            #table_test = Orange.data.Table.from_numpy(mydomain,kf_X_test,Y=kf_y_test)
+            ### Loading data and tags in ndarray format into a an Orange.Table
+            #table_train = Orange.data.Table.from_numpy(mydomain,kf_X_train,Y=kf_y_train)
+            ##table_test = Orange.data.Table.from_numpy(mydomain,kf_X_test,Y=kf_y_test)
 
-            # Fit training set
-            classifier = learner(table_train)
+            ## Fit training set
+            #classifier = learner(table_train)
 
-            # Obtain predicted labels array
-            predicted_labels_prob = classifier.predict(kf_X_test)
-            predicted_labels = np.argmax(predicted_labels_prob,1)
+            ## Obtain predicted labels array
+            #predicted_labels_prob = classifier.predict(kf_X_test)
+            #predicted_labels = np.argmax(predicted_labels_prob,1)
 
             # Sort y_test as it is pre-requisite
-            s_kf_y_test = np.sort(kf_y_test)
-            auc = metrics.auc(s_kf_y_test,predicted_labels,False)
-            print('auc',auc)
-            sumauc+=auc
-        avg_auc=sumauc/splits
+            #s_kf_y_test = np.sort(kf_y_test)
+            #auc = metrics.auc(s_kf_y_test,predicted_labels,False)
+            #print('auc',auc)
+            #sumauc+=auc
+        for i in range(len(threads)):
+            print('thread ',i)
+            threads[i].join()
+
+        print('auc:',results)
+        avg_auc=sum(results)/splits
         print('avg_auc',avg_auc)
         l_scores.append(avg_auc)
 
@@ -83,9 +123,13 @@ def CN2_classifier(data,labels):
     winneridx = np.argmax(l_scores)
     winnerpct = winneridx +5
     print('winner %',winnerpct)
-
+    
     # Instantiate a classifier with the winning min_samples_leaf
+    learner = Orange.classification.CN2Learner()
+    learner.rule_finder.search_algorithm.beam_width = 10
+    learner.rule_finder.search_strategy.constrain_continuous = True
     learner.rule_finder.general_validator.min_covered_examples = winnerpct/100
+    table_train = Orange.data.Table.from_numpy(mydomain,X_train,Y=y_train)
 
     # Initial time mark
     t0 = time()
