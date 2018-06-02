@@ -18,10 +18,9 @@ from parameters import *
 from sklearn.metrics import calinski_harabaz_score,silhouette_score
 from procmetrics import dunn_index,wb_index
 from collections import Counter
-
 from davies_bouldin import davies_bouldin_score
-
 from sklearn.preprocessing import StandardScaler
+import mysql
 
 class bcolors:
     BANNER = '\033[94m'
@@ -45,7 +44,7 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
     # Generate dataset
     dscount=0
     while dscount < dataset_gen_retry:
-        dataset = create_dataset(n_samples=p_n_samples, n_features=p_n_features,
+        dataset,unifo_feat,standa_feat = create_dataset(n_samples=p_n_samples, n_features=p_n_features,
                             perc_lin=p_perc_lin, perc_repeated=p_perc_repeated, n_groups=p_n_groups,perc_outliers=p_perc_outliers,
                             debug=0,plot=0,save_to_file=0)
         
@@ -108,7 +107,7 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
         print('Unable to generate a valid dataset after '+dataset_gen_retry.__str__()+' attempts')
         dataset=np.zeros([0])
 
-    return dataset
+    return dataset,unifo_feat,standa_feat,analysis_results
 
 def clustering_and_metrics(dataset,clustering_alg):
 
@@ -227,6 +226,13 @@ def rule_induction_and_metrics(dataset,rulesind_alg,samples_to_delete,cleanlabel
 
 if __name__ == '__main__':
 
+    # Create DB connection
+    db = mysql.createDbConn()
+    print(mysql.getVersion(db)) 
+
+    # Insert run row
+    runid = mysql.insertRun(db)
+
     paramlist = []
 #    paramlist.append([8,1000,0,0,0,0])
 #    paramlist.append([8,1000,10,0,0,0])
@@ -265,15 +271,16 @@ if __name__ == '__main__':
         print('================================================================================================================')
         print('')
         print('')
-        dataset = dataset_generation_and_validation(*params)
+        dataset,unifo_feat,standa_feat,analysis_results = dataset_generation_and_validation(*params)
         if dataset.shape[0] == 0:
             sys.exit()
 
         else:
-            pass
-#            process_and_analyze(dataset,'dbscan','cn2')
-#            sys.exit()
+            # Insert dataset row
+            datasetid = mysql.insertDataset(db,runid,*params,unifo_feat,standa_feat)
+            datasetvalidationid = mysql.insertDatasetValidation(db,runid,analysis_results['features'],analysis_results[],analysis_results[],analysis_results[],analysis_results[],)
 
+            # Clustering algorithm list
             l_clustering_alg = [
                     'kmeans_++',
 #                    'kmeans_random',
@@ -486,3 +493,4 @@ if __name__ == '__main__':
             #    print('The winner is ',winners[0])
             #else:
             #    print('We have a tie')
+    db.close()

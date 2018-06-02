@@ -279,4 +279,4 @@ def create_dataset(n_samples=20, n_features=3,
     if save_to_file == 1:
         datasets.dump_svmlight_file(Xf,np.zeros(n_samples),'dataset.svl')
 
-    return Xf
+    return Xf,unifor_feat,standa_feat
