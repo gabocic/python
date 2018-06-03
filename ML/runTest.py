@@ -233,32 +233,32 @@ if __name__ == '__main__':
     runid = mysql.insertRun(db)
 
     paramlist = []
-#    paramlist.append([8,1000,0,0,0,0])
-#    paramlist.append([8,1000,10,0,0,0])
-#    paramlist.append([16,1000,10,0,0,0])
-#    paramlist.append([24,1000,10,0,0,0])
-#    paramlist.append([8,1000,40,0,0,0])
-#    paramlist.append([8,1000,80,0,0,0])
-#    paramlist.append([8,1000,0,10,2,0])
-#    paramlist.append([8,1000,0,40,2,0])
-#    paramlist.append([8,1000,0,80,2,0])
-#    paramlist.append([8,1000,0,40,3,0])
-#    paramlist.append([8,1000,0,80,3,0])
-#    paramlist.append([8,1000,0,40,4,0])
-#    paramlist.append([8,1000,0,80,4,0])
-#    paramlist.append([8,1000,0,0,0,6])
-#    paramlist.append([8,1000,0,0,0,12])
-#    paramlist.append([8,1000,0,0,0,18])
-#    paramlist.append([8,1000,10,10,2,6])
-#    paramlist.append([8,1000,10,10,2,12])
-#    paramlist.append([8,1000,10,10,2,18])
-#    paramlist.append([8,1000,10,40,2,6])
+    paramlist.append([8,1000,0,0,0,0])
+    paramlist.append([8,1000,10,0,0,0])
+    paramlist.append([16,1000,10,0,0,0])
+    paramlist.append([24,1000,10,0,0,0])
+    paramlist.append([8,1000,40,0,0,0])
+    paramlist.append([8,1000,80,0,0,0])
+    paramlist.append([8,1000,0,10,2,0])
+    paramlist.append([8,1000,0,40,2,0])
+    paramlist.append([8,1000,0,80,2,0])
+    paramlist.append([8,1000,0,40,3,0])
+    paramlist.append([8,1000,0,80,3,0])
+    paramlist.append([8,1000,0,40,4,0])
+    paramlist.append([8,1000,0,80,4,0])
+    paramlist.append([8,1000,0,0,0,6])
+    paramlist.append([8,1000,0,0,0,12])
+    paramlist.append([8,1000,0,0,0,18])
+    paramlist.append([8,1000,10,10,2,6])
+    paramlist.append([8,1000,10,10,2,12])
+    paramlist.append([8,1000,10,10,2,18])
+    paramlist.append([8,1000,10,40,2,6])
     paramlist.append([8,1000,10,40,2,12])
-#    paramlist.append([8,1000,10,40,2,18])
-#    paramlist.append([8,1000,40,10,2,6])
-#    paramlist.append([8,1000,40,10,2,12])
-#    paramlist.append([8,1000,40,10,2,18])
-#    paramlist.append([8,1000,40,40,2,6])
+    paramlist.append([8,1000,10,40,2,18])
+    paramlist.append([8,1000,40,10,2,6])
+    paramlist.append([8,1000,40,10,2,12])
+    paramlist.append([8,1000,40,10,2,18])
+    paramlist.append([8,1000,40,40,2,6])
 
     for params in paramlist:
         print('')
@@ -289,11 +289,11 @@ if __name__ == '__main__':
             # Clustering algorithm list
             l_clustering_alg = [
                     'kmeans_++',
-#                    'kmeans_random',
-#                    'kmeans_pca',
-#                    'dbscan',
-#                    'birch',
-#                    'meanshift',
+                    'kmeans_random',
+                    'kmeans_pca',
+                    'dbscan',
+                    'birch',
+                    'meanshift',
                     ]
             all_metrics = {}
             all_samples_to_delete = {}
@@ -310,7 +310,7 @@ if __name__ == '__main__':
                 clus_metrics,samples_to_delete,cleanlabels,clusters = clustering_and_metrics(dataset,clustering_alg)
 
                 # Saving Clustering metrics into the database
-                clusmetricsid = mysql.insertClusMetrics(db,runid,clus_metrics['name'],
+                clusmetricsid = mysql.insertClusMetrics(db,datasetid,clus_metrics['name'],
                                                         clus_metrics['cluster_cnt'],
                                                         clus_metrics['sin_ele_clus'],
                                                         clus_metrics['ignored_samples'],
@@ -459,7 +459,6 @@ if __name__ == '__main__':
                 # Save rule induction metrics in mysql
                 mysql.insertRIMetrics(db,datasetid,clusmetricsid,rimetrics['name'],rimetrics['n_rules'],rimetrics['time'],rimetrics['auc'])
 
-                sys.exit()           
                 print('ruleind_alg:',ruleind_alg,'auc:',rimetrics['auc'])
                 if ri_metrics_winners[0] == 0:
                     ri_metrics_winners[0] = rimetrics['name']
@@ -489,6 +488,9 @@ if __name__ == '__main__':
                         else:
                             winner = ri_metrics_winners[0]
                     print('winner',winner)
+
+                    # Updating mysql with the RI algorithm
+                    mysql.updateDatasetRIAlg(db,datasetid,winner)
 
 
                     #if rimetrics['accuracy'] > ri_metrics_win_val[0]:
@@ -523,4 +525,7 @@ if __name__ == '__main__':
             #    print('The winner is ',winners[0])
             #else:
             #    print('We have a tie')
+
+    # Update run table with end date
+    mysql.updateRun(db,runid)
     db.close()

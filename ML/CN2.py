@@ -44,8 +44,8 @@ def CN2_classifier(data,labels):
         learner = Orange.classification.CN2Learner()
         learner.rule_finder.search_algorithm.beam_width = 10
         learner.rule_finder.search_strategy.constrain_continuous = True
-        #learner.rule_finder.general_validator.min_covered_examples = msl/100
-        learner.rule_finder.general_validator.min_covered_examples = 0.15*data.shape[0]
+        learner.rule_finder.general_validator.min_covered_examples = msl/100
+        #learner.rule_finder.general_validator.min_covered_examples = 0.15*data.shape[0]
 
         kf_X_train, kf_X_test = X_train[kf_train_index], X_train[kf_test_index]
         kf_y_train, kf_y_test = y_train[kf_train_index], y_train[kf_test_index]

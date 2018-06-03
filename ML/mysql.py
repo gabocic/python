@@ -67,8 +67,13 @@ def insertRIMetrics(db,datasetid,clustering_metric_id,algorithm,total_rules,elap
     rimetricsid = executeTrx(db,op,(datasetid,clustering_metric_id,algorithm,total_rules,elap_time,auc))
     return rimetricsid
 
-def updateDatasetClusAlg(db,datasetid,winner):
-    op = "update dataset set winner_clus_alg=%s where id=%s"
+def updateDatasetRIAlg(db,datasetid,winner):
+    op = "update dataset set winner_ri_alg=%s where id=%s"
     datasetid = executeTrx(db,op,(winner,datasetid))
     return datasetid
+
+def updateRun(db,runid):
+    op = "update run set end_time=%s where id=%s"
+    datasetid = executeTrx(db,op,(datetime.datetime.now(),runid))
+    return runid
 
