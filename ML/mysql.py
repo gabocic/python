@@ -1,5 +1,6 @@
 import pymysql
 import datetime
+import sys
 
 def createDbConn():
     # Open database connection
@@ -15,7 +16,9 @@ def executeTrx(db,op,valuetuple):
         db.commit()
     except:
         print(op,' failed')
+        print("Unexpected error:", sys.exc_info()[0])
         db.rollback()
+        raise
     else:
         lii = cursor.lastrowid
     return lii
@@ -43,7 +46,29 @@ def insertDataset(db,runid,features,total_samples,linear_samples_perc,repeated_s
     datasetid = executeTrx(db,op,(runid,features,total_samples,linear_samples_perc,repeated_samples_perc,group_number,outliers_perc,uniform_features,standard_features))
     return datasetid
 
-def insertDatasetValidation(db,runid,features,total_samples,linear_samples_perc,repeated_samples_perc,group_number,outliers_perc,outliersbyperp_perc):
-    op = "insert into dataset(run_id,features,total_samples,linear_samples_perc,repeated_samples_perc,group_number,outliers_perc,uniform_features,standard_features) values (%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-    datasetvalidationid = executeTrx(db,op,(runid,features,total_samples,linear_samples_perc,repeated_samples_perc,group_number,outliers_perc,outliersbyperp_perc))
+def insertDatasetValidation(db,runid,datasetid,features,total_samples,linear_samples_perc,repeated_samples_perc,group_number,outliers_perc,outliersbyperp_perc):
+    op = "insert into dataset_validation(run_id,dataset_id,features,total_samples,linear_samples_perc,repeated_samples_perc,group_number,outliers_perc,outliersbyperp_perc) values (%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    datasetvalidationid = executeTrx(db,op,(runid,datasetid,features,total_samples,linear_samples_perc,repeated_samples_perc,group_number,outliers_perc,outliersbyperp_perc))
+    return datasetvalidationid
+
+
+def insertClusMetrics(db,datasetid,algorithm,total_clusters,single_element_clusters,samples_not_considered,elap_time,silhouette_score,calinski_harabaz_score,wb_index,dunn_index,davies_bouldin_score):
+    op = "insert into clustering_metric(dataset_id,algorithm,total_clusters,single_element_clusters,samples_not_considered,elap_time,silhouette_score,calinski_harabaz_score,wb_index,dunn_index,davies_bouldin_score) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    clusmetricsid = executeTrx(db,op,(datasetid,algorithm,total_clusters,single_element_clusters,samples_not_considered,elap_time,silhouette_score,calinski_harabaz_score,wb_index,dunn_index,davies_bouldin_score))
+    return clusmetricsid
+
+def updateDatasetClusAlg(db,datasetid,winner):
+    op = "update dataset set winner_clus_alg=%s where id=%s"
+    datasetid = executeTrx(db,op,(winner,datasetid))
     return datasetid
+
+def insertRIMetrics(db,datasetid,clustering_metric_id,algorithm,total_rules,elap_time,auc):
+    op = "insert into rule_ind_metric(dataset_id,clustering_metric_id,algorithm,total_rules,elap_time,auc) values (%s,%s,%s,%s,%s,%s)"
+    rimetricsid = executeTrx(db,op,(datasetid,clustering_metric_id,algorithm,total_rules,elap_time,auc))
+    return rimetricsid
+
+def updateDatasetClusAlg(db,datasetid,winner):
+    op = "update dataset set winner_clus_alg=%s where id=%s"
+    datasetid = executeTrx(db,op,(winner,datasetid))
+    return datasetid
+

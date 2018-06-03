@@ -93,7 +93,7 @@ def rule_induction_process_metric(ori_labels,predicted_labels):
     ori_labels=np.sort(ori_labels)
     #predicted_labels = np.sort(predicted_labels)
     auc = metrics.auc(ori_labels,predicted_labels,False)
-    ruleindmetrics_dict['auc'] = round(auc,metric_decimals)
+    ruleindmetrics_dict['auc'] = float(round(auc,metric_decimals))
     
     #f1score = metrics.f1_score(y_true=ori_labels,y_pred=predicted_labels,average='weighted')
     #ruleindmetrics_dict['f1score'] = round(f1score,metric_decimals)

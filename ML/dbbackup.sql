@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.7.21, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.7.21-21, for debian-linux-gnu (x86_64)
 --
 -- Host: localhost    Database: thesisdb
 -- ------------------------------------------------------
--- Server version	5.7.21-0ubuntu0.16.04.1
+-- Server version	5.7.21-21
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -14,18 +14,27 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+/*!50717 SELECT COUNT(*) INTO @rocksdb_has_p_s_session_variables FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'performance_schema' AND TABLE_NAME = 'session_variables' */;
+/*!50717 SET @rocksdb_get_is_supported = IF (@rocksdb_has_p_s_session_variables, 'SELECT COUNT(*) INTO @rocksdb_is_supported FROM performance_schema.session_variables WHERE VARIABLE_NAME=\'rocksdb_bulk_load\'', 'SELECT 0') */;
+/*!50717 PREPARE s FROM @rocksdb_get_is_supported */;
+/*!50717 EXECUTE s */;
+/*!50717 DEALLOCATE PREPARE s */;
+/*!50717 SET @rocksdb_enable_bulk_load = IF (@rocksdb_is_supported, 'SET SESSION rocksdb_bulk_load = 1', 'SET @rocksdb_dummy_bulk_load = 0') */;
+/*!50717 PREPARE s FROM @rocksdb_enable_bulk_load */;
+/*!50717 EXECUTE s */;
+/*!50717 DEALLOCATE PREPARE s */;
 
 --
--- Table structure for table `clustering_metrics`
+-- Table structure for table `clustering_metric`
 --
 
-DROP TABLE IF EXISTS `clustering_metrics`;
+DROP TABLE IF EXISTS `clustering_metric`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `clustering_metrics` (
+CREATE TABLE `clustering_metric` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `dataset_id` bigint(20) DEFAULT NULL,
-  `algorithm` char(6) DEFAULT NULL,
+  `algorithm` varchar(15) DEFAULT NULL,
   `total_clusters` int(11) DEFAULT NULL,
   `single_element_clusters` int(11) DEFAULT NULL,
   `samples_not_considered` bigint(20) DEFAULT NULL,
@@ -34,8 +43,9 @@ CREATE TABLE `clustering_metrics` (
   `calinski_harabaz_score` decimal(11,4) DEFAULT NULL,
   `wb_index` decimal(11,4) DEFAULT NULL,
   `dunn_index` decimal(11,4) DEFAULT NULL,
+  `davies_bouldin_score` decimal(11,4) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -50,15 +60,16 @@ CREATE TABLE `dataset` (
   `run_id` bigint(20) DEFAULT NULL,
   `total_samples` bigint(20) DEFAULT NULL,
   `features` int(11) DEFAULT NULL,
-  `random_samples_perc` decimal(4,1) DEFAULT NULL,
   `linear_samples_perc` decimal(4,1) DEFAULT NULL,
   `repeated_samples_perc` decimal(4,1) DEFAULT NULL,
   `group_number` smallint(6) DEFAULT NULL,
   `outliers_perc` decimal(4,1) DEFAULT NULL,
   `uniform_features` int(11) DEFAULT NULL,
   `standard_features` int(11) DEFAULT NULL,
+  `winner_clus_alg` varchar(15) DEFAULT NULL,
+  `winner_ri_alg` varchar(15) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -73,14 +84,14 @@ CREATE TABLE `dataset_validation` (
   `run_id` bigint(20) DEFAULT NULL,
   `total_samples` bigint(20) DEFAULT NULL,
   `features` int(11) DEFAULT NULL,
-  `random_samples_perc` decimal(4,1) DEFAULT NULL,
   `linear_samples_perc` decimal(4,1) DEFAULT NULL,
   `repeated_samples_perc` decimal(4,1) DEFAULT NULL,
   `group_number` smallint(6) DEFAULT NULL,
   `outliers_perc` decimal(4,1) DEFAULT NULL,
   `outliersbyperp_perc` decimal(4,1) DEFAULT NULL,
+  `dataset_id` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -97,8 +108,9 @@ CREATE TABLE `rule_ind_metric` (
   `algorithm` char(6) DEFAULT NULL,
   `total_rules` int(11) DEFAULT NULL,
   `elap_time` decimal(11,4) DEFAULT NULL,
+  `auc` decimal(11,4) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -113,8 +125,12 @@ CREATE TABLE `run` (
   `start_date` datetime DEFAULT NULL,
   `end_time` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+/*!50112 SET @disable_bulk_load = IF (@is_rocksdb_supported, 'SET SESSION rocksdb_bulk_load = @old_rocksdb_bulk_load', 'SET @dummy_rocksdb_bulk_load = 0') */;
+/*!50112 PREPARE s FROM @disable_bulk_load */;
+/*!50112 EXECUTE s */;
+/*!50112 DEALLOCATE PREPARE s */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -125,4 +141,4 @@ CREATE TABLE `run` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-04-28 10:53:24
+-- Dump completed on 2018-06-03 10:45:36

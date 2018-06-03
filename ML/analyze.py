@@ -225,8 +225,8 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
     outdict['features'] = n_features
     outdict['samples'] = data.shape[0]
     outdict['linpointsperc'] = linpointsperc
-    outdict['outliersperc'] = outliersperc
-    outdict['repeatedperc'] = repeatedperc
+    outdict['outliersperc'] = float(outliersperc) # forcing conversion due to database insert error
+    outdict['repeatedperc'] = float(repeatedperc) # forcing conversion due to database insert error
     outdict['repeatedgrps'] = n_groups
     outdict['outliersbyperpenperc'] = outliersbyperpenperc
 

@@ -174,15 +174,15 @@ def clustering_and_metrics(dataset,clustering_alg):
         clus_metrics['davies_bouldin_score'] = None
     else:
         clus_metrics['time'] = round(c_elap_time,metric_decimals)
-        clus_metrics['wb_index'] = round(wb_index(clusters,cleanscaleddata),metric_decimals)
-        clus_metrics['dunn_index'] = round(dunn_index(clusters),metric_decimals)
-        clus_metrics['calinski_harabaz_score'] = round(calinski_harabaz_score(cleanscaleddata, cleanlabels),metric_decimals)
-        clus_metrics['silhouette_score'] = round(silhouette_score(cleanscaleddata, cleanlabels,metric='euclidean',sample_size=None),metric_decimals)
+        clus_metrics['wb_index'] = float(round(wb_index(clusters,cleanscaleddata),metric_decimals))
+        clus_metrics['dunn_index'] = float(round(dunn_index(clusters),metric_decimals))
+        clus_metrics['calinski_harabaz_score'] = float(round(calinski_harabaz_score(cleanscaleddata, cleanlabels),metric_decimals))
+        clus_metrics['silhouette_score'] = float(round(silhouette_score(cleanscaleddata, cleanlabels,metric='euclidean',sample_size=None),metric_decimals)) # forcing data type due to insert error
 
         # Supress expected runtime "divide by zero" warning
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            clus_metrics['davies_bouldin_score'] = round(davies_bouldin_score(cleanscaleddata,cleanlabels),metric_decimals)
+            clus_metrics['davies_bouldin_score'] = float(round(davies_bouldin_score(cleanscaleddata,cleanlabels),metric_decimals))
 
     return clus_metrics,samples_to_delete,cleanlabels,clusters
 
@@ -220,7 +220,6 @@ def rule_induction_and_metrics(dataset,rulesind_alg,samples_to_delete,cleanlabel
 
     # Append algorithm name
     rulind_metrics['name'] = rulesind_alg
-
 
     return rulind_metrics
 
@@ -278,7 +277,14 @@ if __name__ == '__main__':
         else:
             # Insert dataset row
             datasetid = mysql.insertDataset(db,runid,*params,unifo_feat,standa_feat)
-            datasetvalidationid = mysql.insertDatasetValidation(db,runid,analysis_results['features'],analysis_results[],analysis_results[],analysis_results[],analysis_results[],)
+            datasetvalidationid = mysql.insertDatasetValidation(db,runid,datasetid,
+                                                                analysis_results['features'],
+                                                                analysis_results['samples'],
+                                                                analysis_results['linpointsperc'],
+                                                                analysis_results['repeatedperc'],
+                                                                analysis_results['repeatedgrps'],
+                                                                analysis_results['outliersperc'],
+                                                                analysis_results['outliersbyperpenperc'])
 
             # Clustering algorithm list
             l_clustering_alg = [
@@ -302,6 +308,19 @@ if __name__ == '__main__':
                 print('####################################')
                 print('')
                 clus_metrics,samples_to_delete,cleanlabels,clusters = clustering_and_metrics(dataset,clustering_alg)
+
+                # Saving Clustering metrics into the database
+                clusmetricsid = mysql.insertClusMetrics(db,runid,clus_metrics['name'],
+                                                        clus_metrics['cluster_cnt'],
+                                                        clus_metrics['sin_ele_clus'],
+                                                        clus_metrics['ignored_samples'],
+                                                        clus_metrics['time'],
+                                                        clus_metrics['silhouette_score'],
+                                                        clus_metrics['calinski_harabaz_score'],
+                                                        clus_metrics['wb_index'],
+                                                        clus_metrics['dunn_index'],
+                                                        clus_metrics['davies_bouldin_score'])
+
                 print(clus_metrics)
                 print('')
 
@@ -357,6 +376,10 @@ if __name__ == '__main__':
         winners = [algo for algo in ocurrkeys if ocurrkeys.index(algo) in winners_idx]
         if len(winners_idx) == 1:
             print('The winner is ',winners[0])
+
+            # Update dataset row to include the winning algorithm
+            mysql.updateDatasetClusAlg(db,datasetid,winners[0])
+
         else:
             print('We have a tie')
             flag_sel=0 #flag to detect single element clusters
@@ -413,10 +436,12 @@ if __name__ == '__main__':
             winners = [algo for algo in ocurrkeys if ocurrkeys.index(algo) in winners_idx]
             if len(winners_idx) == 1:
                 print('The winner is ',winners[0])
+
+                # Update dataset row to include the winning algorithm
+                mysql.updateDatasetClusAlg(db,datasetid,winners[0])
             else:
                 print('We have a tie')
                 print(winners)
-           
         # Induct rules for the winner clustering
         l_ruleind_alg = [
                 'cn2',
@@ -430,6 +455,11 @@ if __name__ == '__main__':
             ri_metrics_win_val=[0]
             for riaidx,ruleind_alg in enumerate(l_ruleind_alg):
                 rimetrics = rule_induction_and_metrics(dataset,ruleind_alg,all_samples_to_delete[clusalg],all_labels[clusalg],all_clusters[clusalg])
+
+                # Save rule induction metrics in mysql
+                mysql.insertRIMetrics(db,datasetid,clusmetricsid,rimetrics['name'],rimetrics['n_rules'],rimetrics['time'],rimetrics['auc'])
+
+                sys.exit()           
                 print('ruleind_alg:',ruleind_alg,'auc:',rimetrics['auc'])
                 if ri_metrics_winners[0] == 0:
                     ri_metrics_winners[0] = rimetrics['name']
