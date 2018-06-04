@@ -310,6 +310,8 @@ if __name__ == '__main__':
                 clus_metrics,samples_to_delete,cleanlabels,clusters = clustering_and_metrics(dataset,clustering_alg)
 
                 # Saving Clustering metrics into the database
+                print(clus_metrics)
+                print('')
                 clusmetricsid = mysql.insertClusMetrics(db,datasetid,clus_metrics['name'],
                                                         clus_metrics['cluster_cnt'],
                                                         clus_metrics['sin_ele_clus'],
@@ -321,8 +323,6 @@ if __name__ == '__main__':
                                                         clus_metrics['dunn_index'],
                                                         clus_metrics['davies_bouldin_score'])
 
-                print(clus_metrics)
-                print('')
 
                 if clus_metrics['cluster_cnt'] > 1:
                 
@@ -483,7 +483,7 @@ if __name__ == '__main__':
                         winner = ri_metrics_winners[0] 
                     else:
                         print('We have a tie')
-                        if rimetrics['time'] > all_metrics[ri_metrics_winners[0]]['time']:
+                        if rimetrics['time'] < all_metrics[ri_metrics_winners[0]]['time']:
                             winner = rimetrics['name']
                         else:
                             winner = ri_metrics_winners[0]
