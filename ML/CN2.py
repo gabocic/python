@@ -83,9 +83,14 @@ def CN2_classifier(data,labels):
         threads = [None] * 5
         results = [None] * 5
         for kf_train_index, kf_test_index in kf.split(X_train):
-            threads[index] = Thread(target=threadFitData,args=(kf_train_index,kf_test_index,results,index,msl))
-            threads[index].start()
+            #threads[index] = Thread(target=threadFitData,args=(kf_train_index,kf_test_index,results,index,msl))
+            #threads[index].start()
+            threadFitData(kf_train_index,kf_test_index,results,index,msl)
             index+=1
+
+
+
+
             #kf_X_train, kf_X_test = X_train[kf_train_index], X_train[kf_test_index]
             #kf_y_train, kf_y_test = y_train[kf_train_index], y_train[kf_test_index]
 
@@ -105,9 +110,12 @@ def CN2_classifier(data,labels):
             #auc = metrics.auc(s_kf_y_test,predicted_labels,False)
             #print('auc',auc)
             #sumauc+=auc
-        for i in range(len(threads)):
-            print('thread ',i)
-            threads[i].join()
+
+
+
+        #for i in range(len(threads)):
+        #    print('thread ',i)
+        #    threads[i].join()
 
         print('auc:',results)
         avg_auc=sum(results)/splits

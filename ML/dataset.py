@@ -92,6 +92,7 @@ def create_dataset(n_samples=20, n_features=3,
         # Create a random number for mean and stdev
         generator = np.random
         m = generator.random_integers(low=(-1)*value_limit, high=value_limit, size=(usef_samples+out_samples,1))
+        
         Xu[:usef_samples+out_samples, i:i+1] = m
 
     logger("Uniform attributes:",2)
