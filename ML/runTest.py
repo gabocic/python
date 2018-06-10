@@ -258,7 +258,7 @@ if __name__ == '__main__':
     paramlist.append([8,1000,40,10,2,6])
     paramlist.append([8,1000,40,10,2,12])
     paramlist.append([8,1000,40,10,2,18])
-    paramlist.append([8,1000,40,20,2,6])
+#    paramlist.append([8,1000,40,20,2,6])
 
     for params in paramlist:
         print('')
@@ -272,6 +272,8 @@ if __name__ == '__main__':
         print('')
         dataset,unifo_feat,standa_feat,analysis_results = dataset_generation_and_validation(*params)
         if dataset.shape[0] == 0:
+            mysql.updateRun(db,runid)
+            db.close()
             sys.exit()
 
         else:

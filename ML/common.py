@@ -6,7 +6,6 @@ from scipy.special import comb
 
 def split_data_in_clusters(estimator,data):
 
-
     sec_idx=[]
     clusters={}
     l_outliers = []
@@ -15,6 +14,9 @@ def split_data_in_clusters(estimator,data):
     if estimator != None:
 
         unique, counts = np.unique(estimator.labels_, return_counts=True)
+
+        print('unique',unique)
+        print('counts',counts)
 
         ## Check that at least two cluster were found
         if unique[-1] > 0:
@@ -38,9 +40,9 @@ def split_data_in_clusters(estimator,data):
 
             ## Now that I have the Single-element-cluster id I need to search for labels and samples that correspond to that cluster to delete them
             for idx in sec_idx:
-
                 # Search for the positions where the label to be removed is
-                ptd = np.where(estimator.labels_==idx)
+                ptd = np.where(estimator.labels_==unique[idx])
+                print('ptd',ptd)
                 l_outliers.append(ptd[0][0])
 
             ## Delete corresponding data and labels
