@@ -61,7 +61,6 @@ def CART_classifier(data,labels):
     # min_samples_leaf range: 5% to 11%
     for msl in range(5,11):
         clf = tree.DecisionTreeClassifier(min_samples_leaf=msl/100)
-        print('msl',msl)
         kf = KFold(n_splits=splits)
         sumauc=0
         for kf_train_index, kf_test_index in kf.split(X_train):
@@ -77,10 +76,8 @@ def CART_classifier(data,labels):
             # Sort y_test as it is pre-requisite
             s_kf_y_test = np.sort(kf_y_test)
             auc = metrics.auc(s_kf_y_test,predicted_labels,False)
-            print('auc',auc)
             sumauc+=auc
         avg_auc=sumauc/splits
-        print('avg_auc',avg_auc)
 
         #scores = cross_val_score(clf, X_train, y_train, cv=5,scoring='v_measure_score')
         #print('msl:',msl,'AUC mean:',scores.mean())

@@ -9,7 +9,6 @@ def createDbConn():
 
 
 def executeTrx(db,op,valuetuple):
-    print(valuetuple)    
     # Enable or disable writes to the DB
     write=1
 
@@ -64,7 +63,6 @@ def insertClusMetrics(db,datasetid,algorithm,total_clusters,single_element_clust
     # Truncate calinski_harabaz_score value if it exceeds the datatype precision
     if calinski_harabaz_score != None and calinski_harabaz_score > 999999999999999.9999:
         calinski_harabaz_score = '999999999999999.9'
-    print('calinski_harabaz_score',calinski_harabaz_score)
     op = "insert into clustering_metric(dataset_id,algorithm,total_clusters,single_element_clusters,samples_not_considered,elap_time,silhouette_score,calinski_harabaz_score,wb_index,dunn_index,davies_bouldin_score) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     clusmetricsid = executeTrx(db,op,(datasetid,algorithm,total_clusters,single_element_clusters,samples_not_considered,elap_time,silhouette_score,calinski_harabaz_score,wb_index,dunn_index,davies_bouldin_score))
     return clusmetricsid

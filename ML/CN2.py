@@ -48,7 +48,6 @@ def CN2_classifier(data,labels):
         kf_X_train, kf_X_test = X_train[kf_train_index], X_train[kf_test_index]
         kf_y_train, kf_y_test = y_train[kf_train_index], y_train[kf_test_index]
 
-        print('MSL:',(msl/100)*kf_X_train.shape[0])
         learner.rule_finder.general_validator.min_covered_examples = (msl/100)*kf_X_train.shape[0]
         #learner.rule_finder.general_validator.min_covered_examples = 0.15*data.shape[0]
 
@@ -76,7 +75,6 @@ def CN2_classifier(data,labels):
     # min_samples_leaf range: 5% to 10%
     for msl in range(5,11):
         #learner.rule_finder.general_validator.min_covered_examples = msl/100
-        print('msl',msl)
         kf = KFold(n_splits=splits)
         #sumauc=0
         index = 0
@@ -117,9 +115,7 @@ def CN2_classifier(data,labels):
         #    print('thread ',i)
         #    threads[i].join()
 
-        print('auc:',results)
         avg_auc=sum(results)/splits
-        print('avg_auc',avg_auc)
         l_scores.append(avg_auc)
 
 
