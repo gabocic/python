@@ -87,3 +87,13 @@ def updateRun(db,runid):
     datasetid = executeTrx(db,op,(datetime.datetime.now(),runid))
     return runid
 
+def insertDatasetClusFinalistsR1(db,datasetid,winalg,metricsmask,iswinner):
+    op = "insert into dataset_clus_finalists(dataset_id,algorithm,silhouette,calinski_harabaz,dunn,wb,davies_bouldin,winner) values (%s,%s,%s,%s,%s,%s,%s,%s)"
+    dataseclusfinalistid = executeTrx(db,op,(datasetid,winalg,metricsmask['silhouette_score'],metricsmask['calinski_harabaz'],metricsmask['dunn'],metricsmask['wb'],metricsmask['davies_bouldin'],iswinner))
+    return dataseclusfinalistid
+
+def updateDatasetClusFinalistsR2(db,datasetid,winalg,metricsmask,iswinner):
+    op = "update dataset_clus_finalists set time=%s, sin_ele_clus=%s, ignored_samples=%s,winner=%s where dataset_id=%s and algorithm=%s"
+    dataseclusfinalistid = executeTrx(db,op,(metricsmask['time'],metricsmask['sin_ele_clus'],metricsmask['ignored_samples'],iswinner,datasetid,winalg))
+    return dataseclusfinalistid
+

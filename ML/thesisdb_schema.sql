@@ -53,7 +53,7 @@ CREATE TABLE `clustering_metric` (
   `dunn_index` decimal(19,4) DEFAULT NULL,
   `davies_bouldin_score` decimal(19,4) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2542 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1013195 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -76,8 +76,34 @@ CREATE TABLE `dataset` (
   `standard_features` int(11) DEFAULT NULL,
   `winner_clus_alg` varchar(15) DEFAULT NULL,
   `winner_ri_alg` varchar(15) DEFAULT NULL,
+  `type` char(1) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=466 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1002203 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `dataset_clus_finalists`
+--
+
+DROP TABLE IF EXISTS `dataset_clus_finalists`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `dataset_clus_finalists` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `dataset_id` bigint(20) DEFAULT NULL,
+  `algorithm` varchar(15) DEFAULT NULL,
+  `silhouette` tinyint(1) DEFAULT NULL,
+  `calinski_harabaz` tinyint(1) DEFAULT NULL,
+  `dunn` tinyint(1) DEFAULT NULL,
+  `wb` tinyint(1) DEFAULT NULL,
+  `davies_bouldin` tinyint(1) DEFAULT NULL,
+  `time` tinyint(1) DEFAULT NULL,
+  `sin_ele_clus` tinyint(1) DEFAULT NULL,
+  `ignored_samples` tinyint(1) DEFAULT NULL,
+  `winner` varchar(3) DEFAULT 'NO',
+  PRIMARY KEY (`id`),
+  KEY `dsid_algo` (`dataset_id`,`algorithm`)
+) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -99,7 +125,7 @@ CREATE TABLE `dataset_validation` (
   `outliersbyperp_perc` decimal(4,1) DEFAULT NULL,
   `dataset_id` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=466 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1002203 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -142,7 +168,7 @@ CREATE TABLE `rule_ind_metric` (
   `elap_time` decimal(11,4) DEFAULT NULL,
   `auc` decimal(11,4) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=805 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1004418 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -157,7 +183,7 @@ CREATE TABLE `run` (
   `start_date` datetime DEFAULT NULL,
   `end_time` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=78 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1000093 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50112 SET @disable_bulk_load = IF (@is_rocksdb_supported, 'SET SESSION rocksdb_bulk_load = @old_rocksdb_bulk_load', 'SET @dummy_rocksdb_bulk_load = 0') */;
 /*!50112 PREPARE s FROM @disable_bulk_load */;
@@ -173,4 +199,4 @@ CREATE TABLE `run` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-06-10 22:23:07
+-- Dump completed on 2018-06-20 22:32:02

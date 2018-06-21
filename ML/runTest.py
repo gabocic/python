@@ -376,8 +376,37 @@ if __name__ == '__main__':
 
         ocurrkeys = list(ocurrences.keys())
         winners = [algo for algo in ocurrkeys if ocurrkeys.index(algo) in winners_idx]
+
+        # Determine which metrics each winner won
+        for winalg in winners:
+            metricsmask={}
+            metricsmask['silhouette_score']=False
+            metricsmask['calinski_harabaz']=False
+            metricsmask['dunn']=False
+            metricsmask['wb']=False
+            metricsmask['davies_bouldin']=False
+            for metricidx,algoname in enumerate(metrics_winners):
+                if winalg == algoname:
+                    if metricidx == 0:
+                        metricsmask['silhouette_score']=True
+                    elif metricidx == 1:
+                        metricsmask['calinski_harabaz']=True
+                    elif metricidx == 2:
+                         metricsmask['dunn']=True
+                    elif metricidx == 3:
+                         metricsmask['wb']=True
+                    elif metricidx == 4:
+                         metricsmask['davies_bouldin']=True
+            print('Winner algo ',winalg,metricsmask)
+            if len(winners_idx) == 1:
+                iswinner='YES'
+            else:
+                iswinner='NO'
+            mysql.insertDatasetClusFinalistsR1(db,datasetid,winalg,metricsmask,iswinner)
+
         if len(winners_idx) == 1:
             print('The winner is ',winners[0])
+            
 
             # Update dataset row to include the winning algorithm
             mysql.updateDatasetClusAlg(db,datasetid,winners[0])
@@ -436,6 +465,29 @@ if __name__ == '__main__':
 
             ocurrkeys = list(ocurrences.keys())
             winners = [algo for algo in ocurrkeys if ocurrkeys.index(algo) in winners_idx]
+
+            for winalg in winners:
+                metricsmask={}
+                metricsmask['time']=False
+                metricsmask['sin_ele_clus']=False
+                metricsmask['ignored_samples']=False
+                for metricidx,algoname in enumerate(metrics_winners):
+                    if winalg == algoname:
+                        if metricidx == 0:
+                            metricsmask['time']=True
+                        elif metricidx == 1:
+                            metricsmask['sin_ele_clus']=True
+                        elif metricidx == 2:
+                             metricsmask['ignored_samples']=True
+                print('Winner algo ',winalg,metricsmask)
+                if len(winners_idx) == 1:
+                    iswinner='YES'
+                else:
+                    iswinner='NO'
+                mysql.updateDatasetClusFinalistsR2(db,datasetid,winalg,metricsmask,iswinner)
+
+
+
             if len(winners_idx) == 1:
                 print('The winner is ',winners[0])
 
