@@ -260,6 +260,7 @@ if __name__ == '__main__':
     paramlist.append([8,1000,40,10,2,18])
 #    paramlist.append([8,1000,40,20,2,6])
 
+    dstypeidx=65
     for params in paramlist:
         print('')
         print('')
@@ -278,7 +279,7 @@ if __name__ == '__main__':
 
         else:
             # Insert dataset row
-            datasetid = mysql.insertDataset(db,runid,*params,unifo_feat,standa_feat)
+            datasetid = mysql.insertDataset(db,runid,*params,unifo_feat,standa_feat,chr(dstypeidx))
             datasetvalidationid = mysql.insertDatasetValidation(db,runid,datasetid,
                                                                 analysis_results['features'],
                                                                 analysis_results['samples'],
@@ -340,23 +341,23 @@ if __name__ == '__main__':
                         metrics_winners[4] = clus_metrics['name']
                         metrics_win_val[4] = clus_metrics['davies_bouldin_score']
                     else:
-                        if clus_metrics['silhouette_score'] > metrics_win_val[0]:
+                        if clus_metrics['silhouette_score'] > metrics_win_val[0]*(1+0.05):
                             metrics_winners[0] = clus_metrics['name']
                             metrics_win_val[0] = clus_metrics['silhouette_score']
                         
-                        if clus_metrics['calinski_harabaz_score'] > metrics_win_val[1]:
+                        if clus_metrics['calinski_harabaz_score'] > metrics_win_val[1]*(1+0.05):
                             metrics_winners[1] = clus_metrics['name']
                             metrics_win_val[1] = clus_metrics['calinski_harabaz_score']
                         
-                        if clus_metrics['dunn_index'] > metrics_win_val[2]:
+                        if clus_metrics['dunn_index'] > metrics_win_val[2]*(1+0.05):
                             metrics_winners[2] = clus_metrics['name']
                             metrics_win_val[2] = clus_metrics['dunn_index']
                         
-                        if clus_metrics['wb_index'] < metrics_win_val[3]:
+                        if clus_metrics['wb_index'] < metrics_win_val[3]*(1-0.05):
                             metrics_winners[3] = clus_metrics['name']
                             metrics_win_val[3] = clus_metrics['wb_index']
                         
-                        if clus_metrics['davies_bouldin_score'] < metrics_win_val[4]:
+                        if clus_metrics['davies_bouldin_score'] < metrics_win_val[4]*(1-0.05):
                             metrics_winners[4] = clus_metrics['name']
                             metrics_win_val[4] = clus_metrics['davies_bouldin_score']
                         
@@ -466,6 +467,7 @@ if __name__ == '__main__':
             ocurrkeys = list(ocurrences.keys())
             winners = [algo for algo in ocurrkeys if ocurrkeys.index(algo) in winners_idx]
 
+            # Retrieve on which secondary metrics the algorith won
             for winalg in winners:
                 metricsmask={}
                 metricsmask['time']=False
@@ -483,10 +485,8 @@ if __name__ == '__main__':
                 if len(winners_idx) == 1:
                     iswinner='YES'
                 else:
-                    iswinner='NO'
+                    iswinner='TIE'
                 mysql.updateDatasetClusFinalistsR2(db,datasetid,winalg,metricsmask,iswinner)
-
-
 
             if len(winners_idx) == 1:
                 print('The winner is ',winners[0])
@@ -495,91 +495,55 @@ if __name__ == '__main__':
                 mysql.updateDatasetClusAlg(db,datasetid,winners[0])
             else:
                 print('We have a tie')
+                mysql.updateDatasetClusAlg(db,datasetid,'TIE')
                 print(winners)
         # Induct rules for the winner clustering
         l_ruleind_alg = [
                 'cn2',
                 'cart'
                 ]
-        
-        for clusalg in winners:
-            #ri_metrics_winners=[0,0,0,0,0,0]
-            #ri_metrics_win_val=[0,0,0,0,0,0]
-            ri_metrics_winners=[0]
-            ri_metrics_win_val=[0]
-            for riaidx,ruleind_alg in enumerate(l_ruleind_alg):
-                rimetrics = rule_induction_and_metrics(dataset,ruleind_alg,all_samples_to_delete[clusalg],all_labels[clusalg],all_clusters[clusalg])
+       
+        # Always use first element of "winners": if we have a tie, I'll just pick the first algorithm in the list
+        clusalg=winners[0]
+        ri_metrics_winners=[0]
+        ri_metrics_win_val=[0]
+        for riaidx,ruleind_alg in enumerate(l_ruleind_alg):
+            rimetrics = rule_induction_and_metrics(dataset,ruleind_alg,all_samples_to_delete[clusalg],all_labels[clusalg],all_clusters[clusalg])
 
-                # Save rule induction metrics in mysql
-                mysql.insertRIMetrics(db,datasetid,clusmetricsid,rimetrics['name'],rimetrics['n_rules'],rimetrics['time'],rimetrics['auc'])
+            # Save rule induction metrics in mysql
+            mysql.insertRIMetrics(db,datasetid,clusmetricsid,rimetrics['name'],rimetrics['n_rules'],rimetrics['time'],rimetrics['auc'])
 
-                print('ruleind_alg:',ruleind_alg,'auc:',rimetrics['auc'])
-                if ri_metrics_winners[0] == 0:
-                    ri_metrics_winners[0] = rimetrics['name']
-                    ri_metrics_win_val[0] = rimetrics['auc']
-                    #ri_metrics_winners[1] = rimetrics['name']
-                    #ri_metrics_win_val[1] = rimetrics['accuracy']
-                    #ri_metrics_winners[2] = rimetrics['name']
-                    #ri_metrics_win_val[2] = rimetrics['f1score']
-                    #ri_metrics_winners[3] = rimetrics['name']
-                    #ri_metrics_win_val[3] = rimetrics['hl']
-                    #ri_metrics_winners[4] = rimetrics['name']
-                    #ri_metrics_win_val[4] = rimetrics['precision']
-                    #ri_metrics_winners[5] = rimetrics['name']
-                    #ri_metrics_win_val[5] = rimetrics['recall']
-                    all_metrics[rimetrics['name']] = rimetrics
+            print('ruleind_alg:',ruleind_alg,'auc:',rimetrics['auc'])
+            if ri_metrics_winners[0] == 0:
+                ri_metrics_winners[0] = rimetrics['name']
+                ri_metrics_win_val[0] = rimetrics['auc']
+                all_metrics[rimetrics['name']] = rimetrics
+            else:
+
+                # The auc value should be at least 5% higher or 5% lower than the existing winner or % lo
+                wonby='metr'
+                if rimetrics['auc'] > ri_metrics_win_val[0]*(1+.05):
+                    winner = rimetrics['name']
+                elif rimetrics['auc'] < ri_metrics_win_val[0]*(1-.05):
+                    winner = ri_metrics_winners[0] 
                 else:
-
-                    # The auc value should be at least 5% higher or 5% lowe than the existing winner or % lo
-                    if rimetrics['auc'] > ri_metrics_win_val[0]*(1+.05):
+                    print('We have a tie')
+                    wonby='time'
+                    if rimetrics['time'] < all_metrics[ri_metrics_winners[0]]['time']:
                         winner = rimetrics['name']
-                    elif rimetrics['auc'] < ri_metrics_win_val[0]*(1-.05):
-                        winner = ri_metrics_winners[0] 
+                    elif rimetrics['time'] > all_metrics[ri_metrics_winners[0]]['time']:
+                        winner = ri_metrics_winners[0]
                     else:
-                        print('We have a tie')
-                        if rimetrics['time'] < all_metrics[ri_metrics_winners[0]]['time']:
-                            winner = rimetrics['name']
-                        else:
-                            winner = ri_metrics_winners[0]
-                    print('winner',winner)
+                        print('we have a tie in RI alg')
+                        winner='tie'
+                        wonby='tie'
 
-                    # Updating mysql with the RI algorithm
-                    mysql.updateDatasetRIAlg(db,datasetid,winner)
+                print('winner',winner)
 
+                # Updating mysql with the RI algorithm
+                mysql.updateDatasetRIAlg(db,datasetid,winner,wonby)
 
-                    #if rimetrics['accuracy'] > ri_metrics_win_val[0]:
-                    #    ri_metrics_winners[1] = rimetrics['name']
-                    #    ri_metrics_win_val[1] = rimetrics['accuracy']
-                    
-                    #if rimetrics['f1score'] > ri_metrics_win_val[2]:
-                    #    ri_metrics_winners[2] = rimetrics['name']
-                    #    ri_metrics_win_val[2] = rimetrics['f1score']
-                    
-                    #if rimetrics['hl'] < ri_metrics_win_val[3]:
-                    #    ri_metrics_winners[3] = rimetrics['name']
-                    #    ri_metrics_win_val[3] = rimetrics['hl']
-                    
-                    #if rimetrics['precision'] > ri_metrics_win_val[4]:
-                    #    ri_metrics_winners[4] = rimetrics['name']
-                    #    ri_metrics_win_val[4] = rimetrics['precision']
-
-                    #if rimetrics['recall'] > ri_metrics_win_val[4]:
-                    #    ri_metrics_winners[5] = rimetrics['name']
-                    #    ri_metrics_win_val[5] = rimetrics['recall']
-            #    print(ri_metrics_val)
-            #    print(ri_metrics_winners)
-            #ocurrences = Counter(ri_metrics_winners)
-            #print(ocurrences)
-            #winners_cnt = max(ocurrences.values())
-            #winners_idx = [i for i, j in enumerate(ocurrences.values()) if j == winners_cnt]
-
-            #ocurrkeys = list(ocurrences.keys())
-            #winners = [algo for algo in ocurrkeys if ocurrkeys.index(algo) in winners_idx]
-            #if len(winners_idx) == 1:
-            #    print('The winner is ',winners[0])
-            #else:
-            #    print('We have a tie')
-
+        dstypeidx+=1
     # Update run table with end date
     mysql.updateRun(db,runid)
     db.close()

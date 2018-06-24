@@ -47,9 +47,9 @@ def insertRun(db):
     runid = executeTrx(db,op,(datetime.datetime.now()))
     return runid
 
-def insertDataset(db,runid,features,total_samples,linear_samples_perc,repeated_samples_perc,group_number,outliers_perc,uniform_features,standard_features):
-    op = "insert into dataset(run_id,features,total_samples,linear_samples_perc,repeated_samples_perc,group_number,outliers_perc,uniform_features,standard_features) values (%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-    datasetid = executeTrx(db,op,(runid,features,total_samples,linear_samples_perc,repeated_samples_perc,group_number,outliers_perc,uniform_features,standard_features))
+def insertDataset(db,runid,features,total_samples,linear_samples_perc,repeated_samples_perc,group_number,outliers_perc,uniform_features,standard_features,dstype):
+    op = "insert into dataset(run_id,features,total_samples,linear_samples_perc,repeated_samples_perc,group_number,outliers_perc,uniform_features,standard_features,type) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    datasetid = executeTrx(db,op,(runid,features,total_samples,linear_samples_perc,repeated_samples_perc,group_number,outliers_perc,uniform_features,standard_features,dstype))
     return datasetid
 
 def insertDatasetValidation(db,runid,datasetid,features,total_samples,linear_samples_perc,repeated_samples_perc,group_number,outliers_perc,outliersbyperp_perc):
@@ -77,9 +77,9 @@ def insertRIMetrics(db,datasetid,clustering_metric_id,algorithm,total_rules,elap
     rimetricsid = executeTrx(db,op,(datasetid,clustering_metric_id,algorithm,total_rules,elap_time,auc))
     return rimetricsid
 
-def updateDatasetRIAlg(db,datasetid,winner):
-    op = "update dataset set winner_ri_alg=%s where id=%s"
-    datasetid = executeTrx(db,op,(winner,datasetid))
+def updateDatasetRIAlg(db,datasetid,winner,wonby):
+    op = "update dataset set winner_ri_alg=%s,winner_ri_alg_by=%s where id=%s"
+    datasetid = executeTrx(db,op,(winner,wonby,datasetid))
     return datasetid
 
 def updateRun(db,runid):
