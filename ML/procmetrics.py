@@ -8,6 +8,8 @@ from math import log
 from scipy.spatial.distance import pdist
 from sklearn.metrics.pairwise import pairwise_distances
 from parameters import *
+from sklearn.preprocessing import label_binarize
+from sklearn.metrics import roc_curve, auc
 
 #def clustering_metrics(labels, name, data, time, sample_size,clusters,sin_ele_clus,wb_index_only):
 
@@ -84,16 +86,40 @@ def dunn_index(clusters):
         max_intra_cluster_dist = 0.0000001
     return min_inter_cluster_dist/max_intra_cluster_dist
 
-def rule_induction_process_metric(ori_labels,predicted_labels):
+def rule_induction_process_metric(ori_labels,predicted_labels,predicted_labels_prob):
+   
+    print(ori_labels)
+    # Obtain unique labels
+    ulabels = np.unique(ori_labels)
+    print('ulabels:', ulabels)
+
+    y = label_binarize(ori_labels, classes=ulabels)
+    print(y)
+    
     ruleindmetrics_dict = {}
 
     #accuracy = metrics.accuracy_score(y_true=ori_labels,y_pred=predicted_labels)
     #ruleindmetrics_dict['accuracy'] = round(accuracy,metric_decimals)
    
-    ori_labels=np.sort(ori_labels)
+    #ori_labels=np.sort(ori_labels)
     #predicted_labels = np.sort(predicted_labels)
-    auc = metrics.auc(ori_labels,predicted_labels,False)
-    ruleindmetrics_dict['auc'] = float(round(auc,metric_decimals))
+    #auc = metrics.auc(ori_labels,predicted_labels,False)
+
+   # Compute ROC curve and ROC area for each class
+    fpr = dict()
+    tpr = dict() 
+    roc_auc = dict()
+    n_classes = y.shape[1]
+
+    for i in range(n_classes):
+        fpr[i], tpr[i], _ = roc_curve(y[:, i], predicted_labels_prob[:, i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
+
+    fpr["micro"], tpr["micro"], _ = roc_curve(y.ravel(), predicted_labels_prob.ravel())
+    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+    print('roc_auc["micro"]',roc_auc["micro"])
+
+    ruleindmetrics_dict['auc'] = float(round(roc_auc["micro"],metric_decimals))
     
     #f1score = metrics.f1_score(y_true=ori_labels,y_pred=predicted_labels,average='weighted')
     #ruleindmetrics_dict['f1score'] = round(f1score,metric_decimals)

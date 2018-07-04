@@ -117,11 +117,11 @@ def clustering_and_metrics(dataset,clustering_alg):
 
     l_clustering_alg = [
             'kmeans_++',
-            'kmeans_random',
-            'kmeans_pca',
-            'dbscan',
-            'birch',
-            'meanshift',
+    #        'kmeans_random',
+    #        'kmeans_pca',
+    #        'dbscan',
+    #        'birch',
+    #        'meanshift',
             ]
 
     # Scale data
@@ -199,15 +199,15 @@ def rule_induction_and_metrics(dataset,rulesind_alg,samples_to_delete,cleanlabel
     cleandata = np.delete(dataset,samples_to_delete,0)
 
     if rulesind_alg == 'cart':
-        rules,r_elap_time,predicted_labels,y_test = CART_classifier(cleandata,cleanlabels)
+        rules,r_elap_time,predicted_labels,y_test,predicted_labels_prob = CART_classifier(cleandata,cleanlabels)
     elif rulesind_alg == 'cn2':
-        rules,r_elap_time,predicted_labels,y_test = CN2_classifier(cleandata,cleanlabels)
+        rules,r_elap_time,predicted_labels,y_test,predicted_labels_prob = CN2_classifier(cleandata,cleanlabels)
     else:
         print('Rules induction algorithm not found')
         return {}
 
     # Calculate rule induction process metrics
-    rulind_metrics = rule_induction_process_metric(y_test,predicted_labels)
+    rulind_metrics = rule_induction_process_metric(y_test,predicted_labels,predicted_labels_prob)
 
     # Calculate rule metrics
     #rulind_metrics = rules_metrics(clusters,rules,cleandata.shape[0],round(r_elap_time,metric_decimals))
@@ -233,6 +233,11 @@ if __name__ == '__main__':
     runid = mysql.insertRun(db)
 
     paramlist = []
+
+    ## DELETE 
+    paramlist.append([3,200,10,0,0,0])
+    ## DELETE 
+
     paramlist.append([8,1000,0,0,0,0])
     paramlist.append([8,1000,10,0,0,0])
     paramlist.append([16,1000,10,0,0,0])
@@ -272,6 +277,8 @@ if __name__ == '__main__':
         print('')
         print('')
         dataset,unifo_feat,standa_feat,analysis_results = dataset_generation_and_validation(*params)
+        
+
         if dataset.shape[0] == 0:
             mysql.updateRun(db,runid)
             db.close()
@@ -292,11 +299,11 @@ if __name__ == '__main__':
             # Clustering algorithm list
             l_clustering_alg = [
                     'kmeans_++',
-                    'kmeans_random',
-                    'kmeans_pca',
-                    'dbscan',
-                    'birch',
-                    'meanshift',
+#                    'kmeans_random',
+#                    'kmeans_pca',
+#                    'dbscan',
+#                    'birch',
+#                    'meanshift',
                     ]
             all_metrics = {}
             all_samples_to_delete = {}
@@ -499,7 +506,7 @@ if __name__ == '__main__':
                 print(winners)
         # Induct rules for the winner clustering
         l_ruleind_alg = [
-                'cn2',
+#                'cn2',
                 'cart'
                 ]
        
@@ -544,6 +551,7 @@ if __name__ == '__main__':
                 mysql.updateDatasetRIAlg(db,datasetid,winner,wonby)
 
         dstypeidx+=1
+        sys.exit()
     # Update run table with end date
     mysql.updateRun(db,runid)
     db.close()

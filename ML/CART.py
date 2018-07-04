@@ -8,6 +8,9 @@ from time import time
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 from sklearn import metrics
+from sklearn.preprocessing import label_binarize
+from sklearn.metrics import roc_curve, auc
+
 
 import Orange
 
@@ -56,28 +59,53 @@ def CART_classifier(data,labels):
     
     ###  Cross-validation
     ###  Test what value of min_samples_leaf produces better results as per AUC
+
+    # Obtain unique labels
+    ulabels = np.unique(y_train)
+    print('ulabels:', ulabels)
+
+    y_train_bin = label_binarize(y_train, classes=ulabels)
+    n_classes = y_train_bin.shape[1]
+
     splits=5
     l_scores=[]
+    kf = KFold(n_splits=splits)
+    #kfsplits = kf.split(X_train)
+
     # min_samples_leaf range: 5% to 11%
     for msl in range(5,11):
         clf = tree.DecisionTreeClassifier(min_samples_leaf=msl/100)
-        kf = KFold(n_splits=splits)
         sumauc=0
         for kf_train_index, kf_test_index in kf.split(X_train):
             kf_X_train, kf_X_test = X_train[kf_train_index], X_train[kf_test_index]
-            kf_y_train, kf_y_test = y_train[kf_train_index], y_train[kf_test_index]
+            kf_y_train_bin, kf_y_test_bin = y_train_bin[kf_train_index], y_train_bin[kf_test_index]
 
             # Fit training set
-            clf = clf.fit(kf_X_train, kf_y_train)
+            clf = clf.fit(kf_X_train, kf_y_train_bin)
 
             # Obtain predicted labels array
             predicted_labels = clf.predict(kf_X_test)
+            predicted_labels_prob = clf.predict(kf_X_test)
 
             # Sort y_test as it is pre-requisite
-            s_kf_y_test = np.sort(kf_y_test)
-            auc = metrics.auc(s_kf_y_test,predicted_labels,False)
-            sumauc+=auc
+            #s_kf_y_test = np.sort(kf_y_test)
+            #auc = metrics.auc(s_kf_y_test,predicted_labels,False)
+
+            fpr = dict()
+            tpr = dict()
+            roc_auc = dict()
+
+            for i in range(n_classes):
+                fpr[i], tpr[i], _ = roc_curve(kf_y_test_bin[:, i], predicted_labels_prob[:, i])
+                roc_auc[i] = auc(fpr[i], tpr[i])
+
+            fpr["micro"], tpr["micro"], _ = roc_curve(kf_y_test_bin.ravel(), predicted_labels_prob.ravel())
+            roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+            print('roc_auc["micro"]',roc_auc["micro"])
+
+            sumauc+=roc_auc["micro"]
         avg_auc=sumauc/splits
+        print('avg_auc',avg_auc)
 
         #scores = cross_val_score(clf, X_train, y_train, cv=5,scoring='v_measure_score')
         #print('msl:',msl,'AUC mean:',scores.mean())
@@ -100,6 +128,7 @@ def CART_classifier(data,labels):
 
     # Return predicted label for the testing set 
     predicted_labels = clf.predict(X_test)
+    predicted_labels_prob = clf.predict_proba(X_test)
 
     # feature_names
     feature_names = np.array([])
@@ -168,4 +197,4 @@ def CART_classifier(data,labels):
     #tree_to_code(clf,feature_names)
     #for regla in l_rules:   
     #    print(l_rules[regla]['classes_matched'])
-    return l_rules,elap_time,predicted_labels,y_test
+    return l_rules,elap_time,predicted_labels,y_test,predicted_labels_prob

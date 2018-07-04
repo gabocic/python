@@ -172,4 +172,4 @@ def CN2_classifier(data,labels):
         #print(dir(myrule.domain))
         #print(myrule.domain.class_var)
         ruleid+=1
-    return l_rules,elap_time,predicted_labels,y_test
+    return l_rules,elap_time,predicted_labels,y_test,predicted_labels_prob
