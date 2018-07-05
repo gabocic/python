@@ -8,6 +8,7 @@ from common import split_data_in_clusters
 from collections import Counter
 import numpy as np
 from procmetrics import wb_index
+import copy
 
 def k_means_clustering(data,plot,p_init,p_n_init,p_n_jobs):
 
@@ -47,6 +48,8 @@ def k_means_clustering(data,plot,p_init,p_n_init,p_n_jobs):
 
         ## Compute k-means clustering against the original data set
         kmeans.fit(data)
+        origestim = copy.deepcopy(kmeans)
+        estimators.append(origestim)
 
         # Calculate process time
         elap_time = (time() - t0)
@@ -63,7 +66,6 @@ def k_means_clustering(data,plot,p_init,p_n_init,p_n_jobs):
 
         ## Store the WB indexes, estimators and elapsed times
         wbindexes.append(wb)
-        estimators.append(kmeans)
         elaptimes.append(elap_time)
 
     ## Find the winner "K" by looking for the minimum WB index
@@ -79,5 +81,6 @@ def k_means_clustering(data,plot,p_init,p_n_init,p_n_jobs):
         element={'type':'dot','value':centroids.T,'color':'g','marker':'x','size':90}
         element_list.append(element)
         plot_2d_3d(element_list,3)
-
+    
+    print('winner estimator shape >>>>>>>>>>>>>>>>>>',estimators[minwbidx].labels_.shape)
     return estimators[minwbidx],elaptimes[minwbidx]

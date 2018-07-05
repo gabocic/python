@@ -86,16 +86,23 @@ def dunn_index(clusters):
         max_intra_cluster_dist = 0.0000001
     return min_inter_cluster_dist/max_intra_cluster_dist
 
-def rule_induction_process_metric(ori_labels,predicted_labels,predicted_labels_prob):
+def rule_induction_process_metric(ori_labels,predicted_labels,predicted_labels_prob,ulabels):
    
-    print(ori_labels)
-    # Obtain unique labels
-    ulabels = np.unique(ori_labels)
+    #print(ori_labels)
+    #ulabels = np.unique(ori_labels)
     print('ulabels:', ulabels)
 
-    y = label_binarize(ori_labels, classes=ulabels)
-    print(y)
+    print('ori_labels.shape',ori_labels.shape)
+    print('predicted_labels_prob.shape',predicted_labels_prob.shape)
+
+    if len(ulabels) == 2:
+        y = np.array([[1,0] if l==0 else [0,1] for l in ori_labels])
+    else:
+        y = label_binarize(ori_labels, classes=ulabels)
     
+    print('y.shape',y.shape)
+    print('y.ravel().shape',y.ravel().shape)
+    print('predicted_labels_prob.ravel()',predicted_labels_prob.ravel().shape)
     ruleindmetrics_dict = {}
 
     #accuracy = metrics.accuracy_score(y_true=ori_labels,y_pred=predicted_labels)
@@ -109,11 +116,11 @@ def rule_induction_process_metric(ori_labels,predicted_labels,predicted_labels_p
     fpr = dict()
     tpr = dict() 
     roc_auc = dict()
-    n_classes = y.shape[1]
+    #n_classes = y.shape[1]
 
-    for i in range(n_classes):
-        fpr[i], tpr[i], _ = roc_curve(y[:, i], predicted_labels_prob[:, i])
-        roc_auc[i] = auc(fpr[i], tpr[i])
+    #for i in range(n_classes):
+    #    fpr[i], tpr[i], _ = roc_curve(y[:, i], predicted_labels_prob[:, i])
+    #    roc_auc[i] = auc(fpr[i], tpr[i])
 
     fpr["micro"], tpr["micro"], _ = roc_curve(y.ravel(), predicted_labels_prob.ravel())
     roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])

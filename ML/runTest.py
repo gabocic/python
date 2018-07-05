@@ -117,11 +117,11 @@ def clustering_and_metrics(dataset,clustering_alg):
 
     l_clustering_alg = [
             'kmeans_++',
-    #        'kmeans_random',
-    #        'kmeans_pca',
-    #        'dbscan',
-    #        'birch',
-    #        'meanshift',
+            'kmeans_random',
+            'kmeans_pca',
+            'dbscan',
+            'birch',
+            'meanshift',
             ]
 
     # Scale data
@@ -206,8 +206,11 @@ def rule_induction_and_metrics(dataset,rulesind_alg,samples_to_delete,cleanlabel
         print('Rules induction algorithm not found')
         return {}
 
+    # Obtain unique labels
+    uniquelabels = np.unique(cleanlabels)
+
     # Calculate rule induction process metrics
-    rulind_metrics = rule_induction_process_metric(y_test,predicted_labels,predicted_labels_prob)
+    rulind_metrics = rule_induction_process_metric(y_test,predicted_labels,predicted_labels_prob,uniquelabels)
 
     # Calculate rule metrics
     #rulind_metrics = rules_metrics(clusters,rules,cleandata.shape[0],round(r_elap_time,metric_decimals))
@@ -235,34 +238,34 @@ if __name__ == '__main__':
     paramlist = []
 
     ## DELETE 
-    paramlist.append([3,200,10,0,0,0])
+    #paramlist.append([3,200,10,0,0,0])
     ## DELETE 
 
-    paramlist.append([8,1000,0,0,0,0])
-    paramlist.append([8,1000,10,0,0,0])
-    paramlist.append([16,1000,10,0,0,0])
-    paramlist.append([24,1000,10,0,0,0])
-    paramlist.append([8,1000,40,0,0,0])
-    paramlist.append([8,1000,80,0,0,0])
-    paramlist.append([8,1000,0,10,2,0])
-    paramlist.append([8,1000,0,20,2,0])
-    paramlist.append([8,1000,0,40,2,0])
-    paramlist.append([8,1000,0,20,3,0])
-    paramlist.append([8,1000,0,40,3,0])
-    paramlist.append([8,1000,0,20,4,0])
-    paramlist.append([8,1000,0,40,4,0])
-    paramlist.append([8,1000,0,0,0,6])
-    paramlist.append([8,1000,0,0,0,12])
-    paramlist.append([8,1000,0,0,0,18])
-    paramlist.append([8,1000,10,10,2,6])
-    paramlist.append([8,1000,10,10,2,12])
-    paramlist.append([8,1000,10,10,2,18])
-    paramlist.append([8,1000,10,40,2,6])
-    paramlist.append([8,1000,10,40,2,12])
-    paramlist.append([8,1000,10,40,2,18])
-    paramlist.append([8,1000,40,10,2,6])
-    paramlist.append([8,1000,40,10,2,12])
-    paramlist.append([8,1000,40,10,2,18])
+    #paramlist.append([8,1000,0,0,0,0])
+    #paramlist.append([8,1000,10,0,0,0])
+    #paramlist.append([16,1000,10,0,0,0])
+    #paramlist.append([24,1000,10,0,0,0])
+    #paramlist.append([8,1000,40,0,0,0])
+    #paramlist.append([8,1000,80,0,0,0])
+    #paramlist.append([8,1000,0,10,2,0])
+    #paramlist.append([8,1000,0,20,2,0])
+    #paramlist.append([8,1000,0,40,2,0])
+    #paramlist.append([8,1000,0,20,3,0])
+    #paramlist.append([8,1000,0,40,3,0])
+    #paramlist.append([8,1000,0,20,4,0])
+    #paramlist.append([8,1000,0,40,4,0])
+    #paramlist.append([8,1000,0,0,0,6])
+    #paramlist.append([8,1000,0,0,0,12])
+    #paramlist.append([8,1000,0,0,0,18])
+    #paramlist.append([8,1000,10,10,2,6])
+    #paramlist.append([8,1000,10,10,2,12])
+    paramlist.append([8,1000,10,10,2,18]) #
+    #paramlist.append([8,1000,10,40,2,6])
+    #paramlist.append([8,1000,10,40,2,12])
+    #paramlist.append([8,1000,10,40,2,18])
+    #paramlist.append([8,1000,40,10,2,6])
+    #paramlist.append([8,1000,40,10,2,12])
+    #paramlist.append([8,1000,40,10,2,18])
 #    paramlist.append([8,1000,40,20,2,6])
 
     dstypeidx=65
@@ -298,12 +301,12 @@ if __name__ == '__main__':
 
             # Clustering algorithm list
             l_clustering_alg = [
-                    'kmeans_++',
-#                    'kmeans_random',
-#                    'kmeans_pca',
-#                    'dbscan',
-#                    'birch',
-#                    'meanshift',
+    #                'kmeans_++',
+    #                'kmeans_random',
+    #                'kmeans_pca',
+    #                'dbscan',
+    #                'birch',
+                    'meanshift',
                     ]
             all_metrics = {}
             all_samples_to_delete = {}
@@ -376,7 +379,7 @@ if __name__ == '__main__':
                 
                 print(metrics_winners)
                 print(metrics_win_val)
-
+    
         ocurrences = Counter(metrics_winners)
         print(ocurrences)
         winners_cnt = max(ocurrences.values())
@@ -506,7 +509,7 @@ if __name__ == '__main__':
                 print(winners)
         # Induct rules for the winner clustering
         l_ruleind_alg = [
-#                'cn2',
+                'cn2',
                 'cart'
                 ]
        
@@ -551,7 +554,6 @@ if __name__ == '__main__':
                 mysql.updateDatasetRIAlg(db,datasetid,winner,wonby)
 
         dstypeidx+=1
-        sys.exit()
     # Update run table with end date
     mysql.updateRun(db,runid)
     db.close()

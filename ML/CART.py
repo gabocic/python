@@ -61,9 +61,10 @@ def CART_classifier(data,labels):
     ###  Test what value of min_samples_leaf produces better results as per AUC
 
     # Obtain unique labels
-    ulabels = np.unique(y_train)
+    ulabels = np.unique(labels)
     print('ulabels:', ulabels)
 
+    # Binarize labels
     y_train_bin = label_binarize(y_train, classes=ulabels)
     n_classes = y_train_bin.shape[1]
 
@@ -95,9 +96,9 @@ def CART_classifier(data,labels):
             tpr = dict()
             roc_auc = dict()
 
-            for i in range(n_classes):
-                fpr[i], tpr[i], _ = roc_curve(kf_y_test_bin[:, i], predicted_labels_prob[:, i])
-                roc_auc[i] = auc(fpr[i], tpr[i])
+            #for i in range(n_classes):
+            #    fpr[i], tpr[i], _ = roc_curve(kf_y_test_bin[:, i], predicted_labels_prob[:, i])
+            #    roc_auc[i] = auc(fpr[i], tpr[i])
 
             fpr["micro"], tpr["micro"], _ = roc_curve(kf_y_test_bin.ravel(), predicted_labels_prob.ravel())
             roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])

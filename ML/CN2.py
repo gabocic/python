@@ -7,6 +7,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 from sklearn import metrics
 from threading import Thread
+from sklearn.preprocessing import label_binarize
+from sklearn.metrics import roc_curve, auc, roc_auc_score
+
 
 def CN2_classifier(data,labels):
 
@@ -39,6 +42,14 @@ def CN2_classifier(data,labels):
     ## Split the dataset into a training and and a testing set
     X_train, X_test, y_train, y_test = train_test_split(data,labels,test_size=0.2,random_state=0)
 
+    # Obtain unique labels
+    ulabels = np.unique(labels)
+    print('ulabels:', ulabels)
+
+    # Binarize labels
+    #y_train_bin = label_binarize(y_train, classes=ulabels)
+    #n_classes = y_train_bin.shape[1]
+
 
     def threadFitData(kf_train_index,kf_test_index,results,index,msl):
         learner = Orange.classification.CN2Learner()
@@ -62,10 +73,32 @@ def CN2_classifier(data,labels):
         predicted_labels_prob = classifier.predict(kf_X_test)
         predicted_labels = np.argmax(predicted_labels_prob,1)
 
+        # Binarize labels
+
+        # A single column array is generated when we have two classes only. That's why we need the following workaround
+        if len(ulabels) == 2:
+            kf_y_test_bin = np.array([[1,0] if l==0 else [0,1] for l in kf_y_test])
+        else:
+            kf_y_test_bin = label_binarize(kf_y_test, classes=ulabels)
+        n_classes = kf_y_test_bin.shape[1]
+
         # Sort y_test as it is pre-requisite
-        s_kf_y_test = np.sort(kf_y_test)
-        auc = metrics.auc(s_kf_y_test,predicted_labels,False)
-        results[index] = auc
+        #s_kf_y_test = np.sort(kf_y_test)
+        #auc = metrics.auc(s_kf_y_test,predicted_labels,False)
+
+        fpr = dict()
+        tpr = dict()
+        roc_auc = dict()
+
+        #for i in range(n_classes):
+        #    fpr[i], tpr[i], _ = roc_curve(kf_y_test_bin[:, i], predicted_labels_prob[:, i])
+        #    roc_auc[i] = auc(fpr[i], tpr[i])
+
+        fpr["micro"], tpr["micro"], _ = roc_curve(kf_y_test_bin.ravel(), predicted_labels_prob.ravel())
+        roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+        print('roc_auc["micro"]',roc_auc["micro"])
+
+        results[index] = roc_auc["micro"]
 
 
     ###  Cross-validation
@@ -116,6 +149,7 @@ def CN2_classifier(data,labels):
         #    threads[i].join()
 
         avg_auc=sum(results)/splits
+        print('avg_auc',avg_auc)
         l_scores.append(avg_auc)
 
 
