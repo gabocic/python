@@ -5,7 +5,7 @@ from sklearn.tree import _tree
 import numpy as np
 from time import time
 #from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import train_test_split
+#from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 from sklearn import metrics
 from sklearn.preprocessing import label_binarize
@@ -14,7 +14,7 @@ from sklearn.metrics import roc_curve, auc
 
 import Orange
 
-def CART_classifier(data,labels):
+def CART_classifier(X_train, X_test, y_train):
 
     def tree_to_code(tree, feature_names):
         tree_ = tree.tree_
@@ -55,18 +55,19 @@ def CART_classifier(data,labels):
     ## Main ##
 
     ## Split the dataset into a training and and a testing set
-    X_train, X_test, y_train, y_test = train_test_split(data,labels,test_size=0.2,random_state=0)
+    #X_train, X_test, y_train, y_test = train_test_split(data,labels,test_size=0.2,random_state=0)
     
     ###  Cross-validation
     ###  Test what value of min_samples_leaf produces better results as per AUC
 
     # Obtain unique labels
-    ulabels = np.unique(labels)
+    #ulabels = np.unique(labels)
+    ulabels = np.unique(y_train)
     print('ulabels:', ulabels)
 
     # Binarize labels
     y_train_bin = label_binarize(y_train, classes=ulabels)
-    n_classes = y_train_bin.shape[1]
+    #n_classes = y_train_bin.shape[1]
 
     splits=5
     l_scores=[]
@@ -127,13 +128,16 @@ def CART_classifier(data,labels):
     # Calculate process time
     elap_time = (time() - t0)
 
+    print('np.unique(y_train)',np.unique(y_train))
+    #print('np.unique(y_test)',np.unique(y_test))
+
     # Return predicted label for the testing set 
     predicted_labels = clf.predict(X_test)
     predicted_labels_prob = clf.predict_proba(X_test)
 
     # feature_names
     feature_names = np.array([])
-    for i in range(0,data.shape[1]):
+    for i in range(0,X_train.shape[1]):
         feature_names = np.append(feature_names,'f'+i.__str__())
 
     ## Rules extractor
@@ -198,4 +202,5 @@ def CART_classifier(data,labels):
     #tree_to_code(clf,feature_names)
     #for regla in l_rules:   
     #    print(l_rules[regla]['classes_matched'])
-    return l_rules,elap_time,predicted_labels,y_test,predicted_labels_prob
+    
+    return l_rules,elap_time,predicted_labels,predicted_labels_prob

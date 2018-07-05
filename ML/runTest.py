@@ -21,6 +21,7 @@ from collections import Counter
 from davies_bouldin import davies_bouldin_score
 from sklearn.preprocessing import StandardScaler
 import mysql
+from sklearn.model_selection import train_test_split
 
 class bcolors:
     BANNER = '\033[94m'
@@ -198,16 +199,31 @@ def rule_induction_and_metrics(dataset,rulesind_alg,samples_to_delete,cleanlabel
     # Remove samples that were discarded for the clustering phase
     cleandata = np.delete(dataset,samples_to_delete,0)
 
+    ## Split the dataset into a training and and a testing set
+    X_train, X_test, y_train, y_test = train_test_split(cleandata,cleanlabels,test_size=0.2,random_state=0)
+
+
     if rulesind_alg == 'cart':
-        rules,r_elap_time,predicted_labels,y_test,predicted_labels_prob = CART_classifier(cleandata,cleanlabels)
+        #rules,r_elap_time,predicted_labels,y_test,predicted_labels_prob = CART_classifier(cleandata,cleanlabels)
+        rules,r_elap_time,predicted_labels,predicted_labels_prob = CART_classifier(X_train, X_test, y_train)
+        # Obtain unique labels
+        uniquelabels = np.unique(y_train)
     elif rulesind_alg == 'cn2':
-        rules,r_elap_time,predicted_labels,y_test,predicted_labels_prob = CN2_classifier(cleandata,cleanlabels)
+        #rules,r_elap_time,predicted_labels,y_test,predicted_labels_prob = CN2_classifier(cleandata,cleanlabels)
+        rules,r_elap_time,predicted_labels,predicted_labels_prob = CN2_classifier(X_train, X_test, y_train, y_test)
+        # Obtain unique labels
+        uniquelabels = np.unique(cleanlabels)
     else:
         print('Rules induction algorithm not found')
         return {}
 
-    # Obtain unique labels
-    uniquelabels = np.unique(cleanlabels)
+    print('ANTES - predicted_labels_prob.shape',predicted_labels_prob.shape)
+
+
+    print('cleanlabels',np.unique(cleanlabels).shape)
+    print('y_train',np.unique(y_train).shape)
+    print('y_test',np.unique(y_test).shape)
+    print('predicted_labels_prob.shape',predicted_labels_prob.shape)
 
     # Calculate rule induction process metrics
     rulind_metrics = rule_induction_process_metric(y_test,predicted_labels,predicted_labels_prob,uniquelabels)
@@ -241,31 +257,31 @@ if __name__ == '__main__':
     #paramlist.append([3,200,10,0,0,0])
     ## DELETE 
 
-    #paramlist.append([8,1000,0,0,0,0])
-    #paramlist.append([8,1000,10,0,0,0])
-    #paramlist.append([16,1000,10,0,0,0])
-    #paramlist.append([24,1000,10,0,0,0])
-    #paramlist.append([8,1000,40,0,0,0])
-    #paramlist.append([8,1000,80,0,0,0])
-    #paramlist.append([8,1000,0,10,2,0])
-    #paramlist.append([8,1000,0,20,2,0])
-    #paramlist.append([8,1000,0,40,2,0])
-    #paramlist.append([8,1000,0,20,3,0])
-    #paramlist.append([8,1000,0,40,3,0])
-    #paramlist.append([8,1000,0,20,4,0])
-    #paramlist.append([8,1000,0,40,4,0])
-    #paramlist.append([8,1000,0,0,0,6])
-    #paramlist.append([8,1000,0,0,0,12])
-    #paramlist.append([8,1000,0,0,0,18])
-    #paramlist.append([8,1000,10,10,2,6])
-    #paramlist.append([8,1000,10,10,2,12])
+    paramlist.append([8,1000,0,0,0,0])
+    paramlist.append([8,1000,10,0,0,0])
+    paramlist.append([16,1000,10,0,0,0])
+    paramlist.append([24,1000,10,0,0,0])
+    paramlist.append([8,1000,40,0,0,0])
+    paramlist.append([8,1000,80,0,0,0])
+    paramlist.append([8,1000,0,10,2,0])
+    paramlist.append([8,1000,0,20,2,0])
+    paramlist.append([8,1000,0,40,2,0])
+    paramlist.append([8,1000,0,20,3,0])
+    paramlist.append([8,1000,0,40,3,0])
+    paramlist.append([8,1000,0,20,4,0])
+    paramlist.append([8,1000,0,40,4,0])
+    paramlist.append([8,1000,0,0,0,6])
+    paramlist.append([8,1000,0,0,0,12])
+    paramlist.append([8,1000,0,0,0,18])
+    paramlist.append([8,1000,10,10,2,6])
+    paramlist.append([8,1000,10,10,2,12])
     paramlist.append([8,1000,10,10,2,18]) #
-    #paramlist.append([8,1000,10,40,2,6])
-    #paramlist.append([8,1000,10,40,2,12])
-    #paramlist.append([8,1000,10,40,2,18])
-    #paramlist.append([8,1000,40,10,2,6])
-    #paramlist.append([8,1000,40,10,2,12])
-    #paramlist.append([8,1000,40,10,2,18])
+    paramlist.append([8,1000,10,40,2,6])
+    paramlist.append([8,1000,10,40,2,12])
+    paramlist.append([8,1000,10,40,2,18])
+    paramlist.append([8,1000,40,10,2,6])
+    paramlist.append([8,1000,40,10,2,12])
+    paramlist.append([8,1000,40,10,2,18])
 #    paramlist.append([8,1000,40,20,2,6])
 
     dstypeidx=65
@@ -301,11 +317,11 @@ if __name__ == '__main__':
 
             # Clustering algorithm list
             l_clustering_alg = [
-    #                'kmeans_++',
-    #                'kmeans_random',
-    #                'kmeans_pca',
-    #                'dbscan',
-    #                'birch',
+                    'kmeans_++',
+                    'kmeans_random',
+                    'kmeans_pca',
+                    'dbscan',
+                    'birch',
                     'meanshift',
                     ]
             all_metrics = {}

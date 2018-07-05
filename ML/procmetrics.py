@@ -100,9 +100,9 @@ def rule_induction_process_metric(ori_labels,predicted_labels,predicted_labels_p
     else:
         y = label_binarize(ori_labels, classes=ulabels)
     
-    print('y.shape',y.shape)
-    print('y.ravel().shape',y.ravel().shape)
-    print('predicted_labels_prob.ravel()',predicted_labels_prob.ravel().shape)
+    #print('y.shape',y.shape)
+    #print('y.ravel().shape',y.ravel().shape)
+    #print('predicted_labels_prob.ravel()',predicted_labels_prob.ravel().shape)
     ruleindmetrics_dict = {}
 
     #accuracy = metrics.accuracy_score(y_true=ori_labels,y_pred=predicted_labels)

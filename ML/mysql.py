@@ -10,7 +10,7 @@ def createDbConn():
 
 def executeTrx(db,op,valuetuple):
     # Enable or disable writes to the DB
-    write=0
+    write=1
 
     lii = None
     if write == 1:

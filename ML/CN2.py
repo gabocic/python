@@ -3,7 +3,7 @@
 import Orange
 import numpy as np
 from time import time
-from sklearn.model_selection import train_test_split
+#from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 from sklearn import metrics
 from threading import Thread
@@ -11,16 +11,18 @@ from sklearn.preprocessing import label_binarize
 from sklearn.metrics import roc_curve, auc, roc_auc_score
 
 
-def CN2_classifier(data,labels):
+def CN2_classifier(X_train, X_test, y_train,y_test):
 
     ## Creating an Orange "Domain" to work with the data and the tags
     # Define each attribute
     l_attr = []
-    for i in range(0,data.shape[1]):
+    for i in range(0,X_train.shape[1]):
         l_attr.append(Orange.data.ContinuousVariable(name='f'+i.__str__(), compute_value=None))
+    
+    ulabels = np.unique(np.concatenate((y_train,y_test)))
 
     # Define target value
-    l_label = [str(i) for i in np.unique(labels).tolist()]
+    l_label = [str(i) for i in ulabels.tolist()]
     #l_label = ['a']
 
     #print('labels',l_label)
@@ -40,10 +42,9 @@ def CN2_classifier(data,labels):
     #learner.rule_finder.search_strategy.constrain_continuous = True
 
     ## Split the dataset into a training and and a testing set
-    X_train, X_test, y_train, y_test = train_test_split(data,labels,test_size=0.2,random_state=0)
+    #X_train, X_test, y_train, y_test = train_test_split(data,labels,test_size=0.2,random_state=0)
 
     # Obtain unique labels
-    ulabels = np.unique(labels)
     print('ulabels:', ulabels)
 
     # Binarize labels
@@ -192,7 +193,7 @@ def CN2_classifier(data,labels):
         for boolean in myrule.covered_examples:
             if boolean:
                 n_covexamples+=1
-        l_rules[ruleid]['classes_matched'] = np.zeros((1,max(labels)+1))
+        l_rules[ruleid]['classes_matched'] = np.zeros((1,max(ulabels)+1))
         #print(type(myrule.domain.class_var.values[myrule.prediction]))
         l_rules[ruleid]['classes_matched'][0,int(myrule.domain.class_var.values[myrule.prediction])] = n_covexamples
         l_rules[ruleid]['rules'] = []
@@ -206,4 +207,4 @@ def CN2_classifier(data,labels):
         #print(dir(myrule.domain))
         #print(myrule.domain.class_var)
         ruleid+=1
-    return l_rules,elap_time,predicted_labels,y_test,predicted_labels_prob
+    return l_rules,elap_time,predicted_labels,predicted_labels_prob
