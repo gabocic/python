@@ -47,7 +47,7 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
     while dscount < dataset_gen_retry:
         dataset,unifo_feat,standa_feat = create_dataset(n_samples=p_n_samples, n_features=p_n_features,
                             perc_lin=p_perc_lin, perc_repeated=p_perc_repeated, n_groups=p_n_groups,perc_outliers=p_perc_outliers,
-                            debug=0,plot=0,save_to_file=0)
+                            debug=0,plot=0,save_to_file=1)
         
         if dataset.shape == (1,0):
             fatal_error()
@@ -258,30 +258,30 @@ if __name__ == '__main__':
     ## DELETE 
 
     paramlist.append([8,1000,0,0,0,0])
-    paramlist.append([8,1000,10,0,0,0])
-    paramlist.append([16,1000,10,0,0,0])
-    paramlist.append([24,1000,10,0,0,0])
-    paramlist.append([8,1000,40,0,0,0])
-    paramlist.append([8,1000,80,0,0,0])
-    paramlist.append([8,1000,0,10,2,0])
-    paramlist.append([8,1000,0,20,2,0])
-    paramlist.append([8,1000,0,40,2,0])
-    paramlist.append([8,1000,0,20,3,0])
-    paramlist.append([8,1000,0,40,3,0])
-    paramlist.append([8,1000,0,20,4,0])
-    paramlist.append([8,1000,0,40,4,0])
-    paramlist.append([8,1000,0,0,0,6])
-    paramlist.append([8,1000,0,0,0,12])
-    paramlist.append([8,1000,0,0,0,18])
-    paramlist.append([8,1000,10,10,2,6])
-    paramlist.append([8,1000,10,10,2,12])
-    paramlist.append([8,1000,10,10,2,18]) #
-    paramlist.append([8,1000,10,40,2,6])
-    paramlist.append([8,1000,10,40,2,12])
-    paramlist.append([8,1000,10,40,2,18])
-    paramlist.append([8,1000,40,10,2,6])
-    paramlist.append([8,1000,40,10,2,12])
-    paramlist.append([8,1000,40,10,2,18])
+#    paramlist.append([8,1000,10,0,0,0])
+#    paramlist.append([16,1000,10,0,0,0])
+#    paramlist.append([24,1000,10,0,0,0])
+#    paramlist.append([8,1000,40,0,0,0])
+#    paramlist.append([8,1000,80,0,0,0])
+#    paramlist.append([8,1000,0,10,2,0])
+#    paramlist.append([8,1000,0,20,2,0])
+#    paramlist.append([8,1000,0,40,2,0])
+#    paramlist.append([8,1000,0,20,3,0])
+#    paramlist.append([8,1000,0,40,3,0])
+#    paramlist.append([8,1000,0,20,4,0])
+#    paramlist.append([8,1000,0,40,4,0])
+#    paramlist.append([8,1000,0,0,0,6])
+#    paramlist.append([8,1000,0,0,0,12])
+#    paramlist.append([8,1000,0,0,0,18])
+#    paramlist.append([8,1000,10,10,2,6])
+#    paramlist.append([8,1000,10,10,2,12])
+#    paramlist.append([8,1000,10,10,2,18]) #
+#    paramlist.append([8,1000,10,40,2,6])
+#    paramlist.append([8,1000,10,40,2,12])
+#    paramlist.append([8,1000,10,40,2,18])
+#    paramlist.append([8,1000,40,10,2,6])
+#    paramlist.append([8,1000,40,10,2,12])
+#    paramlist.append([8,1000,40,10,2,18])
 #    paramlist.append([8,1000,40,20,2,6])
 
     dstypeidx=65

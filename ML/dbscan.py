@@ -26,7 +26,14 @@ def dbscan_clustering(data,plot,p_n_jobs):
     # Estimating eps
     nbrs = NearestNeighbors(n_neighbors=int(min_samples-1), algorithm='auto',n_jobs=p_n_jobs).fit(data)
     distances, indices = nbrs.kneighbors(data)
+    print('Distances')
+    print(distances)
+    print('Indices')
+    print(indices)
+
     sorteddist = np.sort(distances,axis=None)
+    print('sorted distance')
+    print(sorteddist)
 
     # Generating a list of eps around the mid value
     l_eps=[]

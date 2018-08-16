@@ -17,7 +17,7 @@ class TooFewPoints(Exception):
 
 def create_dataset(n_samples=20, n_features=3,
                         perc_lin=20, perc_repeated=10, n_groups=6,perc_outliers=10,
-                        debug=1,plot=0,save_to_file=0):
+                        debug=1,plot=0,save_to_file=1):
 
     def logger(message,dbg_level):
         if dbg_level <= debug:
@@ -89,9 +89,10 @@ def create_dataset(n_samples=20, n_features=3,
 
     # Generate uniform attributes. Including out_samples as they will be moved away from the mean later
     for i in range(0,unifor_feat):
-        # Create a random number for mean and stdev
+        
         generator = np.random
-        m = generator.random_integers(low=(-1)*value_limit, high=value_limit, size=(usef_samples+out_samples,1))
+        limit = (generator.random_integers(low=0, high=value_limit, size=(1)))[0]
+        m = generator.random_integers(low=(-1)*limit, high=limit, size=(usef_samples+out_samples,1))
         
         Xu[:usef_samples+out_samples, i:i+1] = m
 

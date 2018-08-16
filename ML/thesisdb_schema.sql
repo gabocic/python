@@ -30,7 +30,7 @@
 
 CREATE DATABASE /*!32312 IF NOT EXISTS*/ `thesisdb` /*!40100 DEFAULT CHARACTER SET latin1 */;
 
-USE `thesisdb`;
+USE finaldataset;
 
 --
 -- Table structure for table `clustering_metric`
