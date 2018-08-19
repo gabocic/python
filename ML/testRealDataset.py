@@ -259,7 +259,11 @@ if __name__ == '__main__':
 
     #dataset = genfromtxt('/home/gabriel/Desktop/segmentation.csv', delimiter=',')
     #dataset = genfromtxt('/home/gabriel/Desktop/page-blocks.data', delimiter=',')
-    dataset = genfromtxt('/home/gabriel/Downloads/datasets/house16H.dat', delimiter=',',max_rows=5000)
+    #dataset = genfromtxt('/home/gabriel/Downloads/datasets/house16H.dat', delimiter=',',max_rows=5000)
+    #dataset = genfromtxt('/home/gabriel/Downloads/datasets/stock.dat', delimiter=',',max_rows=2000)
+    #dataset = genfromtxt('/home/gabriel/Documents/Datasets/Skin_NonSkin.txt', delimiter=',',max_rows=2000)
+    dataset = genfromtxt('/home/gabriel/Documents/Datasets/toTest/datasetT.csv', delimiter=',',max_rows=2000)
+    #dataset = genfromtxt('/home/gabriel/Documents/Datasets/stock.dat', delimiter=',',max_rows=2000)
 
     if dataset.shape[0] == 0:
         mysql.updateRun(db,runid)

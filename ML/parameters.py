@@ -7,7 +7,7 @@ max_special_points_perc = 90
 min_dataset_size = 100
 
 # Features values range: all features values will be between value_limit and -value_limit
-value_limit = 100000
+value_limit = 10000
 
 # Numbers of attempts to generate a dataset that fulfill the specified characteristics 
 dataset_gen_retry = 100
@@ -41,7 +41,7 @@ dataset_parameters_error_margin = 0.05 # 5%
 parallelism=4
 
 # Minimum number of samples for a group to be considered (Repeated analysis)
-analysis_group_min_members_perc = 0.05 # 5%
+analysis_group_min_members_perc = 0.08 # 8%
 
 # This parameter determines how many times the distance of the furthest point a point should be to be considered an Outlier
 analysis_outlier_factor = 1.5

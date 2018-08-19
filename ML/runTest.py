@@ -22,6 +22,7 @@ from davies_bouldin import davies_bouldin_score
 from sklearn.preprocessing import StandardScaler
 import mysql
 from sklearn.model_selection import train_test_split
+from histogram import genhistogram
 
 class bcolors:
     BANNER = '\033[94m'
@@ -60,7 +61,7 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
         #print("")
 
         # Validate dataset is within the specifications
-        analysis_results = analyze_dataset(data=dataset,debug=0,plot=0,load_from_file=None)
+        analysis_results = analyze_dataset(data=dataset,debug=0,plot=1,load_from_file=None)
        
         # Linear points ranges
         if 0 <= p_perc_lin < 20:
@@ -108,6 +109,7 @@ def dataset_generation_and_validation(p_n_features,p_n_samples,p_perc_lin,p_perc
         print('Unable to generate a valid dataset after '+dataset_gen_retry.__str__()+' attempts')
         dataset=np.zeros([0])
 
+    genhistogram(dataset)
     return dataset,unifo_feat,standa_feat,analysis_results
 
 def clustering_and_metrics(dataset,clustering_alg):
@@ -257,31 +259,37 @@ if __name__ == '__main__':
     #paramlist.append([3,200,10,0,0,0])
     ## DELETE 
 
-    paramlist.append([8,1000,0,0,0,0])
-#    paramlist.append([8,1000,10,0,0,0])
-#    paramlist.append([16,1000,10,0,0,0])
-#    paramlist.append([24,1000,10,0,0,0])
-#    paramlist.append([8,1000,40,0,0,0])
-#    paramlist.append([8,1000,80,0,0,0])
-#    paramlist.append([8,1000,0,10,2,0])
-#    paramlist.append([8,1000,0,20,2,0])
-#    paramlist.append([8,1000,0,40,2,0])
-#    paramlist.append([8,1000,0,20,3,0])
-#    paramlist.append([8,1000,0,40,3,0])
-#    paramlist.append([8,1000,0,20,4,0])
-#    paramlist.append([8,1000,0,40,4,0])
-#    paramlist.append([8,1000,0,0,0,6])
-#    paramlist.append([8,1000,0,0,0,12])
-#    paramlist.append([8,1000,0,0,0,18])
-#    paramlist.append([8,1000,10,10,2,6])
-#    paramlist.append([8,1000,10,10,2,12])
-#    paramlist.append([8,1000,10,10,2,18]) #
-#    paramlist.append([8,1000,10,40,2,6])
-#    paramlist.append([8,1000,10,40,2,12])
-#    paramlist.append([8,1000,10,40,2,18])
-#    paramlist.append([8,1000,40,10,2,6])
-#    paramlist.append([8,1000,40,10,2,12])
-#    paramlist.append([8,1000,40,10,2,18])
+#    paramlist.append([8,100,0,0,0,0])
+#    paramlist.append([8,100,10,0,0,0])
+#    paramlist.append([16,100,10,0,0,0])
+#    paramlist.append([24,100,10,0,0,0])
+#    paramlist.append([8,100,40,0,0,0])
+    paramlist.append([10,1000,0,0,0,0])
+
+
+
+#    paramlist.append([3,100,0,40,4,0])
+
+
+#    paramlist.append([8,100,0,10,2,0])
+#    paramlist.append([8,100,0,20,2,0])
+#    paramlist.append([8,100,0,40,2,0])
+#    paramlist.append([8,100,0,20,3,0])
+#    paramlist.append([8,100,0,40,3,0])
+#    paramlist.append([8,100,0,20,4,0])
+#    paramlist.append([8,100,0,40,4,0])
+#    paramlist.append([8,100,0,0,0,6])
+#    paramlist.append([8,100,0,0,0,12])
+#    paramlist.append([8,100,0,0,0,18])
+#    paramlist.append([8,100,10,10,2,6])
+#    paramlist.append([8,100,10,10,2,12])
+#    paramlist.append([8,100,10,10,2,18]) #
+#    paramlist.append([8,100,10,40,2,6])
+#    paramlist.append([8,100,10,40,2,12])
+#    paramlist.append([8,100,10,40,2,18])
+#    paramlist.append([8,100,40,10,2,6])
+#    paramlist.append([8,100,40,10,2,12])
+#    paramlist.append([8,100,40,10,2,18])
 #    paramlist.append([8,1000,40,20,2,6])
 
     dstypeidx=65
@@ -296,7 +304,7 @@ if __name__ == '__main__':
         print('')
         print('')
         dataset,unifo_feat,standa_feat,analysis_results = dataset_generation_and_validation(*params)
-        
+        #sys.exit()        
 
         if dataset.shape[0] == 0:
             mysql.updateRun(db,runid)
