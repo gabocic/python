@@ -6,6 +6,7 @@ from sklearn import datasets
 from numpy.linalg import norm
 from scipy.spatial import distance_matrix
 from plot_2d_3d import plot_2d_3d
+from findGroups import checkGroups
 from parameters import *
 
 
@@ -92,21 +93,28 @@ def analyze_dataset(data=None,debug=0,plot=0,load_from_file='dataset.svl'):
     ## Repeated analysis  ##
     ########################
 
-    uniq,dataidx,arrcount = np.unique(data,axis=0,return_counts=True,return_index=True)
+    #uniq,dataidx,arrcount = np.unique(data,axis=0,return_counts=True,return_index=True)
 
     # Only consider a group when it has more than n% of samples
-    groups = [ count for count in arrcount if count >= analysis_group_min_members_perc * samplenum] 
+    ##groups = [ count for count in arrcount if count >= analysis_group_min_members_perc * samplenum] 
+    #groups = [ count for count in arrcount if count >= 2] 
 
     # Remove repeated samples
-    data = uniq
+    #data = uniq
 
-    n_groups = len(groups)
-    n_repeated = sum(groups) - n_groups
-    repeatedperc = round(100*(n_repeated/samplenum),2)
+    #n_groups = len(groups)
+    #n_repeated = sum(groups) - n_groups
+    #repeatedperc = round(100*(n_repeated/samplenum),2)
 
-    print('n_groups',n_groups)
-    print('repeatedperc',repeatedperc)
+    #print('n_groups',n_groups)
+    #print('repeatedperc',repeatedperc)
 
+    #### BEGIN <<<<<<<<<<<<<<< New implementation
+
+    samptoremove,repeatedperc,n_groups = checkGroups(data)
+    data = np.delete(data,samptoremove,axis=0)
+
+    #### END <<<<<<<<<<<<<<< New implementation
     
     ##############################
     ## Linear points detection  ##
